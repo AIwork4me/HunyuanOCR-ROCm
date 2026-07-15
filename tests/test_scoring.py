@@ -30,11 +30,16 @@ def test_write_eval_config_substitutes_pred_dir(tmp_path):
 
 def test_parse_run_summary_reads_overall_and_per_task():
     res = scoring.parse_run_summary(FIX, save_name="mini")
-    assert res["overall"] == 94.33
+    assert round(res["overall"], 2) == 94.33          # computed ((96+94+93)/3)=94.333
     assert res["text_edit_dist"] == 0.04
     assert res["formula_cdm"] == 0.94
     assert res["table_teds"] == 0.93
     assert res["reading_order_edit"] == 0.13
+
+
+def test_overall_score_none_when_cdm_missing():
+    # CDM absent (subset with no formula pages) -> Overall undefined
+    assert scoring.overall_score({"text_edit_dist": 0.04, "formula_cdm": None, "table_teds": 0.93}) is None
 
 
 def test_run_scorer_invokes_pdf_validation_with_venv_python():

@@ -17,11 +17,17 @@ DEFAULT_OMNIDOCBENCH_REPO = "/root/ocr-eval/OmniDocBench"
 TEMPLATE_CONFIG = Path(__file__).resolve().parents[2] / "eval" / "configs" / "hunyuanocr-1.5_linux-rocm.yaml"
 
 
-def overall_score(metrics: dict) -> float:
-    """v1.6 Overall from raw metrics (each in [0,1])."""
+def overall_score(metrics: dict) -> float | None:
+    """v1.6 Overall = ((1-text_edit)*100 + cdm*100 + teds*100)/3.
+
+    Returns None when any of the three is missing (e.g. CDM is null on a subset
+    with no display-formula pages), since the 3-metric Overall is undefined then.
+    """
     text = metrics["text_edit_dist"]
     cdm = metrics["formula_cdm"]
     teds = metrics["table_teds"]
+    if text is None or cdm is None or teds is None:
+        return None
     return ((1.0 - text) * 100.0 + cdm * 100.0 + teds * 100.0) / 3.0
 
 
@@ -43,14 +49,25 @@ def run_scorer(*, omnidocbench_repo: str, config_yaml: str, venv_python: str | N
 
 
 def parse_run_summary(result_dir: str | Path, save_name: str) -> dict:
-    """Read overall + per-task numbers. save_name = basename(pred_dir) + '_quick_match'."""
+    """Read per-task numbers from OmniDocBench's ``run_summary.json``
+    (``notebook_metric_summary.metrics`` is the notebook-aligned source of truth).
+    ``save_name`` = ``basename(pred_dir) + '_quick_match'``. ``formula_cdm`` is
+    ``None`` when the subset has no display-formula pages (CDM did not run)."""
     result_dir = Path(result_dir)
-    metric = json.loads((result_dir / f"{save_name}_metric_result.json").read_text(encoding="utf-8"))
     summary = json.loads((result_dir / f"{save_name}_run_summary.json").read_text(encoding="utf-8"))
+    ms = summary["notebook_metric_summary"]["metrics"]
+
+    def raw(key: str) -> float | None:
+        return ms.get(key, {}).get("raw")
+
+    text = raw("text_block_Edit_dist")
+    cdm = raw("display_formula_CDM")          # None when no formula pages
+    teds = raw("table_TEDS")
+    order = raw("reading_order_Edit_dist")
     return {
-        "overall": summary["notebook_metric_summary"]["overall_notebook"],
-        "text_edit_dist": metric["text_block"]["all"]["Edit_dist"]["ALL_page_avg"],
-        "formula_cdm": metric["display_formula"]["page"]["CDM"]["ALL"],
-        "table_teds": metric["table"]["page"]["TEDS"]["ALL"],
-        "reading_order_edit": metric["reading_order"]["all"]["Edit_dist"]["ALL_page_avg"],
+        "overall": overall_score({"text_edit_dist": text, "formula_cdm": cdm, "table_teds": teds}),
+        "text_edit_dist": text,
+        "formula_cdm": cdm,
+        "table_teds": teds,
+        "reading_order_edit": order,
     }

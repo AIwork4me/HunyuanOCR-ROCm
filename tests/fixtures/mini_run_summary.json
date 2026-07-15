@@ -1,1 +1,11 @@
-{"notebook_metric_summary": {"overall_notebook": 94.33}}
+{
+  "save_name": "mini_quick_match",
+  "notebook_metric_summary": {
+    "metrics": {
+      "text_block_Edit_dist": {"raw": 0.04, "page_denominator": 30, "notebook_value": 0.04},
+      "display_formula_CDM": {"raw": 0.94, "page_denominator": 5, "notebook_value": 94.0},
+      "table_TEDS": {"raw": 0.93, "page_denominator": 3, "notebook_value": 93.0},
+      "reading_order_Edit_dist": {"raw": 0.13, "page_denominator": 30, "notebook_value": 0.13}
+    }
+  }
+}

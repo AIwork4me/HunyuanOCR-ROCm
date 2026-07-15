@@ -35,13 +35,18 @@ def main():
     save_name = f"{Path(args.pred_dir).name}_quick_match"
     s = scoring.parse_run_summary(Path(args.omnidocbench_repo) / "result", save_name)
     print(f"\n=== {args.label} — OmniDocBench v1.6 ===")
-    print(f"  Overall          : {s['overall']:.2f}")
-    print(f"  text  EditDist   : {s['text_edit_dist']:.4f}   -> {(1-s['text_edit_dist'])*100:.2f}")
-    print(f"  formula CDM      : {s['formula_cdm']:.4f}   -> {s['formula_cdm']*100:.2f}")
-    print(f"  table  TEDS      : {s['table_teds']:.4f}   -> {s['table_teds']*100:.2f}")
-    print(f"  order  EditDist  : {s['reading_order_edit']:.4f}")
+    def fmt(v, pct=False):
+        if v is None:
+            return "n/a"
+        return f"{v * 100:.2f}" if pct else f"{v:.4f}"
+    ov = s["overall"]
+    print(f"  Overall          : {'n/a (CDM missing on this subset)' if ov is None else f'{ov:.2f}'}")
+    print(f"  text  EditDist   : {fmt(s['text_edit_dist'])}   -> {fmt(s['text_edit_dist'], pct=True)}")
+    print(f"  formula CDM      : {fmt(s['formula_cdm'])}   -> {fmt(s['formula_cdm'], pct=True)}")
+    print(f"  table  TEDS      : {fmt(s['table_teds'])}   -> {fmt(s['table_teds'], pct=True)}")
+    print(f"  order  EditDist  : {fmt(s['reading_order_edit'])}")
     recomputed = scoring.overall_score({"text_edit_dist": s["text_edit_dist"], "formula_cdm": s["formula_cdm"], "table_teds": s["table_teds"]})
-    print(f"  (overall recomputed: {recomputed:.2f})")
+    print(f"  (overall recomputed: {'n/a' if recomputed is None else f'{recomputed:.2f}'})")
 
 
 if __name__ == "__main__":
