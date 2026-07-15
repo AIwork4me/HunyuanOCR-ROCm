@@ -1,0 +1,6 @@
+{
+  "text_block": {"all": {"Edit_dist": {"ALL_page_avg": 0.04}}},
+  "display_formula": {"page": {"CDM": {"ALL": 0.94}}},
+  "table": {"page": {"TEDS": {"ALL": 0.93}}},
+  "reading_order": {"all": {"Edit_dist": {"ALL_page_avg": 0.13}}}
+}
