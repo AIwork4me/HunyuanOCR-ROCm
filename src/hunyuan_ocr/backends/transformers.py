@@ -8,11 +8,33 @@ Torch/transformers imported lazily so importing this module needs no GPU.
 """
 from __future__ import annotations
 import importlib
+import os
 import sys
 from typing import List
 
 from ..contract import CONTRACT
 from ..postprocess import clean_repeated_substrings, process_one
+
+
+# --- gfx1100 / ROCm ViT resolution cap (workaround) -------------------------
+# On AMD gfx1100 + torch 2.9.1 ROCm, the Hunyuan-ViT bf16 forward becomes
+# non-deterministic and emits NaN above ~14.2k-14.7k vision tokens (sharp
+# threshold). Capping the input pixel area keeps the patch count below the
+# threshold so inference is deterministic and correct. Override or disable
+# (set to 0) via HUNYUANOCR_VIT_MAX_PIXELS. See ROCm issue #6416:
+# https://github.com/ROCm/ROCm/issues/6416
+GFX1100_VIT_MAX_PIXELS = int(os.environ.get("HUNYUANOCR_VIT_MAX_PIXELS", "3400000"))
+
+
+def _apply_vit_resolution_cap(processor):
+    """Cap HunyuanVL image-processor pixel area to stay under the ROCm ViT
+    threshold. No-op when the cap is 0 or the processor lacks the ``size`` knob."""
+    if GFX1100_VIT_MAX_PIXELS:
+        try:
+            processor.image_processor.size.longest_edge = GFX1100_VIT_MAX_PIXELS
+        except Exception:
+            pass
+    return processor
 
 
 def _patch_hunyuan_tokenizer_special_tokens(tokenizer) -> None:
@@ -66,6 +88,7 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
             raise
         print("[warn] AutoProcessor tokenizer lacks video_token; retrying with patched tokenizer.", file=sys.stderr)
         processor = _load_processor_with_patch(model_path)
+    processor = _apply_vit_resolution_cap(processor)
     model = HunYuanVLForConditionalGeneration.from_pretrained(
         model_path, attn_implementation=CONTRACT.attn_implementation, dtype=dtype,
     )
