@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Local environment / machine-specific paths (gitignored, never commit)
+.env.local
+*.local
+
+# Heavy data / caches (symlinked to /root per the storage plan; not committed)
+models/
+datasets/
+*.safetensors
+*.gguf
+*.bin
+hf_cache/
+.cache/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
