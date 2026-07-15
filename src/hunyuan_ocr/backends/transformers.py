@@ -24,6 +24,10 @@ from ..postprocess import clean_repeated_substrings, process_one
 # (set to 0) via HUNYUANOCR_VIT_MAX_PIXELS. See ROCm issue #6416:
 # https://github.com/ROCm/ROCm/issues/6416
 GFX1100_VIT_MAX_PIXELS = int(os.environ.get("HUNYUANOCR_VIT_MAX_PIXELS", "3400000"))
+# gfx1100 attention impl. With the ViT cap above, sdpa is deterministic, correct,
+# and ~1.4x faster than eager on RDNA3 (eager is the upstream default, tuned for
+# H100). Override via HUNYUANOCR_ATTN.
+GFX1100_ATTN_IMPLEMENTATION = os.environ.get("HUNYUANOCR_ATTN", "sdpa")
 
 
 def _apply_vit_resolution_cap(processor):
@@ -90,7 +94,7 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
         processor = _load_processor_with_patch(model_path)
     processor = _apply_vit_resolution_cap(processor)
     model = HunYuanVLForConditionalGeneration.from_pretrained(
-        model_path, attn_implementation=CONTRACT.attn_implementation, dtype=dtype,
+        model_path, attn_implementation=GFX1100_ATTN_IMPLEMENTATION, dtype=dtype,
     )
     model = model.to(device)
     model.eval()
