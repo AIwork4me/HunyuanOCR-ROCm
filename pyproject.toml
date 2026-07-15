@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hunyuan-ocr"
+version = "0.1.0"
+description = "Precision-aligned AMD ROCm port of HunyuanOCR-1.5 for OmniDocBench v1.6"
+requires-python = ">=3.12"
+dependencies = [
+  "transformers==5.13.0",
+  "torch",          # installed from ROCm wheel, not PyPI — do NOT pin here
+  "pillow",
+  "tqdm",
+  "pyyaml",
+  "requests",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-mock"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
