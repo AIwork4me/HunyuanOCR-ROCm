@@ -377,8 +377,9 @@ def test_clean_repeated_substrings_trims_long_loop():
     body = "正文内容。" * 5
     loop = "ABCD" * 3000           # >> 2000 chars, repeats > 10x
     out = clean_repeated_substrings(body + loop)
-    assert out == body             # the repeated suffix is trimmed
-    assert "ABCD" not in out
+    # upstream keeps ONE surviving copy of the unit: text[: n - length*(count-1)]
+    assert out == body + "ABCD"
+    assert "ABCDABCD" not in out   # the degenerate loop is collapsed to one copy
 
 
 def test_clean_repeated_substrings_short_text_untouched():
