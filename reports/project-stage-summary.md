@@ -33,6 +33,20 @@ Same 148-page OmniDocBench v1.6 subset, same weights, same 3.4M-pixel cap, gfx11
 3. **A `max-model-len` footgun:** the contract's `max_tokens=32768` requires `--max-model-len ≥ ~49k`; setting it to 32768 silently 400-rejects every request.
 4. **Throughput:** transformers-native ~5.5 tok/s (full set ~40h, impractical). vLLM eager decode ~2 tok/s (slow, unfused kernels). vLLM **torch.compile** fuses decode kernels → ~28× single-request speedup (compiles in ~140s, no stall with the capped dir). Batched throughput settles around ~5–30 pages/min depending on warmup.
 
+## Throughput findings (detailed)
+
+Tuning vLLM for the full 1651-page set on gfx1100 surfaced a clear stack of levers and limits:
+
+| Lever / observation | Result |
+|---|---|
+| Data parallelism (4 × tp=1 servers, one/GPU) | ~4× — the biggest win; 1B model fits one GPU, so tp=4 is wasteful |
+| `--gpu-memory-utilization 0.9` | more KV cache → bigger batches (vs 0.55) |
+| `--max-model-len` | **footgun**: must be ≥ input(~13k) + `max_tokens`(32768) ≈ 46k; setting 32768 silently **400-rejects every request**; 65536 is safe + ~2× KV-efficient vs 131072 |
+| **`--enforce-eager` (off → torch.compile)** | **decode 2 tok/s → ~150 tok/s/server (~28×)**; compiles in ~140s with the capped dir (the earlier "stall" was uncapped 65k-patch profiling, not compile) |
+| Batched throughput ceiling | **~5–30 pages/min, intermittent idle** — the **sync streaming OpenAI client + GIL** doesn't keep the (fast) servers saturated; bumping concurrency 16→64 didn't help → bottleneck is client↔server interaction, not GPU or concurrency |
+
+**Net:** a single compiled server does a page in ~6 s (vs eager ~180 s); 4 compiled servers finish the full set in **~5 h** (reliable, background). An **async driver** (aiohttp) would likely saturate the servers → ~6× faster (~45 min), deferred as optional. transformers-native is impractical for the full set (~40 h).
+
 ## Issues filed (both OPEN, by AIwork4me)
 
 - **AMD ROCm #6416** — the bf16 ViT forward non-determinism + NaN above ~14.3k tokens on gfx1100; full repro + threshold table + isolation. https://github.com/ROCm/ROCm/issues/6416
