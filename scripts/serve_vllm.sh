@@ -1,20 +1,26 @@
 #!/bin/bash
 # Start the HunyuanOCR-1.5 vLLM server (OpenAI-compatible) on gfx1100.
 # Uses the box's vLLM ROCm build (/opt/venv, vllm 0.16.1, native HunYuanVL).
+# Defaults are tuned for the 4-GPU full-set run: capped dir (gfx1100 ViT workaround),
+# max-model-len 32768 (frees KV cache for higher batch), --enforce-eager (ROCm
+# torch.compile stalls; eager is proven).
 #
-# Usage:  MODEL_PATH=/root/models/HunyuanOCR GPU=0 PORT=8000 bash scripts/serve_vllm.sh
-# Run one instance per GPU (ports 8000/8001/8002) for multi-GPU throughput.
+# Usage:  GPU=0 PORT=8000 bash scripts/serve_vllm.sh   # one per GPU
 set -e
-MODEL_PATH=${MODEL_PATH:-/root/models/HunyuanOCR}
+MODEL_PATH=${MODEL_PATH:-/root/models/HunyuanOCR-vllm}   # capped preprocessor (3.4M)
 GPU=${GPU:-0}
 PORT=${PORT:-8000}
 GPU_MEM_UTIL=${GPU_MEM_UTIL:-0.9}
-MAX_MODEL_LEN=${MAX_MODEL_LEN:-131072}
+MAX_MODEL_LEN=${MAX_MODEL_LEN:-32768}
 SERVED_NAME=${SERVED_NAME:-tencent/HunyuanOCR}
+ENFORCE_EAGER=${ENFORCE_EAGER:-1}
 LOG=${LOG:-/root/hunyuanocr-results/vllm_${PORT}.log}
 mkdir -p "$(dirname "$LOG")"
 
-echo "[serve] model=${MODEL_PATH} served-as=${SERVED_NAME} gpu=${GPU} port=${PORT} log=${LOG}"
+EAGER_FLAG=""
+[ "${ENFORCE_EAGER}" = "1" ] && EAGER_FLAG="--enforce-eager"
+
+echo "[serve] model=${MODEL_PATH} served-as=${SERVED_NAME} gpu=${GPU} port=${PORT} mem=${GPU_MEM_UTIL} maxlen=${MAX_MODEL_LEN} eager=${ENFORCE_EAGER} log=${LOG}"
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 
 CUDA_VISIBLE_DEVICES=${GPU} /opt/venv/bin/vllm serve "${MODEL_PATH}" \
@@ -25,6 +31,7 @@ CUDA_VISIBLE_DEVICES=${GPU} /opt/venv/bin/vllm serve "${MODEL_PATH}" \
     --gpu-memory-utilization ${GPU_MEM_UTIL} \
     --max-model-len ${MAX_MODEL_LEN} \
     --max-num-batched-tokens ${MAX_MODEL_LEN} \
+    ${EAGER_FLAG} \
     > "${LOG}" 2>&1 &
 
 echo "[started] pid=$!  Readiness: curl -sf http://127.0.0.1:${PORT}/v1/models"
