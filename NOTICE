@@ -1,0 +1,13 @@
+HunyuanOCR-ROCm
+Copyright 2026 AIwork4me
+
+This product includes software developed by the HunyuanOCR-ROCm project
+(https://github.com/AIwork4me/HunyuanOCR-ROCm).
+
+This product uses the HunyuanOCR-1.5 model weights
+(https://huggingface.co/tencent/HunyuanOCR), which are licensed under the
+Tencent Hunyuan Community License Agreement. Derivatives must carry the
+"Powered by Tencent Hunyuan" notice and comply with the license terms
+(see https://huggingface.co/tencent/HunyuanOCR/blob/main/License.txt).
+
+Powered by Tencent Hunyuan.

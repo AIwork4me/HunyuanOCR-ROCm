@@ -28,3 +28,8 @@ hf_cache/
 .vscode/
 .idea/
 .DS_Store
+
+# internal / scratch
+.superpowers/
+.pytest_cache/
+.ipynb_checkpoints/
