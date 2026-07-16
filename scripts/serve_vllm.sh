@@ -11,9 +11,9 @@ MODEL_PATH=${MODEL_PATH:-/root/models/HunyuanOCR-vllm}   # capped preprocessor (
 GPU=${GPU:-0}
 PORT=${PORT:-8000}
 GPU_MEM_UTIL=${GPU_MEM_UTIL:-0.9}
-MAX_MODEL_LEN=${MAX_MODEL_LEN:-32768}
+MAX_MODEL_LEN=${MAX_MODEL_LEN:-65536}   # must exceed input(~13k) + max_tokens(32768); 65536 is safe + ~2x KV-efficient vs 131072
 SERVED_NAME=${SERVED_NAME:-tencent/HunyuanOCR}
-ENFORCE_EAGER=${ENFORCE_EAGER:-1}
+ENFORCE_EAGER=${ENFORCE_EAGER:-0}   # 0 = torch.compile (compiles in ~140s, ~28x faster decode than eager); 1 = eager fallback
 LOG=${LOG:-/root/hunyuanocr-results/vllm_${PORT}.log}
 mkdir -p "$(dirname "$LOG")"
 
