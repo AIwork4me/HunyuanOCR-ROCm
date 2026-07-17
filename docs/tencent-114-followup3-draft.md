@@ -1,4 +1,4 @@
-**Update 3 — Formula CDM gap analysis: systematic debugging rules out resolution, streaming, and post-processing; root cause is inference-engine-level generation differences**
+**Update 3 — Formula CDM gap analysis: systematic debugging rules out resolution, streaming, and post-processing; inference-engine-level generation differences are the leading explanation**
 
 Following up on the formula CDM gap we reported (llama.cpp 89.6% vs vLLM 96.5% on the full set), we conducted a systematic investigation to localize it. Here's what we found.
 
@@ -21,7 +21,7 @@ The formula CDM gap is **~5.65 points** (vLLM vs llama.cpp uncapped, same pages)
 
 ## Where the gap actually is
 
-After ruling out the above, the remaining explanation is **inference-engine-level generation differences**:
+After ruling out the above, the leading explanation is **inference-engine-level generation differences**:
 
 - llama.cpp (C++ GGML ViT + GGML LLM on HIP) and vLLM (Flash-Attn-Triton ViT + PyTorch LLM on ROCm) run the **same BF16 weights** through **different kernel implementations**. These produce slightly different intermediate values, which — for formula-heavy pages where the model must transcribe fine mathematical notation — accumulate into measurably different LaTeX output (e.g., spacing, delimiter choices, alignment formatting). These differences are invisible to a text comparison but affect the **CDM pixel-level render comparison**.
 
@@ -39,7 +39,7 @@ After ruling out the above, the remaining explanation is **inference-engine-leve
 ## What we're taking away
 
 - **llama.cpp is the only backend that can run at full resolution on ROCm** (the >14k ViT instability doesn't affect its C++ path). Full resolution is strictly better than capping — confirming the cap was always a workaround, not an intended operating point.
-- The formula CDM gap is an inference-engine artifact, not a model or preprocessing bug. Closing it would require either (a) kernel-level numerical alignment between GGML and PyTorch, or (b) accepting it as a known backend characteristic.
+- The formula CDM gap is best explained as an inference-engine artifact, not a model or preprocessing bug (the leading explanation, not a singly-proven root cause). Closing it would require either (a) kernel-level numerical alignment between GGML and PyTorch, or (b) accepting it as a known backend characteristic.
 - We're sharing these findings in the hope they're useful if your team ever evaluates the llama.cpp path for production. The full per-page outputs and scoring artifacts are available on request.
 
 Thanks! 🙏

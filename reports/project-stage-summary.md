@@ -34,7 +34,7 @@ Same 148-page OmniDocBench v1.6 subset, same weights, same 3.4M-pixel cap, gfx11
 
 ## Key technical findings
 
-1. **A real ROCm ViT instability (root-caused + worked around).** The Hunyuan-ViT forward becomes **non-deterministic + NaN above a sharp ~14.2k–14.7k vision-token threshold** — in the **transformers SDPA/eager ViT path** only (vLLM's Flash-Attention ViT avoids it). Sharp threshold; isolated to the full ViT forward (single ops don't reproduce); LLM unaffected; fp32 doesn't NaN. **Workaround:** cap image to 3.4M pixels (~13k tokens) → deterministic + correct. Filed with AMD.
+1. **A real ROCm ViT instability (localized + worked around).** The Hunyuan-ViT forward becomes **non-deterministic + NaN above a sharp ~14.2k–14.7k vision-token threshold** — in the **transformers SDPA/eager ViT path** only (vLLM's Flash-Attention ViT avoids it). Sharp threshold; isolated to the full ViT forward (single ops don't reproduce); LLM unaffected; fp32 doesn't NaN. **Workaround:** cap image to 3.4M pixels (~13k tokens) → deterministic + correct. Filed with AMD.
 2. **vLLM is the better/faster backend on ROCm.** It reaches upstream (94.81) where transformers (94.11) is slightly lower — consistent with the SDPA-ViT degradation. And it's the only path fast enough for the full set.
 3. **A `max-model-len` footgun:** the contract's `max_tokens=32768` requires `--max-model-len ≥ ~49k`; setting it to 32768 silently 400-rejects every request.
 4. **Throughput:** transformers-native ~5.5 tok/s (full set ~40h, impractical). vLLM eager decode ~2 tok/s (slow, unfused kernels). vLLM **torch.compile** fuses decode kernels → ~28× single-request speedup (compiles in ~140s, no stall with the capped dir). Batched throughput settles around ~5–30 pages/min depending on warmup.
