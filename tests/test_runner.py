@@ -138,3 +138,42 @@ def test_decide_run_status():
     assert runner.decide_run_status(0, 1) == "failed"
     assert runner.decide_run_status(0, 0, worker_errors=1) == "failed"
     assert runner.decide_run_status(0, 0, crashed=1) == "failed"
+
+
+def test_aggregate_errors_concatenates_records(tmp_path):
+    for stem, msg in [("a", "e1"), ("b", "e2")]:
+        try:
+            raise ValueError(msg)
+        except ValueError as e:
+            runner.record_error(tmp_path, stem, image_path=stem + ".png",
+                                backend="b", endpoint="e", exc=e, attempt=1)
+    out = runner.aggregate_errors(tmp_path)
+    lines = [json.loads(l) for l in out.read_text("utf-8").splitlines() if l.strip()]
+    assert {l["exception_message"] for l in lines} == {"e1", "e2"}
+
+
+def test_safe_argv_redacts_secrets():
+    argv = ["--gt-json", "x.json", "--hf-token", "SECRET123",
+            "--api-key=TOPSECRET", "--ports", "8000"]
+    redacted = runner.safe_argv(argv)
+    assert "SECRET123" not in redacted
+    assert "TOPSECRET" not in redacted
+    assert "--gt-json" in redacted and "x.json" in redacted and "8000" in redacted
+
+
+def test_safe_argv_no_false_positive_on_monkey():
+    # 'monkey' contains 'key' substring but is not a secret flag
+    redacted = runner.safe_argv(["--monkey", "tail"])
+    assert redacted == ["--monkey", "tail"]
+
+
+def test_write_run_manifest_structure_and_no_secret(tmp_path):
+    p = runner.write_run_manifest(
+        tmp_path, backend="vllm", model="HYVL",
+        counts={"expected": 3, "succeeded": 2, "failed": 1, "skipped": 0},
+        ports=[8000, 8001], max_pixels=0, max_tokens=32768, status="failed")
+    m = json.loads(p.read_text("utf-8"))
+    assert m["backend"] == "vllm" and m["status"] == "failed"
+    assert m["counts"] == {"expected": 3, "succeeded": 2, "failed": 1, "skipped": 0}
+    assert m["ports"] == [8000, 8001]
+    assert "torch" in m["env"]  # current env has torch

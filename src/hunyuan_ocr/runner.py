@@ -165,3 +165,114 @@ def decide_run_status(final_failed: int, final_pending: int,
     if final_failed or final_pending or worker_errors or crashed:
         return "failed"
     return "ok"
+
+
+def aggregate_errors(pred_dir, out_name: str = "_errors.jsonl") -> Path:
+    """Concatenate ``_errors/*.json`` into ``_errors.jsonl``. Call ONCE from main
+    after all workers join (single writer). Uses write_atomic for safety."""
+    edir = Path(pred_dir) / "_errors"
+    out = Path(pred_dir) / out_name
+    rows = []
+    if edir.is_dir():
+        for f in sorted(edir.glob("*.json")):
+            try:
+                rows.append(json.loads(f.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError):
+                continue
+    body = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows)
+    write_atomic(out, body)
+    return out
+
+
+# NOTE: --venv-python is redacted because it is a machine-local absolute path,
+# not a credential — keeping it out of the portable manifest.
+_SECRET_FLAGS = {
+    "--token", "--api-key", "--apikey", "--key", "--password",
+    "--secret", "--hf-token", "--hugging-face-token", "--venv-python",
+}
+
+
+def safe_argv(argv=None) -> list[str]:
+    """Return argv with secret-bearing flag values redacted (exact flag match only)."""
+    argv = list(sys.argv[1:] if argv is None else argv)
+    out: list[str] = []
+    i = 0
+    while i < len(argv):
+        tok = argv[i]
+        if "=" in tok and tok.split("=", 1)[0] in _SECRET_FLAGS:
+            out.append(f"{tok.split('=', 1)[0]}=<redacted>")
+        elif tok in _SECRET_FLAGS and i + 1 < len(argv):
+            out.append(tok); out.append("<redacted>"); i += 1
+        else:
+            out.append(tok)
+        i += 1
+    return out
+
+
+def _git_head(repo: str = ".") -> str | None:
+    try:
+        cp = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
+                            capture_output=True, text=True, timeout=10)
+        if cp.returncode == 0:
+            return cp.stdout.strip() or None
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return None
+
+
+def _env_versions() -> dict:
+    v: dict[str, str] = {}
+    try:
+        import torch  # type: ignore
+        v["torch"] = getattr(torch, "__version__", None)
+        hip = getattr(getattr(torch, "version", None), "hip", None)
+        if hip:
+            v["hip"] = hip
+    except Exception:
+        pass
+    try:
+        import transformers  # type: ignore
+        v["transformers"] = getattr(transformers, "__version__", None)
+    except Exception:
+        pass
+    try:
+        import vllm  # type: ignore
+        v["vllm"] = getattr(vllm, "__version__", None)
+    except Exception:
+        pass
+    return {k: val for k, val in v.items() if val}
+
+
+def write_run_manifest(pred_dir, *, backend: str, model: str,
+                       model_revision: str | None = None,
+                       command: list[str] | None = None,
+                       counts: dict | None = None, ports=None, gpu_ids=None,
+                       max_pixels=None, max_tokens=None, status: str = "ok",
+                       extra: dict | None = None) -> Path:
+    """Write ``run_manifest.json`` (atomic). No secrets (command via safe_argv)."""
+    counts = counts or {}
+    manifest = {
+        "repo_commit": _git_head(),
+        "backend": backend,
+        "model": model,
+        "model_revision": model_revision,
+        "command": safe_argv() if command is None else command,
+        "timestamp": time.time(),
+        "counts": {
+            "expected": counts.get("expected"),
+            "succeeded": counts.get("succeeded"),
+            "failed": counts.get("failed"),
+            "skipped": counts.get("skipped"),
+        },
+        "ports": ports,
+        "gpu_ids": gpu_ids,
+        "pixel_cap": max_pixels,
+        "max_tokens": max_tokens,
+        "env": _env_versions(),
+        "status": status,
+    }
+    if extra:
+        manifest.update(extra)
+    out = Path(pred_dir) / "run_manifest.json"
+    write_atomic(out, json.dumps(manifest, ensure_ascii=False, indent=2))
+    return out
