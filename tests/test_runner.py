@@ -1,6 +1,5 @@
 # tests/test_runner.py
 import json
-from pathlib import Path
 import pytest
 
 from hunyuan_ocr import runner
@@ -16,8 +15,6 @@ def test_write_atomic_creates_final_and_no_partial(tmp_path):
 def test_write_atomic_is_atomic_on_error(tmp_path, monkeypatch):
     out = tmp_path / "page.md"
     import os as _os
-
-    real_replace = _os.replace
 
     def boom(src, dst):
         # fail the rename step
@@ -41,9 +38,16 @@ def test_record_error_writes_structured_record(tmp_path):
     try:
         raise ValueError("boom")
     except ValueError as e:
-        runner.record_error(tmp_path, "stem1",
-                            image_path="/x/y.png", backend="vllm",
-                            endpoint="127.0.0.1:8080", exc=e, attempt=2, ts=1.5)
+        runner.record_error(
+            tmp_path,
+            "stem1",
+            image_path="/x/y.png",
+            backend="vllm",
+            endpoint="127.0.0.1:8080",
+            exc=e,
+            attempt=2,
+            ts=1.5,
+        )
     rec = json.loads((tmp_path / "_errors" / "stem1.json").read_text("utf-8"))
     assert rec["exception_type"] == "ValueError"
     assert rec["exception_message"] == "boom"
@@ -56,8 +60,7 @@ def test_commit_success_writes_md_and_clears_stale_error(tmp_path):
     try:
         raise RuntimeError("first try failed")
     except RuntimeError as e:
-        runner.record_error(tmp_path, "s", image_path="i", backend="b",
-                            endpoint="e", exc=e, attempt=1)
+        runner.record_error(tmp_path, "s", image_path="i", backend="b", endpoint="e", exc=e, attempt=1)
     assert not runner.is_complete(tmp_path, "s")  # has error record
     runner.commit_success(tmp_path, "s", "# real output")
     assert runner.is_complete(tmp_path, "s")
@@ -86,19 +89,19 @@ def test_page_status_states(tmp_path):
     try:
         raise ValueError("z")
     except ValueError as e:
-        runner.record_error(tmp_path, "bad", image_path="i", backend="b",
-                            endpoint="e", exc=e, attempt=2)
+        runner.record_error(tmp_path, "bad", image_path="i", backend="b", endpoint="e", exc=e, attempt=2)
     assert runner.page_status(tmp_path, "bad") == "failed"
 
 
 def test_select_todo_default_resumes_and_retries_failed(tmp_path):
     items = [("a", "a.png"), ("b", "b.png"), ("c", "c.png"), ("d", "d.png")]
-    runner.commit_success(tmp_path, "a", "ok")          # complete -> skip
+    runner.commit_success(tmp_path, "a", "ok")  # complete -> skip
     try:
         raise ValueError("x")
     except ValueError as e:
-        runner.record_error(tmp_path, "b", image_path="b.png", backend="b",
-                            endpoint="e", exc=e, attempt=1)  # failed -> retry
+        runner.record_error(
+            tmp_path, "b", image_path="b.png", backend="b", endpoint="e", exc=e, attempt=1
+        )  # failed -> retry
     # c pending, d pending
     todo, skipped = runner.select_todo(items, tmp_path)
     assert {s for s, _ in todo} == {"b", "c", "d"}
@@ -111,8 +114,7 @@ def test_select_todo_retry_failed_only(tmp_path):
     try:
         raise ValueError("x")
     except ValueError as e:
-        runner.record_error(tmp_path, "b", image_path="b.png", backend="b",
-                            endpoint="e", exc=e, attempt=1)
+        runner.record_error(tmp_path, "b", image_path="b.png", backend="b", endpoint="e", exc=e, attempt=1)
     todo, skipped = runner.select_todo(items, tmp_path, retry_failed=True)
     assert {s for s, _ in todo} == {"b"}
     assert skipped == 2
@@ -145,16 +147,14 @@ def test_aggregate_errors_concatenates_records(tmp_path):
         try:
             raise ValueError(msg)
         except ValueError as e:
-            runner.record_error(tmp_path, stem, image_path=stem + ".png",
-                                backend="b", endpoint="e", exc=e, attempt=1)
+            runner.record_error(tmp_path, stem, image_path=stem + ".png", backend="b", endpoint="e", exc=e, attempt=1)
     out = runner.aggregate_errors(tmp_path)
-    lines = [json.loads(l) for l in out.read_text("utf-8").splitlines() if l.strip()]
-    assert {l["exception_message"] for l in lines} == {"e1", "e2"}
+    lines = [json.loads(row) for row in out.read_text("utf-8").splitlines() if row.strip()]
+    assert {row["exception_message"] for row in lines} == {"e1", "e2"}
 
 
 def test_safe_argv_redacts_secrets():
-    argv = ["--gt-json", "x.json", "--hf-token", "SECRET123",
-            "--api-key=TOPSECRET", "--ports", "8000"]
+    argv = ["--gt-json", "x.json", "--hf-token", "SECRET123", "--api-key=TOPSECRET", "--ports", "8000"]
     redacted = runner.safe_argv(argv)
     assert "SECRET123" not in redacted
     assert "TOPSECRET" not in redacted
@@ -169,11 +169,78 @@ def test_safe_argv_no_false_positive_on_monkey():
 
 def test_write_run_manifest_structure_and_no_secret(tmp_path):
     p = runner.write_run_manifest(
-        tmp_path, backend="vllm", model="HYVL",
-        counts={"expected": 3, "succeeded": 2, "failed": 1, "skipped": 0},
-        ports=[8000, 8001], max_pixels=0, max_tokens=32768, status="failed")
+        tmp_path,
+        backend="vllm",
+        model="HYVL",
+        run_counts={"attempted": 3, "succeeded": 2, "failed": 1, "skipped": 0},
+        final_state={"expected": 3, "complete": 2, "failed": 1, "pending": 0},
+        ports=[8000, 8001],
+        max_pixels=0,
+        max_tokens=32768,
+        status="failed",
+    )
     m = json.loads(p.read_text("utf-8"))
+    assert m["schema_version"] == runner.MANIFEST_SCHEMA_VERSION
     assert m["backend"] == "vllm" and m["status"] == "failed"
-    assert m["counts"] == {"expected": 3, "succeeded": 2, "failed": 1, "skipped": 0}
+    assert m["run_counts"] == {"attempted": 3, "succeeded": 2, "failed": 1, "skipped": 0}
+    assert m["final_state"] == {"expected": 3, "complete": 2, "failed": 1, "pending": 0}
     assert m["ports"] == [8000, 8001]
-    assert "torch" in m["env"]  # current env has torch
+    assert "timestamp_iso" in m and m["timestamp_iso"].endswith("+00:00")
+    # env is best-effort and OPTIONAL — present only when the dep is installed.
+    # Never assert a specific package exists (env-independent test).
+    assert isinstance(m["env"], dict)
+    assert isinstance(m["platform"], dict) and "python" in m["platform"]
+    # no secrets: a token-bearing flag value must be redacted
+    assert all("TOPSECRET" != str(v) for v in m["command"])
+
+
+def test_manifest_invariants_hold(tmp_path):
+    # Conservation laws: attempted == succeeded+failed; expected == attempted+skipped;
+    # expected == complete+failed+pending.
+    for rc, fs in [
+        (
+            {"attempted": 5, "succeeded": 5, "failed": 0, "skipped": 0},
+            {"expected": 5, "complete": 5, "failed": 0, "pending": 0},
+        ),
+        (
+            {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 2},
+            {"expected": 3, "complete": 3, "failed": 0, "pending": 0},
+        ),  # partial resume
+        (
+            {"attempted": 2, "succeeded": 1, "failed": 1, "skipped": 0},
+            {"expected": 2, "complete": 1, "failed": 1, "pending": 0},
+        ),  # retry-failed
+    ]:
+        runner.write_run_manifest(tmp_path, backend="vllm", model="m", run_counts=rc, final_state=fs)
+        m = json.loads((tmp_path / "run_manifest.json").read_text("utf-8"))
+        assert runner.validate_manifest(m) == [], (rc, fs)
+
+
+def test_manifest_invariants_violated(tmp_path):
+    # The broken pre-fix shape: expected=3,succeeded=3,skipped=2 must be rejected.
+    runner.write_run_manifest(
+        tmp_path,
+        backend="vllm",
+        model="m",
+        run_counts={"attempted": 3, "succeeded": 3, "failed": 0, "skipped": 2},
+        final_state={"expected": 3, "complete": 3, "failed": 0, "pending": 0},
+    )
+    m = json.loads((tmp_path / "run_manifest.json").read_text("utf-8"))
+    errs = runner.validate_manifest(m)
+    assert errs and any("expected" in e and "attempted" in e for e in errs)
+
+
+def test_manifest_works_without_torch(tmp_path):
+    # Generating a manifest must not require torch/transformers/vllm. This test
+    # runs in both the GPU env (where env may list them) and the no-torch CI venv
+    # (where env is empty); either way manifest generation + validation must work.
+    runner.write_run_manifest(
+        tmp_path,
+        backend="llamacpp",
+        model="HYVL",
+        run_counts={"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0},
+        final_state={"expected": 1, "complete": 1, "failed": 0, "pending": 0},
+    )
+    m = json.loads((tmp_path / "run_manifest.json").read_text("utf-8"))
+    assert m["backend"] == "llamacpp"
+    assert runner.validate_manifest(m) == []
