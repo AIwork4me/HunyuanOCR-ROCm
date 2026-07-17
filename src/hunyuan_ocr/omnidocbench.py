@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 AIwork4me
 """OmniDocBench v1.6 dataset iteration + prediction filename mapping.
 
 Ground-truth JSON (e.g. /workspace/OmniDocBench_data/OmniDocBench.json) is a list

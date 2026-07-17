@@ -1,13 +1,52 @@
 HunyuanOCR-ROCm
 Copyright 2026 AIwork4me
 
-This product includes software developed by the HunyuanOCR-ROCm project
-(https://github.com/AIwork4me/HunyuanOCR-ROCm).
+This NOTICE fulfills the distribution conditions of the licenses below.
 
-This product uses the HunyuanOCR-1.5 model weights
-(https://huggingface.co/tencent/HunyuanOCR), which are licensed under the
-Tencent Hunyuan Community License Agreement. Derivatives must carry the
-"Powered by Tencent Hunyuan" notice and comply with the license terms
-(see https://huggingface.co/tencent/HunyuanOCR/blob/main/License.txt).
+------------------------------------------------------------------------------
+1. Original packaging, tooling, and integration code in this repository
+------------------------------------------------------------------------------
+Copyright 2026 AIwork4me. Licensed under the Apache License, Version 2.0
+(see LICENSE and LICENSES/Apache-2.0.txt).
+
+------------------------------------------------------------------------------
+2. Code ported from or derived from Tencent HunyuanOCR
+------------------------------------------------------------------------------
+Some files (contract.py, tasks.py, postprocess.py, backends/*) derive from
+Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR). Those
+upstream-derived portions are licensed under the Tencent Hunyuan Community
+License Agreement
+(see LICENSES/Tencent-Hunyuan-Community-License.txt). When distributing those
+portions you must include a copy of that agreement and prominent notices on
+any modified files stating that you changed them.
+
+------------------------------------------------------------------------------
+3. Tencent HunyuanOCR model weights
+------------------------------------------------------------------------------
+The model weights (tencent/HunyuanOCR; ggml-org/HunyuanOCR-GGUF) are licensed
+under the Tencent Hunyuan Community License Agreement. They are NOT OSI Open Source
+and are NOT licensed in the EU, UK, or South Korea (territory-limited).
+Distributions (other than via a Hosted Service) must carry this Notice text:
+
+    Tencent Hunyuan is licensed under the Tencent Hunyuan Community License
+    Agreement, Copyright © 2025 Tencent. All Rights Reserved. The trademark
+    rights of "Tencent Hunyuan" are owned by Tencent or its affiliate.
+
+The "Powered by Tencent Hunyuan" mark is ENCOURAGED by the license (§3c),
+not required.
+
+------------------------------------------------------------------------------
+4. Non-affiliation
+------------------------------------------------------------------------------
+This project is an independent community port. Tencent is not affiliated with,
+associated with, sponsoring, or endorsing this project. "Tencent Hunyuan" is a
+trademark of Tencent or its affiliate.
+
+------------------------------------------------------------------------------
+5. Third-party projects used
+------------------------------------------------------------------------------
+- llama.cpp (https://github.com/ggml-org/llama.cpp) -- MIT
+- vLLM (https://github.com/vllm-project/vllm) -- Apache-2.0
+- OmniDocBench (https://github.com/opendatalab/OmniDocBench) -- benchmark (see its license)
 
 Powered by Tencent Hunyuan.

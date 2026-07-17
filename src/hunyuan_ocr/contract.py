@@ -1,3 +1,11 @@
+# SPDX-License-Identifier: NOASSERTION
+# Copyright (c) Tencent. All rights reserved.
+# Copyright 2026 AIwork4me (modifications for the ROCm port)
+#
+# This file derives from Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR),
+# licensed under the Tencent Hunyuan Community License Agreement. Upstream-derived
+# portions retain that license; see LICENSES/Tencent-Hunyuan-Community-License.txt.
+# The "Powered by Tencent Hunyuan" mark is encouraged (license §3c), not required.
 """The FROZEN decoding contract — the single shared layer across backends.
 
 Phase 1 (transformers) establishes BASELINE against these values; Phases 2 (vLLM)

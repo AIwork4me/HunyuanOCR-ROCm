@@ -1,0 +1,62 @@
+# reproducibility.lock.yaml — machine-readable reproducibility snapshot for the
+# published HunyuanOCR-ROCm results. Verified fields carry a source; unverified
+# fields are `not_recorded` with a fill command. Do not invent values.
+
+hunyuanocr_rocm:
+  repo: https://github.com/AIwork4me/HunyuanOCR-ROCm
+  # The published benchmark results were finalized and documented at this commit
+  # (the comprehensive HANDOFF commit). It is the reproducibility snapshot anchor.
+  # NOTE: the p0-integrity-license-repro branch (which adds this lock file) has a
+  # later tip; the published *results* correspond to commit below, not to the
+  # branch tip that contains this lock file.
+  commit: e17fab1d3c2586599b9ee0c845784e4b000e2101   # handoff/published-results commit (verified)
+
+llama_cpp:
+  repo: https://github.com/ggml-org/llama.cpp
+  commit: a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # GitHub API (verified 2026-07-16)
+  ggml_version: "0.16.0"                              # per HANDOFF (reported)
+  contains_hunyuan_multimodal: true                   # verified via GitHub API tree at this commit (tools/mtmd/models/hunyuanvl.cpp + src/models/hunyuan-vl.cpp present)
+
+model:
+  hf_repo: tencent/HunyuanOCR
+  hf_revision: not_recorded                           # huggingface.co API not reachable from this env
+  # fill: curl -sL https://huggingface.co/api/models/tencent/HunyuanOCR/revision/main | jq -r .sha
+  gguf_repo: ggml-org/HunyuanOCR-GGUF
+  gguf_files: [HunyuanOCR-bf16.gguf, mmproj-HunyuanOCR-bf16.gguf]
+  gguf_lfs_oid: not_recorded                          # HF API not reachable from this env
+  # fill: curl -sL https://huggingface.co/api/models/ggml-org/HunyuanOCR-GGUF/tree/main | jq -r '.[]|select(.path|contains("bf16"))|{path,.lfs.oid}'
+
+omnidocbench:
+  version: v1.6
+  repo: https://github.com/opendatalab/OmniDocBench
+  repo_default_branch: main
+  # repo commit (fill): curl -sL https://api.github.com/repos/opendatalab/OmniDocBench/commits/main | jq -r .sha
+  gt_json_canary: OmniDocBench_150.json
+  gt_json_canary_sha256: 3e3fbea07702084d9466e231260ad92141848a32631c9895d8e55b24e2c2f7b5   # sha256sum (verified, 148 pages)
+  gt_json_full: OmniDocBench.json
+  gt_json_full_sha256: a45cd84b04ad8b793e775089640e6b681209abea33ead54c1828ddca35fae496     # sha256sum (verified)
+  scorer_repo: /root/ocr-eval/OmniDocBench
+  scorer_commit: 2b161d010d2e3aff77a0edef359ea3a6411d23cd                              # git rev-parse HEAD (verified, local)
+
+environment:
+  python: "3.12.3"                                    # sys.version (verified)
+  rocm_hip: "7.2.53211-e1a6bc5663"                    # torch.version.hip (verified)
+  torch: "2.9.1+gitff65f5b"                           # torch.__version__ (verified)
+  transformers:
+    benchmark_venv: "5.13.0"                          # REPORTED in HANDOFF (/root/hunyuanocr-venvs/transformers); NOT re-verified this session
+    current_opt_venv: "4.57.6"                        # transformers.__version__ here (verified)
+    note: "The published benchmark was produced in the isolated 5.13.0 venv, NOT this /opt/venv."
+  vllm: "0.16.1.dev0+g89a77b108.d20260317"            # vllm.__version__ (verified)
+  gpu_arch: gfx1100                                   # RDNA3 (per repo docs)
+  rocm_smi_device_id: "0x744b"                        # rocm-smi (verified)
+
+benchmark:
+  date: "2026-07-16"                                  # per reports
+  hardware: "4x AMD gfx1100 (RDNA3, 48GB), ROCm 7.2"
+  canary_148:
+    vllm_overall: 94.81
+    transformers_overall: 94.11
+    llamacpp_overall: 93.33
+  full_1651:
+    llamacpp_overall: 92.09
+    vllm_overall: invalid                            # ~780 ERROR pages; 46.31 is not a valid benchmark

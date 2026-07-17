@@ -5,7 +5,7 @@
 [![OmniDocBench v1.6](https://img.shields.io/badge/OmniDocBench-v1.6-blue)](https://github.com/opendatalab/OmniDocBench)
 [![vLLM Overall](https://img.shields.io/badge/vLLM%20canary-94.81-green)](reports/canary-baseline.md)
 [![llama.cpp Full](https://img.shields.io/badge/llama.cpp%20full%201651-92.09-yellow)](reports/project-stage-summary.md)
-[![License](https://img.shields.io/badge/code-Apache--2.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-mixed%20(see%20NOTICE)-blue)](NOTICE)
 [![Weights: Hunyuan Community License](https://img.shields.io/badge/weights-Hunyuan%20Community%20License-orange)](NOTICE)
 
 ## Results
@@ -19,10 +19,16 @@ Three inference backends on AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, Omni
 | **llama.cpp** (C++ GGML, BF16 GGUF) | 93.33 | **92.09** | 89.64 | ✅ **(uncapped)** | **~1.4 s/page** |
 | Upstream (reported) | 94.74 | 94.74 | — | — | — |
 
+> **vLLM full-set: NOT a valid result.** The 1651-page vLLM run never produced a
+> valid score — servers crashed under sustained load, yielding ~780 ERROR pages;
+> the resulting 46.31 is **not a valid benchmark** and is excluded from all
+> comparisons. The vLLM **canary (148 pages, 94.81) is the only reliable vLLM
+> number.** No "full run in progress."
+
 **Key findings:**
-- **llama.cpp is the fastest and most stable backend on gfx1100**, and the only one that runs at **full resolution** (no pixel cap). Its C++ ViT is deterministic at >14k vision tokens — the >14k NaN/non-determinism only affects the transformers SDPA path ([ROCm issue #6416](https://github.com/ROCm/ROCm/issues/6416)).
-- The **formula CDM gap** (~5.65 pts on the canary) is from **inference-engine-level generation differences**, not resolution, streaming, or post-processing — confirmed by systematic ablation ([analysis](docs/tencent-114-followup3-draft.md)).
-- The **>14k ViT instability** is a sharp threshold (~14,200 patches) in the ROCm PyTorch SDPA kernel; it does **not** affect vLLM's Flash-Attention or llama.cpp's C++ GGML paths.
+- **Among the three tested backends, on the tested gfx1100/ROCm 7.2 stack**, llama.cpp is the fastest and most stable, and the only one of the three that runs with no pixel cap (full resolution). Its C++ ViT is deterministic at >14k vision tokens.
+- The **formula CDM gap** (~5.65 pts on the canary): after ruling out resolution, streaming, post-processing, and systematic formula omission, **inference-engine-level numerical divergence is the leading explanation** — not a singly-proven root cause ([analysis](docs/tencent-114-followup3-draft.md)).
+- The **>14k ViT instability** is a sharp threshold (~14,200 patches) **observed in the transformers/ROCm full-ViT path using SDPA on the tested gfx1100 stack**; a standalone SDPA op does not reproduce it, so it is **not pinned to a single SDPA kernel**, and there is no NVIDIA control to bound it to ROCm ([ROCm issue #6416](https://github.com/ROCm/ROCm/issues/6416)). It is not observed in vLLM's Flash-Attention or llama.cpp's C++ GGML paths.
 
 ## Quick start (llama.cpp, recommended)
 
@@ -31,6 +37,7 @@ Three inference backends on AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, Omni
 ```bash
 git clone https://github.com/ggml-org/llama.cpp.git
 cd llama.cpp
+git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # locked commit for published results
 HIPCXX=/opt/rocm/llvm/bin/clang HIP_PATH=/opt/rocm \
 cmake -S . -B build -DGGML_HIP=ON -DGPU_TARGETS=gfx1100 \
   -DGGML_HIP_ROCWMMA_FATTN=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=ON
@@ -115,10 +122,37 @@ HunyuanOCR-ROCm/
 - **[ROCm/ROCm#6416](https://github.com/ROCm/ROCm/issues/6416)** — bf16 ViT forward non-determinism + NaN above ~14.3k tokens on gfx1100.
 - **[Tencent-Hunyuan/HunyuanOCR#114](https://github.com/Tencent-Hunyuan/HunyuanOCR/issues/114)** — recommended max resolution / vision-token budget; three-backend comparison data; formula CDM gap analysis.
 
+## Reproducibility
+
+- **Lock file:** [`reproducibility.lock.yaml`](reproducibility.lock.yaml) pins every
+  verified input (repo + llama.cpp commits, GT SHA256, env versions) for the published
+  results. Unreachable-from-our-env fields (HF model revision, GGUF LFS oid) are
+  `not_recorded` with a fill command.
+- **Canary manifest:** [`eval/canary_148.manifest.json`](eval/canary_148.manifest.json)
+  lists the 148 canary pages with the source-GT SHA256. Regenerate with
+  `scripts/create_canary_manifest.py`.
+- **Reproduce scripts:** `scripts/reproduce_llamacpp_canary.sh` (148) and
+  `scripts/reproduce_llamacpp_full.sh` (1651) run predict → validate → score against a
+  locked llama.cpp commit, binding `127.0.0.1`. Set `LLAMA_DIR/GGUF_DIR/DATA_DIR/OUT_DIR`.
+- **Which numbers are formal vs diagnostic:**
+  - **Formal/reliable:** llama.cpp full 1651 = **92.09**; canary vLLM 94.81, transformers
+    94.11, llama.cpp 93.33.
+  - **Diagnostic only:** the >14k ViT isolation, throughput tuning, formula-CDM ablation.
+  - **Invalid (excluded):** vLLM full-set 46.31 (server crashes, ~780 ERROR pages).
+- **Why newer deps may differ:** the benchmark used transformers 5.13.0 in an isolated
+  venv; a current install may have a different transformers/torch/vLLM and can produce
+  different numbers, especially around the >14k ViT path and formula CDM.
+
 ## License
 
-- **Code:** Apache-2.0 (see [LICENSE](LICENSE)).
-- **Model weights:** [Tencent Hunyuan Community License](https://huggingface.co/tencent/HunyuanOCR/blob/main/License.txt) — not OSI-open; EU/UK/KR territory exclusion; "Powered by Tencent Hunyuan" notice required. See [NOTICE](NOTICE).
+This repository is **mixed-licensed** (see [NOTICE](NOTICE)):
+
+1. **Original packaging/tooling** (drivers, `runner.py`, `validation.py`, `scoring.py`, `omnidocbench.py`): **Apache-2.0** ([LICENSE](LICENSE), [LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
+2. **Code ported from HunyuanOCR** (`contract.py`, `tasks.py`, `postprocess.py`, `backends/*`): upstream-derived portions under the **Tencent Hunyuan Community License** ([LICENSES/Tencent-Hunyuan-Community-License.txt](LICENSES/Tencent-Hunyuan-Community-License.txt)) — *not* Apache.
+3. **HunyuanOCR model weights** (`tencent/HunyuanOCR`, `ggml-org/HunyuanOCR-GGUF`): **Tencent Hunyuan Community License** — **not OSI Open Source**; excludes EU/UK/KR; "Powered by Tencent Hunyuan" is *encouraged*, not required.
+4. **llama.cpp**: MIT. **vLLM**: Apache-2.0.
+
+Tencent is not affiliated with, sponsoring, or endorsing this project.
 
 ## Acknowledgements
 
