@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite both this repository and the HunyuanOCR technical report."
+title: "HunyuanOCR-ROCm: an evaluation-backed AMD ROCm port of HunyuanOCR-1.5"
+abstract: >-
+  Tooling to run Tencent HunyuanOCR-1.5 on AMD gfx1100 (RDNA3) across three
+  inference backends (llama.cpp, vLLM, transformers) and score them on
+  OmniDocBench v1.6. Evaluation-backed, not precision-aligned.
+authors:
+  - alias: AIwork4me
+type: software
+version: "0.1.0"
+date-released: "2026-07-16"
+license: Apache-2.0
+keywords:
+  - OCR
+  - document-ai
+  - AMD-ROCm
+  - RDNA3
+  - vision-language-model
+  - OmniDocBench
+repository-code: "https://github.com/AIwork4me/HunyuanOCR-ROCm"
+preferred-citation:
+  type: article
+  title: "HunyuanOCR Technical Report"
+  authors:
+    - name: "Hunyuan Vision Team"
+  year: 2025
+  url: "https://arxiv.org/abs/2511.19575"

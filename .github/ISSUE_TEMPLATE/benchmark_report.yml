@@ -1,0 +1,50 @@
+name: Benchmark / score report
+description: Report a score, question about a number, or a discrepancy vs the published results
+labels: ["benchmark"]
+body:
+  - type: dropdown
+    id: pageset
+    attributes:
+      label: Page set
+      options:
+        - Canary (148)
+        - Full (1651)
+        - Other / custom subset
+    validations:
+      required: true
+  - type: input
+    id: backend
+    attributes:
+      label: Backend + version
+      placeholder: "llama.cpp @ <commit> / vLLM <ver> / transformers <ver>"
+    validations:
+      required: true
+  - type: textarea
+    id: numbers
+    attributes:
+      label: Your numbers
+      description: Overall + text EditDist + formula CDM + table TEDS + order EditDist. State the scorer commit + metric config.
+      placeholder: "Overall=..., text=..., CDM=..., TEDS=..., order=... (scorer commit: ...)"
+    validations:
+      required: true
+  - type: textarea
+    id: manifest
+    attributes:
+      label: run_manifest.json
+      description: Paste the run_counts / final_state so completeness + conservation laws are visible.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Hardware + environment
+      description: GPU/gfx/ROCm/torch/deps and the exact predict+score commands.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / comparison
+      description: How does this compare to the published numbers? Do not claim precision-alignment without a same-page-set CUDA control.
+    validations:
+      required: false
