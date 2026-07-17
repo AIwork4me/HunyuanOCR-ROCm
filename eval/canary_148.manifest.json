@@ -1,98 +1,182 @@
 {
   "expected_count": 148,
-  "manifest_sha256": "dc08c664057932578780e5166e68e8344324f2685515e6d4037e3e383a2d654e",
+  "manifest_sha256": "9839dbdf0424a1b2d1bb42bf0344cd9359847665a1cc04f6fdf0e8e447fa269f",
   "pages": [
     {
-      "image_path": "PPT_1001115_eng_page_005.png",
-      "stem": "PPT_1001115_eng_page_005"
+      "image_path": "page-52875b3d-f4dc-44c2-a9bb-514b0763833d.png",
+      "stem": "page-52875b3d-f4dc-44c2-a9bb-514b0763833d"
     },
     {
-      "image_path": "PPT_CalculusReview_page_033.png",
-      "stem": "PPT_CalculusReview_page_033"
+      "image_path": "page-b21c7247-a843-4316-a44d-c3365077f077.png",
+      "stem": "page-b21c7247-a843-4316-a44d-c3365077f077"
     },
     {
-      "image_path": "PPT_Keuk Chan Narith_page_009.png",
-      "stem": "PPT_Keuk Chan Narith_page_009"
+      "image_path": "page-d43b98f8-6a96-44f8-a3cf-65de9397f582.png",
+      "stem": "page-d43b98f8-6a96-44f8-a3cf-65de9397f582"
     },
     {
-      "image_path": "PPT_LEP power point presentation-English-FINAL-10-31-07_page_011.png",
-      "stem": "PPT_LEP power point presentation-English-FINAL-10-31-07_page_011"
+      "image_path": "page-30aa7cae-34fd-4b0b-b01a-fd35ff3bdfea.png",
+      "stem": "page-30aa7cae-34fd-4b0b-b01a-fd35ff3bdfea"
     },
     {
-      "image_path": "PPT_MMAT5390Lecture1_page_023.png",
-      "stem": "PPT_MMAT5390Lecture1_page_023"
+      "image_path": "page-29ccb4ce-9266-4938-8f2d-b2b69ceb43cd.png",
+      "stem": "page-29ccb4ce-9266-4938-8f2d-b2b69ceb43cd"
     },
     {
-      "image_path": "PPT_all655920_page_001.png",
-      "stem": "PPT_all655920_page_001"
+      "image_path": "page-7a7566fd-43d8-46e4-8a4f-0330e1f27a88.png",
+      "stem": "page-7a7566fd-43d8-46e4-8a4f-0330e1f27a88"
     },
     {
-      "image_path": "PPT_ch7_page_035.png",
-      "stem": "PPT_ch7_page_035"
+      "image_path": "page-c7fec126-2adb-4094-8110-5d81a92e05b0.png",
+      "stem": "page-c7fec126-2adb-4094-8110-5d81a92e05b0"
     },
     {
-      "image_path": "PPT_sociolinguistics_page_015.png",
-      "stem": "PPT_sociolinguistics_page_015"
+      "image_path": "page-8cbbe0d4-a3a8-4533-a620-048bebfa714b.png",
+      "stem": "page-8cbbe0d4-a3a8-4533-a620-048bebfa714b"
     },
     {
-      "image_path": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0035.png",
-      "stem": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0035"
+      "image_path": "page-2329f04a-41b3-435b-993a-a0652294b07d.png",
+      "stem": "page-2329f04a-41b3-435b-993a-a0652294b07d"
     },
     {
-      "image_path": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0119.png",
-      "stem": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0119"
+      "image_path": "page-27a46d41-49b5-4562-a546-6cbbafd23a81.png",
+      "stem": "page-27a46d41-49b5-4562-a546-6cbbafd23a81"
     },
     {
-      "image_path": "book_en_搬书匠-2253-The Well-Grounded Rubyist 3rd Edition-2019-英文版_page_194.png",
-      "stem": "book_en_搬书匠-2253-The Well-Grounded Rubyist 3rd Edition-2019-英文版_page_194"
+      "image_path": "page-e13fef95-c179-4a0f-94f9-1cc970aab788.png",
+      "stem": "page-e13fef95-c179-4a0f-94f9-1cc970aab788"
     },
     {
-      "image_path": "book_en_搬书匠-3299-Swift Data Structure and Algorithms-2016-英文版_page_142.png",
-      "stem": "book_en_搬书匠-3299-Swift Data Structure and Algorithms-2016-英文版_page_142"
+      "image_path": "page-5a104368-22a2-440a-a1aa-49b7d1eb57f0.png",
+      "stem": "page-5a104368-22a2-440a-a1aa-49b7d1eb57f0"
     },
     {
-      "image_path": "book_zh_JGJ1022003_extracted_page_27.png",
-      "stem": "book_zh_JGJ1022003_extracted_page_27"
+      "image_path": "page-6788acda-bfb0-479c-bc2a-9b471ec2cc33.png",
+      "stem": "page-6788acda-bfb0-479c-bc2a-9b471ec2cc33"
     },
     {
-      "image_path": "book_zh_TB100782001_extracted_page_21.png",
-      "stem": "book_zh_TB100782001_extracted_page_21"
+      "image_path": "page-4540d82a-19d8-44ef-8f18-6d42fdb2a2de.png",
+      "stem": "page-4540d82a-19d8-44ef-8f18-6d42fdb2a2de"
     },
     {
-      "image_path": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点五年级英语下册_课本_人教新起点英语5B电子课本_page_034.png",
-      "stem": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点五年级英语下册_课本_人教新起点英语5B电子课本_page_034"
+      "image_path": "page-83a26c96-4318-4587-9fba-877fd6fe5414.png",
+      "stem": "page-83a26c96-4318-4587-9fba-877fd6fe5414"
     },
     {
-      "image_path": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点四年级英语下册_课本_人教新起点英语4B电子课本_page_016.png",
-      "stem": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点四年级英语下册_课本_人教新起点英语4B电子课本_page_016"
+      "image_path": "page-d271a2ab-4523-44c4-94b5-303bf54b69e9.png",
+      "stem": "page-d271a2ab-4523-44c4-94b5-303bf54b69e9"
     },
     {
-      "image_path": "color_textbook_zhonggaokao_小学_KET听说读写逐项突破_KET听说读写逐项突破之轻松搞定KET阅读25分【10讲 褚连一 】_第01讲第一课阅读题型综述_第一课阅读题型综述_page_004.png",
-      "stem": "color_textbook_zhonggaokao_小学_KET听说读写逐项突破_KET听说读写逐项突破之轻松搞定KET阅读25分【10讲 褚连一 】_第01讲第一课阅读题型综述_第一课阅读题型综述_page_004"
+      "image_path": "page-f628d36d-1c38-41a0-990b-7681c214e29c.png",
+      "stem": "page-f628d36d-1c38-41a0-990b-7681c214e29c"
     },
     {
-      "image_path": "color_textbook_教材全解1+1二年级上册英语上海牛津版_page_067.png",
-      "stem": "color_textbook_教材全解1+1二年级上册英语上海牛津版_page_067"
+      "image_path": "page-a31baeee-95aa-4758-8d3a-ebf33fdc1626.png",
+      "stem": "page-a31baeee-95aa-4758-8d3a-ebf33fdc1626"
     },
     {
-      "image_path": "docstructbench_dianzishu_zhongwenzaixian-o.O-61520612.pdf_140.jpg",
-      "stem": "docstructbench_dianzishu_zhongwenzaixian-o.O-61520612.pdf_140"
+      "image_path": "page-01700769-1314-4880-83ab-af23bee36da3.png",
+      "stem": "page-01700769-1314-4880-83ab-af23bee36da3"
     },
     {
-      "image_path": "docstructbench_dianzishu_zhongwenzaixian-o.O-61564860.pdf_81.jpg",
-      "stem": "docstructbench_dianzishu_zhongwenzaixian-o.O-61564860.pdf_81"
+      "image_path": "page-3ecc67a1-9b19-4fb9-b74d-acbb73db5c53.png",
+      "stem": "page-3ecc67a1-9b19-4fb9-b74d-acbb73db5c53"
     },
     {
-      "image_path": "docstructbench_dianzishu_zhongwenzaixian-o.O-63688043.pdf_110.jpg",
-      "stem": "docstructbench_dianzishu_zhongwenzaixian-o.O-63688043.pdf_110"
+      "image_path": "page-7a8cfa1e-c76b-4449-a38f-497648074cd1.png",
+      "stem": "page-7a8cfa1e-c76b-4449-a38f-497648074cd1"
     },
     {
-      "image_path": "docstructbench_enbook-zlib-o.O-21882649.pdf_3.jpg",
-      "stem": "docstructbench_enbook-zlib-o.O-21882649.pdf_3"
+      "image_path": "page-eb7308e0-1395-4444-b6a5-9d33cc3a03b2.png",
+      "stem": "page-eb7308e0-1395-4444-b6a5-9d33cc3a03b2"
     },
     {
-      "image_path": "docstructbench_llm-raw-scihub-o.O-bf03175144.pdf_4.jpg",
-      "stem": "docstructbench_llm-raw-scihub-o.O-bf03175144.pdf_4"
+      "image_path": "page-c9614e79-fb1f-46ef-a660-0f8de860ae30.png",
+      "stem": "page-c9614e79-fb1f-46ef-a660-0f8de860ae30"
+    },
+    {
+      "image_path": "page-f6b6cfb8-3bb5-4393-b3fb-70efef72aca5.png",
+      "stem": "page-f6b6cfb8-3bb5-4393-b3fb-70efef72aca5"
+    },
+    {
+      "image_path": "page-3f872a77-3faf-47d6-8574-bd2e5806ff98.png",
+      "stem": "page-3f872a77-3faf-47d6-8574-bd2e5806ff98"
+    },
+    {
+      "image_path": "page-bf2cd266-22b7-41d7-a244-28595d23974f.png",
+      "stem": "page-bf2cd266-22b7-41d7-a244-28595d23974f"
+    },
+    {
+      "image_path": "page-38fc7c6b-80ed-46be-bb53-29986a63ad3e.png",
+      "stem": "page-38fc7c6b-80ed-46be-bb53-29986a63ad3e"
+    },
+    {
+      "image_path": "yanbaopptmerge_6b6ed54523980841c1a28a656d0295ec638cf50c991c16cafec715237c83919f.pdf_31.jpg",
+      "stem": "yanbaopptmerge_6b6ed54523980841c1a28a656d0295ec638cf50c991c16cafec715237c83919f.pdf_31"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_1465.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_1465"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_1710.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_1710"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_1745.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_1745"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_1810.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_1810"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_1825.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_1825"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_2460.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_2460"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_4000.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_4000"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_4010.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_4010"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_4095.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_4095"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_4150.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_4150"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_455.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_455"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_495.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_495"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_5175.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_5175"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_620.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_620"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_685.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_685"
+    },
+    {
+      "image_path": "yanbaopptmerge_yanbaoPPT_90.jpg",
+      "stem": "yanbaopptmerge_yanbaoPPT_90"
     },
     {
       "image_path": "docstructbench_llm-raw-scihub-o.O-ceat.200600266.pdf_2.jpg",
@@ -127,60 +211,32 @@
       "stem": "docstructbench_llm-raw-scihub-o.O-j.snb.2004.05.025.pdf_5"
     },
     {
-      "image_path": "eastmoney_d0313ed730f58180b1f005a3607c2a77dc3672410e8f7ee1de3b814668da9bcb.pdf_5.jpg",
-      "stem": "eastmoney_d0313ed730f58180b1f005a3607c2a77dc3672410e8f7ee1de3b814668da9bcb.pdf_5"
+      "image_path": "docstructbench_dianzishu_zhongwenzaixian-o.O-61520612.pdf_140.jpg",
+      "stem": "docstructbench_dianzishu_zhongwenzaixian-o.O-61520612.pdf_140"
     },
     {
-      "image_path": "eastmoney_d2bb183f5254ede5760932ac3118524aa7eddad551935713b435541f1525c1ee.pdf_3.jpg",
-      "stem": "eastmoney_d2bb183f5254ede5760932ac3118524aa7eddad551935713b435541f1525c1ee.pdf_3"
+      "image_path": "docstructbench_dianzishu_zhongwenzaixian-o.O-63688043.pdf_110.jpg",
+      "stem": "docstructbench_dianzishu_zhongwenzaixian-o.O-63688043.pdf_110"
     },
     {
-      "image_path": "eastmoney_d64a9204564ad81332a4dc3767365740a00228323d2862604d15cb15b318f3af.pdf_3.jpg",
-      "stem": "eastmoney_d64a9204564ad81332a4dc3767365740a00228323d2862604d15cb15b318f3af.pdf_3"
+      "image_path": "yanbaor2_001c0e4e970dcae8f91980266459d41aa0fd9c54245320b5d41d9651c4fc575d.pdf_26.jpg",
+      "stem": "yanbaor2_001c0e4e970dcae8f91980266459d41aa0fd9c54245320b5d41d9651c4fc575d.pdf_26"
     },
     {
-      "image_path": "eastmoney_ea3eda50a04cf431d7412a567497c91e8cc52f72b4c5ccb554776c5c57b13e29.pdf_4.jpg",
-      "stem": "eastmoney_ea3eda50a04cf431d7412a567497c91e8cc52f72b4c5ccb554776c5c57b13e29.pdf_4"
+      "image_path": "yanbaor2_0a49fd5fc362650bf30a0a9391a2d2f091e751ba3d51da18e630e23856905c63.pdf_8.jpg",
+      "stem": "yanbaor2_0a49fd5fc362650bf30a0a9391a2d2f091e751ba3d51da18e630e23856905c63.pdf_8"
     },
     {
-      "image_path": "eastmoney_f671ab94bf8b8274d6736f1a3dc775b3b74fa68686df2946aa5307b6b2a32062.pdf_18.jpg",
-      "stem": "eastmoney_f671ab94bf8b8274d6736f1a3dc775b3b74fa68686df2946aa5307b6b2a32062.pdf_18"
+      "image_path": "yanbaor2_ey-how-covid-19-has-triggered-a-sprint-toward-smarter-health-care.pdf_5.jpg",
+      "stem": "yanbaor2_ey-how-covid-19-has-triggered-a-sprint-toward-smarter-health-care.pdf_5"
     },
     {
-      "image_path": "exam_paper_2004-2019上海高考英语听力原文和答案_page_002.png",
-      "stem": "exam_paper_2004-2019上海高考英语听力原文和答案_page_002"
+      "image_path": "docstructbench_dianzishu_zhongwenzaixian-o.O-61564860.pdf_81.jpg",
+      "stem": "docstructbench_dianzishu_zhongwenzaixian-o.O-61564860.pdf_81"
     },
     {
-      "image_path": "exam_paper_2004-2019上海高考英语听力原文和答案_page_010.png",
-      "stem": "exam_paper_2004-2019上海高考英语听力原文和答案_page_010"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_1997_Solutions_1997s_page_002.png",
-      "stem": "exam_paper_en-file-putnam-archive_1997_Solutions_1997s_page_002"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_2000_Problems_2000_page_001.png",
-      "stem": "exam_paper_en-file-putnam-archive_2000_Problems_2000_page_001"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_2006_Solutions_2006s_page_006.png",
-      "stem": "exam_paper_en-file-putnam-archive_2006_Solutions_2006s_page_006"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_2007_Problems_2007_page_001.png",
-      "stem": "exam_paper_en-file-putnam-archive_2007_Problems_2007_page_001"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_2011_Solutions_2011s_page_002.png",
-      "stem": "exam_paper_en-file-putnam-archive_2011_Solutions_2011s_page_002"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_2013_Problems_2013_page_002.png",
-      "stem": "exam_paper_en-file-putnam-archive_2013_Problems_2013_page_002"
-    },
-    {
-      "image_path": "exam_paper_en-file-putnam-archive_2015_Problems_2015_page_001.png",
-      "stem": "exam_paper_en-file-putnam-archive_2015_Problems_2015_page_001"
+      "image_path": "docstructbench_llm-raw-scihub-o.O-bf03175144.pdf_4.jpg",
+      "stem": "docstructbench_llm-raw-scihub-o.O-bf03175144.pdf_4"
     },
     {
       "image_path": "jiaocaineedrop_42351289.pdf_1.jpg",
@@ -255,84 +311,8 @@
       "stem": "jiaocaineedrop_unit2t03.pdf_63"
     },
     {
-      "image_path": "magazine_TheEconomist.2023.11.18_page_071.png",
-      "stem": "magazine_TheEconomist.2023.11.18_page_071"
-    },
-    {
-      "image_path": "magazine_TheEconomist.2023.11.25_page_069.png",
-      "stem": "magazine_TheEconomist.2023.11.25_page_069"
-    },
-    {
-      "image_path": "magazine_TheEconomist.2023.12.02_page_056.png",
-      "stem": "magazine_TheEconomist.2023.12.02_page_056"
-    },
-    {
-      "image_path": "magazine_TheEconomist.2023.12.09_page_009.png",
-      "stem": "magazine_TheEconomist.2023.12.09_page_009"
-    },
-    {
-      "image_path": "magazine_TheEconomist.2023.12.23_page_060.png",
-      "stem": "magazine_TheEconomist.2023.12.23_page_060"
-    },
-    {
-      "image_path": "magazine_TheEconomist.2024.03.02_page_028.png",
-      "stem": "magazine_TheEconomist.2024.03.02_page_028"
-    },
-    {
-      "image_path": "newspaper_0ce88e1e131aef7a59d0533be36870de_1.jpg",
-      "stem": "newspaper_0ce88e1e131aef7a59d0533be36870de_1"
-    },
-    {
-      "image_path": "newspaper_14b9d21f7fed39fb42849e9cde233930_1.jpg",
-      "stem": "newspaper_14b9d21f7fed39fb42849e9cde233930_1"
-    },
-    {
-      "image_path": "newspaper_4790b51e8fa793743699647c09a93ccb_1.jpg",
-      "stem": "newspaper_4790b51e8fa793743699647c09a93ccb_1"
-    },
-    {
-      "image_path": "newspaper_4b4ad1f6cba28a4844d7ffa9306223a4_1.jpg",
-      "stem": "newspaper_4b4ad1f6cba28a4844d7ffa9306223a4_1"
-    },
-    {
-      "image_path": "newspaper_5e8bcc55b922fd521a667c6ef01027d5_1.jpg",
-      "stem": "newspaper_5e8bcc55b922fd521a667c6ef01027d5_1"
-    },
-    {
-      "image_path": "newspaper_87769622e073730af94822416c60c710_1.jpg",
-      "stem": "newspaper_87769622e073730af94822416c60c710_1"
-    },
-    {
-      "image_path": "newspaper_Daily Star 2025-1-8@magazinesclubnew_page_060.png",
-      "stem": "newspaper_Daily Star 2025-1-8@magazinesclubnew_page_060"
-    },
-    {
-      "image_path": "newspaper_NY Daily News_August 1@magazinesclubnew_page_007.png",
-      "stem": "newspaper_NY Daily News_August 1@magazinesclubnew_page_007"
-    },
-    {
-      "image_path": "newspaper_The Wall Street Journal - 2025-01-08@magazinesclubnew_page_018.png",
-      "stem": "newspaper_The Wall Street Journal - 2025-01-08@magazinesclubnew_page_018"
-    },
-    {
-      "image_path": "newspaper_b615618f3cdb0f2c13ffb5865dea799c_1.jpg",
-      "stem": "newspaper_b615618f3cdb0f2c13ffb5865dea799c_1"
-    },
-    {
-      "image_path": "newspaper_b95d1d8eb0d756cc94a5d8b5db3cf69b_1.jpg",
-      "stem": "newspaper_b95d1d8eb0d756cc94a5d8b5db3cf69b_1"
-    },
-    {
-      "image_path": "newspaper_c79c0c10a5df54b21bccad8f64063ffa_1.jpg",
-      "stem": "newspaper_c79c0c10a5df54b21bccad8f64063ffa_1"
-    },
-    {
-      "image_path": "newspaper_e6083de4647ef28434cb6a598b073ae4_1.jpg",
-      "stem": "newspaper_e6083de4647ef28434cb6a598b073ae4_1"
-    },
-    {
-      "image_path": "newspaper_ef5c785d9cc21ccf6b73d143f231b5c5_1.jpg",
-      "stem": "newspaper_ef5c785d9cc21ccf6b73d143f231b5c5_1"
+      "image_path": "docstructbench_enbook-zlib-o.O-21882649.pdf_3.jpg",
+      "stem": "docstructbench_enbook-zlib-o.O-21882649.pdf_3"
     },
     {
       "image_path": "notes_1ba14cb325bc448f7201b20502ecf2b5_103.jpg",
@@ -375,112 +355,72 @@
       "stem": "notes_f7f010b78016aeebd76e56d9283eb67f_97"
     },
     {
-      "image_path": "page-01700769-1314-4880-83ab-af23bee36da3.png",
-      "stem": "page-01700769-1314-4880-83ab-af23bee36da3"
+      "image_path": "newspaper_0ce88e1e131aef7a59d0533be36870de_1.jpg",
+      "stem": "newspaper_0ce88e1e131aef7a59d0533be36870de_1"
     },
     {
-      "image_path": "page-2329f04a-41b3-435b-993a-a0652294b07d.png",
-      "stem": "page-2329f04a-41b3-435b-993a-a0652294b07d"
+      "image_path": "newspaper_14b9d21f7fed39fb42849e9cde233930_1.jpg",
+      "stem": "newspaper_14b9d21f7fed39fb42849e9cde233930_1"
     },
     {
-      "image_path": "page-27a46d41-49b5-4562-a546-6cbbafd23a81.png",
-      "stem": "page-27a46d41-49b5-4562-a546-6cbbafd23a81"
+      "image_path": "newspaper_4790b51e8fa793743699647c09a93ccb_1.jpg",
+      "stem": "newspaper_4790b51e8fa793743699647c09a93ccb_1"
     },
     {
-      "image_path": "page-29ccb4ce-9266-4938-8f2d-b2b69ceb43cd.png",
-      "stem": "page-29ccb4ce-9266-4938-8f2d-b2b69ceb43cd"
+      "image_path": "newspaper_4b4ad1f6cba28a4844d7ffa9306223a4_1.jpg",
+      "stem": "newspaper_4b4ad1f6cba28a4844d7ffa9306223a4_1"
     },
     {
-      "image_path": "page-30aa7cae-34fd-4b0b-b01a-fd35ff3bdfea.png",
-      "stem": "page-30aa7cae-34fd-4b0b-b01a-fd35ff3bdfea"
+      "image_path": "newspaper_5e8bcc55b922fd521a667c6ef01027d5_1.jpg",
+      "stem": "newspaper_5e8bcc55b922fd521a667c6ef01027d5_1"
     },
     {
-      "image_path": "page-38fc7c6b-80ed-46be-bb53-29986a63ad3e.png",
-      "stem": "page-38fc7c6b-80ed-46be-bb53-29986a63ad3e"
+      "image_path": "newspaper_87769622e073730af94822416c60c710_1.jpg",
+      "stem": "newspaper_87769622e073730af94822416c60c710_1"
     },
     {
-      "image_path": "page-3ecc67a1-9b19-4fb9-b74d-acbb73db5c53.png",
-      "stem": "page-3ecc67a1-9b19-4fb9-b74d-acbb73db5c53"
+      "image_path": "newspaper_b615618f3cdb0f2c13ffb5865dea799c_1.jpg",
+      "stem": "newspaper_b615618f3cdb0f2c13ffb5865dea799c_1"
     },
     {
-      "image_path": "page-3f872a77-3faf-47d6-8574-bd2e5806ff98.png",
-      "stem": "page-3f872a77-3faf-47d6-8574-bd2e5806ff98"
+      "image_path": "newspaper_b95d1d8eb0d756cc94a5d8b5db3cf69b_1.jpg",
+      "stem": "newspaper_b95d1d8eb0d756cc94a5d8b5db3cf69b_1"
     },
     {
-      "image_path": "page-4540d82a-19d8-44ef-8f18-6d42fdb2a2de.png",
-      "stem": "page-4540d82a-19d8-44ef-8f18-6d42fdb2a2de"
+      "image_path": "newspaper_c79c0c10a5df54b21bccad8f64063ffa_1.jpg",
+      "stem": "newspaper_c79c0c10a5df54b21bccad8f64063ffa_1"
     },
     {
-      "image_path": "page-52875b3d-f4dc-44c2-a9bb-514b0763833d.png",
-      "stem": "page-52875b3d-f4dc-44c2-a9bb-514b0763833d"
+      "image_path": "newspaper_e6083de4647ef28434cb6a598b073ae4_1.jpg",
+      "stem": "newspaper_e6083de4647ef28434cb6a598b073ae4_1"
     },
     {
-      "image_path": "page-5a104368-22a2-440a-a1aa-49b7d1eb57f0.png",
-      "stem": "page-5a104368-22a2-440a-a1aa-49b7d1eb57f0"
+      "image_path": "newspaper_ef5c785d9cc21ccf6b73d143f231b5c5_1.jpg",
+      "stem": "newspaper_ef5c785d9cc21ccf6b73d143f231b5c5_1"
     },
     {
-      "image_path": "page-6788acda-bfb0-479c-bc2a-9b471ec2cc33.png",
-      "stem": "page-6788acda-bfb0-479c-bc2a-9b471ec2cc33"
+      "image_path": "eastmoney_d0313ed730f58180b1f005a3607c2a77dc3672410e8f7ee1de3b814668da9bcb.pdf_5.jpg",
+      "stem": "eastmoney_d0313ed730f58180b1f005a3607c2a77dc3672410e8f7ee1de3b814668da9bcb.pdf_5"
     },
     {
-      "image_path": "page-7a7566fd-43d8-46e4-8a4f-0330e1f27a88.png",
-      "stem": "page-7a7566fd-43d8-46e4-8a4f-0330e1f27a88"
+      "image_path": "eastmoney_d2bb183f5254ede5760932ac3118524aa7eddad551935713b435541f1525c1ee.pdf_3.jpg",
+      "stem": "eastmoney_d2bb183f5254ede5760932ac3118524aa7eddad551935713b435541f1525c1ee.pdf_3"
     },
     {
-      "image_path": "page-7a8cfa1e-c76b-4449-a38f-497648074cd1.png",
-      "stem": "page-7a8cfa1e-c76b-4449-a38f-497648074cd1"
+      "image_path": "eastmoney_d64a9204564ad81332a4dc3767365740a00228323d2862604d15cb15b318f3af.pdf_3.jpg",
+      "stem": "eastmoney_d64a9204564ad81332a4dc3767365740a00228323d2862604d15cb15b318f3af.pdf_3"
     },
     {
-      "image_path": "page-83a26c96-4318-4587-9fba-877fd6fe5414.png",
-      "stem": "page-83a26c96-4318-4587-9fba-877fd6fe5414"
+      "image_path": "eastmoney_ea3eda50a04cf431d7412a567497c91e8cc52f72b4c5ccb554776c5c57b13e29.pdf_4.jpg",
+      "stem": "eastmoney_ea3eda50a04cf431d7412a567497c91e8cc52f72b4c5ccb554776c5c57b13e29.pdf_4"
     },
     {
-      "image_path": "page-8cbbe0d4-a3a8-4533-a620-048bebfa714b.png",
-      "stem": "page-8cbbe0d4-a3a8-4533-a620-048bebfa714b"
+      "image_path": "eastmoney_f671ab94bf8b8274d6736f1a3dc775b3b74fa68686df2946aa5307b6b2a32062.pdf_18.jpg",
+      "stem": "eastmoney_f671ab94bf8b8274d6736f1a3dc775b3b74fa68686df2946aa5307b6b2a32062.pdf_18"
     },
     {
-      "image_path": "page-a31baeee-95aa-4758-8d3a-ebf33fdc1626.png",
-      "stem": "page-a31baeee-95aa-4758-8d3a-ebf33fdc1626"
-    },
-    {
-      "image_path": "page-b21c7247-a843-4316-a44d-c3365077f077.png",
-      "stem": "page-b21c7247-a843-4316-a44d-c3365077f077"
-    },
-    {
-      "image_path": "page-bf2cd266-22b7-41d7-a244-28595d23974f.png",
-      "stem": "page-bf2cd266-22b7-41d7-a244-28595d23974f"
-    },
-    {
-      "image_path": "page-c7fec126-2adb-4094-8110-5d81a92e05b0.png",
-      "stem": "page-c7fec126-2adb-4094-8110-5d81a92e05b0"
-    },
-    {
-      "image_path": "page-c9614e79-fb1f-46ef-a660-0f8de860ae30.png",
-      "stem": "page-c9614e79-fb1f-46ef-a660-0f8de860ae30"
-    },
-    {
-      "image_path": "page-d271a2ab-4523-44c4-94b5-303bf54b69e9.png",
-      "stem": "page-d271a2ab-4523-44c4-94b5-303bf54b69e9"
-    },
-    {
-      "image_path": "page-d43b98f8-6a96-44f8-a3cf-65de9397f582.png",
-      "stem": "page-d43b98f8-6a96-44f8-a3cf-65de9397f582"
-    },
-    {
-      "image_path": "page-e13fef95-c179-4a0f-94f9-1cc970aab788.png",
-      "stem": "page-e13fef95-c179-4a0f-94f9-1cc970aab788"
-    },
-    {
-      "image_path": "page-eb7308e0-1395-4444-b6a5-9d33cc3a03b2.png",
-      "stem": "page-eb7308e0-1395-4444-b6a5-9d33cc3a03b2"
-    },
-    {
-      "image_path": "page-f628d36d-1c38-41a0-990b-7681c214e29c.png",
-      "stem": "page-f628d36d-1c38-41a0-990b-7681c214e29c"
-    },
-    {
-      "image_path": "page-f6b6cfb8-3bb5-4393-b3fb-70efef72aca5.png",
-      "stem": "page-f6b6cfb8-3bb5-4393-b3fb-70efef72aca5"
+      "image_path": "yanbaopptmerge_0c79d327060dbf9f1582d03c235dadb039533a19091d2c0d24f2ad95d267f79b.pdf_2.jpg",
+      "stem": "yanbaopptmerge_0c79d327060dbf9f1582d03c235dadb039533a19091d2c0d24f2ad95d267f79b.pdf_2"
     },
     {
       "image_path": "scihub_c2gc35284b.pdf_6.jpg",
@@ -499,86 +439,6 @@
       "stem": "scihub_s12935-018-0683-z.pdf_0"
     },
     {
-      "image_path": "yanbaopptmerge_0c79d327060dbf9f1582d03c235dadb039533a19091d2c0d24f2ad95d267f79b.pdf_2.jpg",
-      "stem": "yanbaopptmerge_0c79d327060dbf9f1582d03c235dadb039533a19091d2c0d24f2ad95d267f79b.pdf_2"
-    },
-    {
-      "image_path": "yanbaopptmerge_6b6ed54523980841c1a28a656d0295ec638cf50c991c16cafec715237c83919f.pdf_31.jpg",
-      "stem": "yanbaopptmerge_6b6ed54523980841c1a28a656d0295ec638cf50c991c16cafec715237c83919f.pdf_31"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_1465.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_1465"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_1710.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_1710"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_1745.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_1745"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_1810.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_1810"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_1825.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_1825"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_2460.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_2460"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_4000.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_4000"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_4010.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_4010"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_4095.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_4095"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_4150.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_4150"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_455.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_455"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_495.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_495"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_5175.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_5175"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_620.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_620"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_685.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_685"
-    },
-    {
-      "image_path": "yanbaopptmerge_yanbaoPPT_90.jpg",
-      "stem": "yanbaopptmerge_yanbaoPPT_90"
-    },
-    {
-      "image_path": "yanbaor2_001c0e4e970dcae8f91980266459d41aa0fd9c54245320b5d41d9651c4fc575d.pdf_26.jpg",
-      "stem": "yanbaor2_001c0e4e970dcae8f91980266459d41aa0fd9c54245320b5d41d9651c4fc575d.pdf_26"
-    },
-    {
-      "image_path": "yanbaor2_0a49fd5fc362650bf30a0a9391a2d2f091e751ba3d51da18e630e23856905c63.pdf_8.jpg",
-      "stem": "yanbaor2_0a49fd5fc362650bf30a0a9391a2d2f091e751ba3d51da18e630e23856905c63.pdf_8"
-    },
-    {
       "image_path": "yanbaor2_533f881f4aabe82c1477b97463169dc51256487aa3770f2f47a32c3a16723478.pdf_18.jpg",
       "stem": "yanbaor2_533f881f4aabe82c1477b97463169dc51256487aa3770f2f47a32c3a16723478.pdf_18"
     },
@@ -591,10 +451,151 @@
       "stem": "yanbaor2_9be04f6bcbe2c6afc83f0751eb05e361872f9673ccd4bec49cf844c66f34bff0.pdf_19"
     },
     {
-      "image_path": "yanbaor2_ey-how-covid-19-has-triggered-a-sprint-toward-smarter-health-care.pdf_5.jpg",
-      "stem": "yanbaor2_ey-how-covid-19-has-triggered-a-sprint-toward-smarter-health-care.pdf_5"
+      "image_path": "PPT_Keuk Chan Narith_page_009.png",
+      "stem": "PPT_Keuk Chan Narith_page_009"
+    },
+    {
+      "image_path": "PPT_MMAT5390Lecture1_page_023.png",
+      "stem": "PPT_MMAT5390Lecture1_page_023"
+    },
+    {
+      "image_path": "PPT_all655920_page_001.png",
+      "stem": "PPT_all655920_page_001"
+    },
+    {
+      "image_path": "PPT_1001115_eng_page_005.png",
+      "stem": "PPT_1001115_eng_page_005"
+    },
+    {
+      "image_path": "PPT_LEP power point presentation-English-FINAL-10-31-07_page_011.png",
+      "stem": "PPT_LEP power point presentation-English-FINAL-10-31-07_page_011"
+    },
+    {
+      "image_path": "PPT_sociolinguistics_page_015.png",
+      "stem": "PPT_sociolinguistics_page_015"
+    },
+    {
+      "image_path": "PPT_ch7_page_035.png",
+      "stem": "PPT_ch7_page_035"
+    },
+    {
+      "image_path": "newspaper_Daily Star 2025-1-8@magazinesclubnew_page_060.png",
+      "stem": "newspaper_Daily Star 2025-1-8@magazinesclubnew_page_060"
+    },
+    {
+      "image_path": "newspaper_NY Daily News_August 1@magazinesclubnew_page_007.png",
+      "stem": "newspaper_NY Daily News_August 1@magazinesclubnew_page_007"
+    },
+    {
+      "image_path": "newspaper_The Wall Street Journal - 2025-01-08@magazinesclubnew_page_018.png",
+      "stem": "newspaper_The Wall Street Journal - 2025-01-08@magazinesclubnew_page_018"
+    },
+    {
+      "image_path": "book_zh_JGJ1022003_extracted_page_27.png",
+      "stem": "book_zh_JGJ1022003_extracted_page_27"
+    },
+    {
+      "image_path": "book_zh_TB100782001_extracted_page_21.png",
+      "stem": "book_zh_TB100782001_extracted_page_21"
+    },
+    {
+      "image_path": "book_en_搬书匠-3299-Swift Data Structure and Algorithms-2016-英文版_page_142.png",
+      "stem": "book_en_搬书匠-3299-Swift Data Structure and Algorithms-2016-英文版_page_142"
+    },
+    {
+      "image_path": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0119.png",
+      "stem": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0119"
+    },
+    {
+      "image_path": "book_en_搬书匠-2253-The Well-Grounded Rubyist 3rd Edition-2019-英文版_page_194.png",
+      "stem": "book_en_搬书匠-2253-The Well-Grounded Rubyist 3rd Edition-2019-英文版_page_194"
+    },
+    {
+      "image_path": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0035.png",
+      "stem": "book_en_国外数学教材-数论-Melvyn B. Nathanson—Elementary Methods in Number Theory_0035"
+    },
+    {
+      "image_path": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点四年级英语下册_课本_人教新起点英语4B电子课本_page_016.png",
+      "stem": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点四年级英语下册_课本_人教新起点英语4B电子课本_page_016"
+    },
+    {
+      "image_path": "color_textbook_zhonggaokao_小学_KET听说读写逐项突破_KET听说读写逐项突破之轻松搞定KET阅读25分【10讲 褚连一 】_第01讲第一课阅读题型综述_第一课阅读题型综述_page_004.png",
+      "stem": "color_textbook_zhonggaokao_小学_KET听说读写逐项突破_KET听说读写逐项突破之轻松搞定KET阅读25分【10讲 褚连一 】_第01讲第一课阅读题型综述_第一课阅读题型综述_page_004"
+    },
+    {
+      "image_path": "color_textbook_教材全解1+1二年级上册英语上海牛津版_page_067.png",
+      "stem": "color_textbook_教材全解1+1二年级上册英语上海牛津版_page_067"
+    },
+    {
+      "image_path": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点五年级英语下册_课本_人教新起点英语5B电子课本_page_034.png",
+      "stem": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点五年级英语下册_课本_人教新起点英语5B电子课本_page_034"
+    },
+    {
+      "image_path": "exam_paper_2004-2019上海高考英语听力原文和答案_page_010.png",
+      "stem": "exam_paper_2004-2019上海高考英语听力原文和答案_page_010"
+    },
+    {
+      "image_path": "exam_paper_2004-2019上海高考英语听力原文和答案_page_002.png",
+      "stem": "exam_paper_2004-2019上海高考英语听力原文和答案_page_002"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_2007_Problems_2007_page_001.png",
+      "stem": "exam_paper_en-file-putnam-archive_2007_Problems_2007_page_001"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_2013_Problems_2013_page_002.png",
+      "stem": "exam_paper_en-file-putnam-archive_2013_Problems_2013_page_002"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_2015_Problems_2015_page_001.png",
+      "stem": "exam_paper_en-file-putnam-archive_2015_Problems_2015_page_001"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_1997_Solutions_1997s_page_002.png",
+      "stem": "exam_paper_en-file-putnam-archive_1997_Solutions_1997s_page_002"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_2011_Solutions_2011s_page_002.png",
+      "stem": "exam_paper_en-file-putnam-archive_2011_Solutions_2011s_page_002"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_2000_Problems_2000_page_001.png",
+      "stem": "exam_paper_en-file-putnam-archive_2000_Problems_2000_page_001"
+    },
+    {
+      "image_path": "exam_paper_en-file-putnam-archive_2006_Solutions_2006s_page_006.png",
+      "stem": "exam_paper_en-file-putnam-archive_2006_Solutions_2006s_page_006"
+    },
+    {
+      "image_path": "magazine_TheEconomist.2023.11.18_page_071.png",
+      "stem": "magazine_TheEconomist.2023.11.18_page_071"
+    },
+    {
+      "image_path": "magazine_TheEconomist.2023.11.25_page_069.png",
+      "stem": "magazine_TheEconomist.2023.11.25_page_069"
+    },
+    {
+      "image_path": "magazine_TheEconomist.2023.12.09_page_009.png",
+      "stem": "magazine_TheEconomist.2023.12.09_page_009"
+    },
+    {
+      "image_path": "magazine_TheEconomist.2023.12.23_page_060.png",
+      "stem": "magazine_TheEconomist.2023.12.23_page_060"
+    },
+    {
+      "image_path": "magazine_TheEconomist.2024.03.02_page_028.png",
+      "stem": "magazine_TheEconomist.2024.03.02_page_028"
+    },
+    {
+      "image_path": "magazine_TheEconomist.2023.12.02_page_056.png",
+      "stem": "magazine_TheEconomist.2023.12.02_page_056"
+    },
+    {
+      "image_path": "PPT_CalculusReview_page_033.png",
+      "stem": "PPT_CalculusReview_page_033"
     }
   ],
+  "serialization": "json_compact_utf8",
   "source_dataset": "OmniDocBench",
   "source_dataset_version": "v1.6",
   "source_json_sha256": "3e3fbea07702084d9466e231260ad92141848a32631c9895d8e55b24e2c2f7b5",
