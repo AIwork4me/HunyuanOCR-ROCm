@@ -22,5 +22,6 @@ def test_build_manifest_structure_and_sha(tmp_path):
     assert "source_json_sha256" in d and len(d["source_json_sha256"]) == 64
     # manifest_sha recomputes from the dict WITHOUT manifest_sha256
     sha = m.manifest_sha256(d)
-    d2 = dict(d); d2["manifest_sha256"] = sha
+    d2 = dict(d)
+    d2["manifest_sha256"] = sha
     assert m.manifest_sha256(d) == sha
