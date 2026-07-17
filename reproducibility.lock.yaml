@@ -15,7 +15,7 @@ llama_cpp:
   repo: https://github.com/ggml-org/llama.cpp
   commit: a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # GitHub API (verified 2026-07-16)
   ggml_version: "0.16.0"                              # per HANDOFF (reported)
-  contains_hunyuan_multimodal: true                   # tools/mtmd/models/hunyuanvl.cpp + src/models/hunyuan-vl.cpp present at this commit
+  contains_hunyuan_multimodal: true                   # verified via GitHub API tree at this commit (tools/mtmd/models/hunyuanvl.cpp + src/models/hunyuan-vl.cpp present)
 
 model:
   hf_repo: tencent/HunyuanOCR

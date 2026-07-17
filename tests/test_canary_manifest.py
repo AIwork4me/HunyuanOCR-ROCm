@@ -20,8 +20,10 @@ def test_build_manifest_structure_and_sha(tmp_path):
     assert d["subset_name"] == "canary-test"
     assert [p["stem"] for p in d["pages"]] == ["page-1", "page-2", "page-3"]  # sorted
     assert "source_json_sha256" in d and len(d["source_json_sha256"]) == 64
-    # manifest_sha recomputes from the dict WITHOUT manifest_sha256
-    sha = m.manifest_sha256(d)
-    d2 = dict(d)
-    d2["manifest_sha256"] = sha
-    assert m.manifest_sha256(d) == sha
+    # manifest_sha256 MUST be the sha of the canonical JSON with the field
+    # omitted, so a reader can drop it and recompute to verify integrity.
+    sha = m.manifest_sha256(d)                 # d has no manifest_sha256 field
+    d_with = dict(d)
+    d_with["manifest_sha256"] = "deadbeef"     # field present with any value
+    # manifest_sha256 MUST ignore its own field -> same sha whether or not it's present
+    assert m.manifest_sha256(d_with) == sha
