@@ -5,7 +5,7 @@
 [![OmniDocBench v1.6](https://img.shields.io/badge/OmniDocBench-v1.6-blue)](https://github.com/opendatalab/OmniDocBench)
 [![vLLM Overall](https://img.shields.io/badge/vLLM%20canary-94.81-green)](reports/canary-baseline.md)
 [![llama.cpp Full](https://img.shields.io/badge/llama.cpp%20full%201651-92.09-yellow)](reports/project-stage-summary.md)
-[![License](https://img.shields.io/badge/code-Apache--2.0-blue)](LICENSE)
+[![License](https://img.shields.io/badge/license-mixed%20(see%20NOTICE)-blue)](NOTICE)
 [![Weights: Hunyuan Community License](https://img.shields.io/badge/weights-Hunyuan%20Community%20License-orange)](NOTICE)
 
 ## Results
@@ -117,8 +117,14 @@ HunyuanOCR-ROCm/
 
 ## License
 
-- **Code:** Apache-2.0 (see [LICENSE](LICENSE)).
-- **Model weights:** [Tencent Hunyuan Community License](https://huggingface.co/tencent/HunyuanOCR/blob/main/License.txt) — not OSI-open; EU/UK/KR territory exclusion; "Powered by Tencent Hunyuan" notice required. See [NOTICE](NOTICE).
+This repository is **mixed-licensed** (see [NOTICE](NOTICE)):
+
+1. **Original packaging/tooling** (drivers, `runner.py`, `validation.py`, `scoring.py`, `omnidocbench.py`): **Apache-2.0** ([LICENSE](LICENSE), [LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
+2. **Code ported from HunyuanOCR** (`contract.py`, `tasks.py`, `postprocess.py`, `backends/*`): upstream-derived portions under the **Tencent Hunyuan Community License** ([LICENSES/Tencent-Hunyuan-Community-License.txt](LICENSES/Tencent-Hunyuan-Community-License.txt)) — *not* Apache.
+3. **HunyuanOCR model weights** (`tencent/HunyuanOCR`, `ggml-org/HunyuanOCR-GGUF`): **Tencent Hunyuan Community License** — **not OSI Open Source**; excludes EU/UK/KR; "Powered by Tencent Hunyuan" is *encouraged*, not required.
+4. **llama.cpp**: MIT. **vLLM**: Apache-2.0.
+
+Tencent is not affiliated with, sponsoring, or endorsing this project.
 
 ## Acknowledgements
 
