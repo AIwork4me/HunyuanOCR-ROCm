@@ -1,6 +1,12 @@
 # HunyuanOCR-ROCm — Comprehensive Handoff Document
 
-**Date:** 2026-07-16 · **Repo:** https://github.com/AIwork4me/HunyuanOCR-ROCm · **Branch:** main (28 commits)
+> **Historical — 2026-07-16.** Retained as experimental evidence; `README.md` is
+> the single source of current status. Some conclusions in this file read
+> stronger than the evidence now supports (see README). Machine-local paths
+> (`/root/...`, `/workspace/...`) are factual cross-session evidence, not user
+> repro paths — use `scripts/reproduce_*.sh` + `reproducibility.lock.yaml`.
+
+**Date:** 2026-07-16 · **Repo:** https://github.com/AIwork4me/HunyuanOCR-ROCm · **State:** snapshot 2026-07-16; see git history for current state.
 
 > Every conclusion below has a specific evidence reference (file path, command, or data point) and reproducible steps. If you pick this up in a new session, start here.
 

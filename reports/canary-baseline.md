@@ -1,5 +1,11 @@
 # Canary BASELINE — HunyuanOCR-1.5 on AMD gfx1100 (OmniDocBench v1.6, 148-page canary)
 
+> **Historical — 2026-07-16.** Retained as experimental evidence; `README.md` is
+> the single source of current status. Some conclusions in this file read
+> stronger than the evidence now supports (see README). Machine-local paths
+> (`/root/...`, `/workspace/...`) are factual cross-session evidence, not user
+> repro paths — use `scripts/reproduce_*.sh` + `reproducibility.lock.yaml`.
+
 **Date:** 2026-07-16
 **Subset:** `OmniDocBench_150.json` (148 pages), both backends 148/148 complete
 **Hardware:** AMD gfx1100 (RDNA3, 48 GB) ×4; ROCm `hip 7.2.53211`; torch 2.9.1

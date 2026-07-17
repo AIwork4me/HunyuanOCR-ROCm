@@ -1,6 +1,12 @@
 # HunyuanOCR-ROCm — Project Stage Summary
 
-**As of:** 2026-07-16 · **Branch:** `feat/phase1-transformers` (off `main`) · **Repo:** `/workspace/HunyuanOCR-ROCm`
+> **Historical — 2026-07-16.** Retained as experimental evidence; `README.md` is
+> the single source of current status. Some conclusions in this file read
+> stronger than the evidence now supports (see README). Machine-local paths
+> (`/root/...`, `/workspace/...`) are factual cross-session evidence, not user
+> repro paths — use `scripts/reproduce_*.sh` + `reproducibility.lock.yaml`.
+
+**As of:** 2026-07-16 · **State:** snapshot 2026-07-16; see git history for current state. · **Repo:** `/workspace/HunyuanOCR-ROCm`
 
 ## Goal (recap)
 
@@ -12,7 +18,7 @@ A standalone, eval-backed project running Tencent **HunyuanOCR-1.5** (~1B VLM) o
 - ✅ **Phase-2 code** (vLLM backend): adapter + serve + driver + plan.
 - ✅ **Canary BASELINE** (OmniDocBench_150 = 148 pages, **both backends 148/148 complete**).
 - ✅ **Two upstream issues filed** (ROCm, Tencent) — both OPEN with evidence.
-- 🔄 **Full 1651-page vLLM run in progress** (~5h, background; auto-scores on completion).
+- ⚠️ **vLLM full-set attempted, never completed a valid run** (server crashes under sustained load). The vLLM canary (94.81) is the reliable vLLM number; the 1651-page vLLM score is **not available**.
 
 ## Canary results (the headline)
 
@@ -58,9 +64,9 @@ Tuning vLLM for the full 1651-page set on gfx1100 surfaced a clear stack of leve
 - `scripts/serve_vllm.sh`: capped model dir, `max-model-len 65536`, `torch.compile` by default (enforce-eager fallback).
 - Frozen decoding contract (prompt/sampling/post-processors) shared across backends.
 
-## In progress
+## vLLM full-set status
 
-- **Full 1651-page OmniDocBench v1.6 via vLLM** (4 compiled servers, one/GPU) → background; auto-scores on completion. Expected: Overall ≈ 94.x (confirming the canary at full scale).
+- **Full 1651-page OmniDocBench v1.6 via vLLM was attempted but never completed a valid run** — compiled-mode servers crashed under sustained load (3 of 4 servers died mid-run, ~780 ERROR pages → false score of 46.31, which is **not a valid benchmark**). Cleaned + re-run also failed. **The vLLM canary (148 pages, 94.81) is the only reliable vLLM number.** No full-set vLLM score is available.
 
 ## Next steps (after the full number lands)
 
