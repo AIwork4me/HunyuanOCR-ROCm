@@ -1,0 +1,15 @@
+version = 1
+SPDX-PackageName = "HunyuanOCR-ROCm"
+SPDX-PackageDownloadLocation = "https://github.com/AIwork4me/HunyuanOCR-ROCm"
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 AIwork4me"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = ["src/hunyuan_ocr/contract.py", "src/hunyuan_ocr/tasks.py", "src/hunyuan_ocr/postprocess.py", "src/hunyuan_ocr/backends/transformers.py", "src/hunyuan_ocr/backends/vllm_client.py"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = ["(c) Tencent. All rights reserved.", "2026 AIwork4me (modifications for the ROCm port)"]
+SPDX-License-Identifier = "LicenseRef-Tencent-Hunyuan-Community-License"

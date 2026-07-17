@@ -1732,13 +1732,13 @@ Header policy:
 - **Upstream-derivative files** (`contract.py`, `tasks.py`, `postprocess.py` Group 1, `backends/transformers.py`, `backends/vllm_client.py`) → top-of-file comment block:
 
 ```python
-# SPDX-License-Identifier: NOASSERTION
+# SPDX-License-Identifier: LicenseRef-Tencent-Hunyuan-Community-License
 # Copyright (c) Tencent. All rights reserved.
 # Copyright 2026 AIwork4me (modifications for the ROCm port)
 #
 # This file derives from Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR),
 # licensed under the Tencent Hunyuan Community License Agreement. Upstream-derived
-# portions retain that license; see LICENSES/Tencent-Hunyuan-Community-License.txt.
+# portions retain that license; see LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt.
 # The "Powered by Tencent Hunyuan" mark is encouraged (license §3c), not required.
 ```
 

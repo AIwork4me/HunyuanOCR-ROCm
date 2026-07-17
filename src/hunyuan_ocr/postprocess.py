@@ -1,10 +1,10 @@
-# SPDX-License-Identifier: NOASSERTION
+# SPDX-License-Identifier: LicenseRef-Tencent-Hunyuan-Community-License
 # Copyright (c) Tencent. All rights reserved.
 # Copyright 2026 AIwork4me (modifications for the ROCm port)
 #
 # This file derives from Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR),
 # licensed under the Tencent Hunyuan Community License Agreement. Upstream-derived
-# portions retain that license; see LICENSES/Tencent-Hunyuan-Community-License.txt.
+# portions retain that license; see LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt.
 # The "Powered by Tencent Hunyuan" mark is encouraged (license §3c), not required.
 """
 HunyuanOCR-1.5 output utilities (shared, importable).
@@ -206,7 +206,7 @@ def _rows_are_independent(rows):
     return True
 
 def apply_pattern_C(text, stats):
-    """Find $$..$$ or \[..\] containing exactly one ROW_ENV that spans (mostly) the
+    r"""Find $$..$$ or \[..\] containing exactly one ROW_ENV that spans (mostly) the
     block, with >= 2 INDEPENDENT rows. Split into N \[...\] blocks."""
     def expand(m, delim_pair):
         nonlocal stats
@@ -298,7 +298,7 @@ LEFT_RE  = re.compile(r'\\left(?![a-zA-Z@])')
 RIGHT_RE = re.compile(r'\\right(?![a-zA-Z@])')
 
 def fix_left_right(content):
-    """If imbalanced, try a safe fix:
+    r"""If imbalanced, try a safe fix:
        left > right: insert \right. before the LAST \end{array}/\end{aligned}/...,
                      or before the closing delimiter at the very end.
        right > left: insert \left. right after the first \begin{...}, or at start.

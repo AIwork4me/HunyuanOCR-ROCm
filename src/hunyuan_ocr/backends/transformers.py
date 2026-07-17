@@ -1,10 +1,10 @@
-# SPDX-License-Identifier: NOASSERTION
+# SPDX-License-Identifier: LicenseRef-Tencent-Hunyuan-Community-License
 # Copyright (c) Tencent. All rights reserved.
 # Copyright 2026 AIwork4me (modifications for the ROCm port)
 #
 # This file derives from Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR),
 # licensed under the Tencent Hunyuan Community License Agreement. Upstream-derived
-# portions retain that license; see LICENSES/Tencent-Hunyuan-Community-License.txt.
+# portions retain that license; see LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt.
 # The "Powered by Tencent Hunyuan" mark is encouraged (license §3c), not required.
 """Transformers backend for HunyuanOCR-1.5 (Phase 1 oracle).
 
@@ -14,6 +14,7 @@ Ported from upstream inference/transformers/infer_hf_8gpu_hyocr15.py:
   tail-repetition StoppingCriteria, clean_repeated_substrings + process_one.
 Torch/transformers imported lazily so importing this module needs no GPU.
 """
+
 from __future__ import annotations
 import importlib
 import os
@@ -72,6 +73,7 @@ def _patch_hunyuan_tokenizer_special_tokens(tokenizer) -> None:
 
 def _load_processor_with_patch(model_path: str):
     from transformers import AutoImageProcessor, AutoTokenizer
+
     proc_mod = importlib.import_module("transformers.models.hunyuan_vl.processing_hunyuan_vl")
     HunYuanVLProcessor = proc_mod.HunYuanVLProcessor
     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
@@ -80,6 +82,7 @@ def _load_processor_with_patch(model_path: str):
     video_processor = None
     try:
         from transformers import AutoVideoProcessor
+
         video_processor = AutoVideoProcessor.from_pretrained(model_path)
     except Exception:
         video_processor = None
@@ -92,6 +95,7 @@ def _load_processor_with_patch(model_path: str):
 def load_model_and_processor(model_path: str, device: str = "cuda:0"):
     import torch
     from transformers import AutoProcessor, HunYuanVLForConditionalGeneration
+
     dtype = getattr(torch, CONTRACT.dtype)
     try:
         processor = AutoProcessor.from_pretrained(model_path, use_fast=False)
@@ -102,7 +106,9 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
         processor = _load_processor_with_patch(model_path)
     processor = _apply_vit_resolution_cap(processor)
     model = HunYuanVLForConditionalGeneration.from_pretrained(
-        model_path, attn_implementation=GFX1100_ATTN_IMPLEMENTATION, dtype=dtype,
+        model_path,
+        attn_implementation=GFX1100_ATTN_IMPLEMENTATION,
+        dtype=dtype,
     )
     model = model.to(device)
     model.eval()
@@ -113,10 +119,13 @@ def build_messages(image_path: str, prompt: str) -> List[dict]:
     """Upstream message shape: empty system + user[image, text]."""
     return [
         {"role": "system", "content": ""},
-        {"role": "user", "content": [
-            {"type": "image", "image": image_path},
-            {"type": "text", "text": prompt},
-        ]},
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "image": image_path},
+                {"type": "text", "text": prompt},
+            ],
+        },
     ]
 
 
@@ -124,6 +133,7 @@ def _build_tail_repetition_stop(processor, prompt_len: int):
     """StoppingCriteria mirroring the vLLM streaming early-stop (per upstream)."""
     from transformers import StoppingCriteria, StoppingCriteriaList
     from ..postprocess import has_tail_repetition
+
     tokenizer = processor.tokenizer
     min_repeats = CONTRACT.repeat_min_repeats
     check_start_chars, check_step_chars, token_probe_step = 4000, 1000, 64
@@ -162,6 +172,7 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
     """Run one image through the model with the frozen contract; return markdown."""
     import torch
     from PIL import Image
+
     tokenizer = processor.tokenizer
     eos_token_id = getattr(tokenizer, "eos_token_id", None)
     pad_token_id = getattr(tokenizer, "pad_token_id", None) or eos_token_id
@@ -176,7 +187,10 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
 
     stopping_criteria = _build_tail_repetition_stop(processor, prompt_len=prompt_len)
     gen_kwargs = dict(
-        max_new_tokens=32768, do_sample=False, repetition_penalty=1.08, use_cache=True,
+        max_new_tokens=32768,
+        do_sample=False,
+        repetition_penalty=1.08,
+        use_cache=True,
         stopping_criteria=stopping_criteria,
     )
     if eos_token_id is not None:
@@ -186,12 +200,12 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
 
     with torch.inference_mode():
         generated_ids = model.generate(**inputs, **gen_kwargs)
-    trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(input_ids, generated_ids)]
+    trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(input_ids, generated_ids)]
     decoded = processor.batch_decode(trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     out_text = decoded[0] if decoded else ""
     out_text = clean_repeated_substrings(out_text)
     try:
-        out_text, _ = process_one(out_text)      # doc_parse normalization (frozen postproc)
+        out_text, _ = process_one(out_text)  # doc_parse normalization (frozen postproc)
     except Exception:
         pass
     return out_text

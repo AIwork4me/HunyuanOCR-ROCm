@@ -20,8 +20,17 @@ def test_get_prompt_unknown_raises():
 
 def test_all_twelve_tasks_present():
     expected = {
-        "doc_parse", "structured_parse", "spotting_json", "spotting_hunyuan",
-        "layout", "layout_parse", "chart_parse", "formula", "table",
-        "doc_trans_en2zh", "trans_other2en", "trans_other2zh",
+        "doc_parse",
+        "structured_parse",
+        "spotting_json",
+        "spotting_hunyuan",
+        "layout",
+        "layout_parse",
+        "chart_parse",
+        "formula",
+        "table",
+        "doc_trans_en2zh",
+        "trans_other2en",
+        "trans_other2zh",
     }
     assert expected == set(TASK_PROMPTS.keys())

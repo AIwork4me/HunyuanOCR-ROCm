@@ -2,7 +2,7 @@ from hunyuan_ocr.contract import CONTRACT, SAMPLING
 
 
 def test_sampling_is_frozen_and_greedy():
-    assert SAMPLING["do_sample"] is False          # temp=0 -> greedy
+    assert SAMPLING["do_sample"] is False  # temp=0 -> greedy
     assert SAMPLING["repetition_penalty"] == 1.08
     assert SAMPLING["max_new_tokens"] == 32768
     assert SAMPLING["use_cache"] is True
