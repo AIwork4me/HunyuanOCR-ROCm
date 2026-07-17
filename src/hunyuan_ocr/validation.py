@@ -12,10 +12,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .runner import ERROR_PREFIX
-
-# Files/dirs the runners legitimately emit alongside predictions.
-_OWN_ARTIFACTS = {"_errors", "_errors.jsonl", "run_manifest.json"}
+from .runner import ERROR_PREFIX, _OWN_ARTIFACTS
 
 
 @dataclass
