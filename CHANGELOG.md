@@ -5,6 +5,14 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+### Verified — reproducibility
+- **Model weights cross-checked against official HuggingFace.** All four
+  benchmark artifacts (`HunyuanOCR-bf16.gguf`, `mmproj-HunyuanOCR-bf16.gguf`,
+  `model.safetensors`, `config.json`) are byte-identical to `tencent/HunyuanOCR`
+  and `ggml-org/HunyuanOCR-GGUF` on HF (queried via the `hf-mirror.com` mirror,
+  since `huggingface.co` is unreachable from the bench env). `reproducibility.lock.yaml`
+  `current_remote_artifact` now records the verified HF revisions + LFS oids.
+
 ### Changed — scientific positioning & correctness
 - **Evaluation-backed, not precision-aligned.** Removed the unverified
   "precision-aligned" claim repo-wide; the README now separates the 148-page

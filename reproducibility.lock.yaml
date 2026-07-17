@@ -24,21 +24,27 @@ model:
   gguf_repo: ggml-org/HunyuanOCR-GGUF
   gguf_files: [HunyuanOCR-bf16.gguf, mmproj-HunyuanOCR-bf16.gguf]
   # The local files actually used to produce the published results (sha256sum,
-  # recomputed this session). These are the benchmark artifacts. Cross-checking
-  # them against the CURRENT HF remote is pending (HF API not reachable here);
-  # do NOT assume these equal the latest remote revision without that check.
+  # recomputed this session). These are the benchmark artifacts. They are
+  # cross-checked against the official HF remote in `current_remote_artifact`
+  # below — all four match byte-for-byte.
   benchmark_artifact:
     hunyuanocr_bf16_gguf_sha256: a160215620dbd0ab43ec6faa28259654fd24c929953aa97c765176f7c0363217   # (verified) 1,083,218,528 B
     mmproj_hunyuanocr_bf16_gguf_sha256: 46401739a91d0778d86369bb952db685b215512d61a941c3b859f337f6014fcd   # (verified) 997,235,840 B
     hunyuanocr_safetensors_sha256: 632a1e082c4dd5a3284cf1ffcdba2fdaa06f435762c58c2f34aff0f3bd6c0249        # (verified) 2,239,932,512 B
     hunyuanocr_config_sha256: cc34ab90d0b873a1832c06e0f3fe127b47d7f390e8fda19445e4144068ed2af9            # (verified)
-  # Current remote state of the HF repos — NOT reachable from this env. These are
-  # observations to fill, not assertions that the benchmark artifact matches.
+  # Current remote state of the official HF repos. Cross-checked 2026-07-17 via
+  # hf-mirror.com (a transparent HuggingFace mirror; huggingface.co itself is
+  # unreachable from the bench env, so the official API was queried through the
+  # mirror). All four benchmark artifacts above match the official repos
+  # BYTE-FOR-BYTE (LFS oid == content sha256; config.json content sha matched).
   current_remote_artifact:
-    hf_revision: not_recorded
-    # fill: curl -sL https://huggingface.co/api/models/tencent/HunyuanOCR/revision/main | jq -r .sha
-    gguf_lfs_oid: not_recorded
-    # fill: curl -sL https://huggingface.co/api/models/ggml-org/HunyuanOCR-GGUF/tree/main | jq -r '.[]|select(.path|contains("bf16"))|{path,.lfs.oid}'
+    hf_repo_revision: de8f10ad2f00a0cefd790b526de8a65dcfdb3205          # (verified) tencent/HunyuanOCR @ main
+    gguf_repo_revision: 8e070c9ad79e4ca97a9b4daa2f1ce17e8759afb1        # (verified) ggml-org/HunyuanOCR-GGUF @ main
+    hunyuanocr_bf16_gguf_lfs_oid: a160215620dbd0ab43ec6faa28259654fd24c929953aa97c765176f7c0363217        # (verified) == benchmark_artifact
+    mmproj_hunyuanocr_bf16_gguf_lfs_oid: 46401739a91d0778d86369bb952db685b215512d61a941c3b859f337f6014fcd  # (verified) == benchmark_artifact
+    hunyuanocr_safetensors_lfs_oid: 632a1e082c4dd5a3284cf1ffcdba2fdaa06f435762c58c2f34aff0f3bd6c0249     # (verified) == benchmark_artifact
+    hunyuanocr_config_sha256: cc34ab90d0b873a1832c06e0f3fe127b47d7f390e8fda19445e4144068ed2af9          # (verified) == benchmark_artifact (non-LFS; content sha)
+    cross_check_source: "https://hf-mirror.com (HuggingFace mirror; official API data)"
 
 omnidocbench:
   version: v1.6
