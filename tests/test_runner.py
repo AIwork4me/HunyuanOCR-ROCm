@@ -89,3 +89,52 @@ def test_page_status_states(tmp_path):
         runner.record_error(tmp_path, "bad", image_path="i", backend="b",
                             endpoint="e", exc=e, attempt=2)
     assert runner.page_status(tmp_path, "bad") == "failed"
+
+
+def test_select_todo_default_resumes_and_retries_failed(tmp_path):
+    items = [("a", "a.png"), ("b", "b.png"), ("c", "c.png"), ("d", "d.png")]
+    runner.commit_success(tmp_path, "a", "ok")          # complete -> skip
+    try:
+        raise ValueError("x")
+    except ValueError as e:
+        runner.record_error(tmp_path, "b", image_path="b.png", backend="b",
+                            endpoint="e", exc=e, attempt=1)  # failed -> retry
+    # c pending, d pending
+    todo, skipped = runner.select_todo(items, tmp_path)
+    assert {s for s, _ in todo} == {"b", "c", "d"}
+    assert skipped == 1
+
+
+def test_select_todo_retry_failed_only(tmp_path):
+    items = [("a", "a.png"), ("b", "b.png"), ("c", "c.png")]
+    runner.commit_success(tmp_path, "a", "ok")
+    try:
+        raise ValueError("x")
+    except ValueError as e:
+        runner.record_error(tmp_path, "b", image_path="b.png", backend="b",
+                            endpoint="e", exc=e, attempt=1)
+    todo, skipped = runner.select_todo(items, tmp_path, retry_failed=True)
+    assert {s for s, _ in todo} == {"b"}
+    assert skipped == 2
+
+
+def test_select_todo_overwrite(tmp_path):
+    items = [("a", "a.png")]
+    runner.commit_success(tmp_path, "a", "ok")
+    todo, skipped = runner.select_todo(items, tmp_path, overwrite=True)
+    assert todo == [("a", "a.png")] and skipped == 0
+
+
+def test_detect_stem_conflicts(tmp_path):
+    conflicts = runner.detect_stem_conflicts(["dirA/page-1.png", "dirB/page-1.png", "page-2.png"])
+    assert len(conflicts) == 1
+    stem, srcs = conflicts[0]
+    assert stem == "page-1" and len(srcs) == 2
+
+
+def test_decide_run_status():
+    assert runner.decide_run_status(0, 0) == "ok"
+    assert runner.decide_run_status(1, 0) == "failed"
+    assert runner.decide_run_status(0, 1) == "failed"
+    assert runner.decide_run_status(0, 0, worker_errors=1) == "failed"
+    assert runner.decide_run_status(0, 0, crashed=1) == "failed"

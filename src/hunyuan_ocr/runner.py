@@ -120,3 +120,48 @@ def page_status(pred_dir, stem: str, ext: str = ".md") -> str:
     if is_complete(pred_dir, stem, ext):
         return "complete"
     return "pending"
+
+
+def select_todo(items, pred_dir, *, overwrite: bool = False,
+                retry_failed: bool = False, ext: str = ".md"):
+    """Build the run's todo list per the resume policy.
+
+    items: iterable of (stem, image_path). Returns (todo, n_skipped).
+      default      -> skip COMPLETE; run FAILED + PENDING (failed retried across runs)
+      retry_failed -> run FAILED only
+      overwrite    -> run everything
+    """
+    todo: list[tuple[str, str]] = []
+    skipped = 0
+    for stem, img in items:
+        st = page_status(pred_dir, stem, ext)
+        if overwrite:
+            todo.append((stem, img))
+        elif retry_failed:
+            if st == "failed":
+                todo.append((stem, img))
+            else:
+                skipped += 1
+        else:
+            if st == "complete":
+                skipped += 1
+            else:
+                todo.append((stem, img))
+    return todo, skipped
+
+
+def detect_stem_conflicts(image_paths) -> list:
+    """Return [(stem, [source_paths...])] for any stem produced by >1 distinct image."""
+    seen: dict[str, list[str]] = {}
+    for p in image_paths:
+        stem = Path(p).stem
+        seen.setdefault(stem, []).append(str(p))
+    return [(stem, srcs) for stem, srcs in seen.items() if len(srcs) > 1]
+
+
+def decide_run_status(final_failed: int, final_pending: int,
+                      worker_errors: int = 0, crashed: int = 0) -> str:
+    """Pure exit decision shared by both drivers."""
+    if final_failed or final_pending or worker_errors or crashed:
+        return "failed"
+    return "ok"
