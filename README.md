@@ -37,6 +37,7 @@ Three inference backends on AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, Omni
 ```bash
 git clone https://github.com/ggml-org/llama.cpp.git
 cd llama.cpp
+git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # locked commit for published results
 HIPCXX=/opt/rocm/llvm/bin/clang HIP_PATH=/opt/rocm \
 cmake -S . -B build -DGGML_HIP=ON -DGPU_TARGETS=gfx1100 \
   -DGGML_HIP_ROCWMMA_FATTN=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=ON
@@ -120,6 +121,27 @@ HunyuanOCR-ROCm/
 
 - **[ROCm/ROCm#6416](https://github.com/ROCm/ROCm/issues/6416)** — bf16 ViT forward non-determinism + NaN above ~14.3k tokens on gfx1100.
 - **[Tencent-Hunyuan/HunyuanOCR#114](https://github.com/Tencent-Hunyuan/HunyuanOCR/issues/114)** — recommended max resolution / vision-token budget; three-backend comparison data; formula CDM gap analysis.
+
+## Reproducibility
+
+- **Lock file:** [`reproducibility.lock.yaml`](reproducibility.lock.yaml) pins every
+  verified input (repo + llama.cpp commits, GT SHA256, env versions) for the published
+  results. Unreachable-from-our-env fields (HF model revision, GGUF LFS oid) are
+  `not_recorded` with a fill command.
+- **Canary manifest:** [`eval/canary_148.manifest.json`](eval/canary_148.manifest.json)
+  lists the 148 canary pages with the source-GT SHA256. Regenerate with
+  `scripts/create_canary_manifest.py`.
+- **Reproduce scripts:** `scripts/reproduce_llamacpp_canary.sh` (148) and
+  `scripts/reproduce_llamacpp_full.sh` (1651) run predict → validate → score against a
+  locked llama.cpp commit, binding `127.0.0.1`. Set `LLAMA_DIR/GGUF_DIR/DATA_DIR/OUT_DIR`.
+- **Which numbers are formal vs diagnostic:**
+  - **Formal/reliable:** llama.cpp full 1651 = **92.09**; canary vLLM 94.81, transformers
+    94.11, llama.cpp 93.33.
+  - **Diagnostic only:** the >14k ViT isolation, throughput tuning, formula-CDM ablation.
+  - **Invalid (excluded):** vLLM full-set 46.31 (server crashes, ~780 ERROR pages).
+- **Why newer deps may differ:** the benchmark used transformers 5.13.0 in an isolated
+  venv; a current install may have a different transformers/torch/vLLM and can produce
+  different numbers, especially around the >14k ViT path and formula CDM.
 
 ## License
 
