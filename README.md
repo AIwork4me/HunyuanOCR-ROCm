@@ -19,10 +19,16 @@ Three inference backends on AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, Omni
 | **llama.cpp** (C++ GGML, BF16 GGUF) | 93.33 | **92.09** | 89.64 | ✅ **(uncapped)** | **~1.4 s/page** |
 | Upstream (reported) | 94.74 | 94.74 | — | — | — |
 
+> **vLLM full-set: NOT a valid result.** The 1651-page vLLM run never produced a
+> valid score — servers crashed under sustained load, yielding ~780 ERROR pages;
+> the resulting 46.31 is **not a valid benchmark** and is excluded from all
+> comparisons. The vLLM **canary (148 pages, 94.81) is the only reliable vLLM
+> number.** No "full run in progress."
+
 **Key findings:**
-- **llama.cpp is the fastest and most stable backend on gfx1100**, and the only one that runs at **full resolution** (no pixel cap). Its C++ ViT is deterministic at >14k vision tokens — the >14k NaN/non-determinism only affects the transformers SDPA path ([ROCm issue #6416](https://github.com/ROCm/ROCm/issues/6416)).
-- The **formula CDM gap** (~5.65 pts on the canary) is from **inference-engine-level generation differences**, not resolution, streaming, or post-processing — confirmed by systematic ablation ([analysis](docs/tencent-114-followup3-draft.md)).
-- The **>14k ViT instability** is a sharp threshold (~14,200 patches) in the ROCm PyTorch SDPA kernel; it does **not** affect vLLM's Flash-Attention or llama.cpp's C++ GGML paths.
+- **Among the three tested backends, on the tested gfx1100/ROCm 7.2 stack**, llama.cpp is the fastest and most stable, and the only one of the three that runs with no pixel cap (full resolution). Its C++ ViT is deterministic at >14k vision tokens.
+- The **formula CDM gap** (~5.65 pts on the canary): after ruling out resolution, streaming, post-processing, and systematic formula omission, **inference-engine-level numerical divergence is the leading explanation** — not a singly-proven root cause ([analysis](docs/tencent-114-followup3-draft.md)).
+- The **>14k ViT instability** is a sharp threshold (~14,200 patches) **observed in the transformers/ROCm full-ViT path using SDPA on the tested gfx1100 stack**; a standalone SDPA op does not reproduce it, so it is **not pinned to a single SDPA kernel**, and there is no NVIDIA control to bound it to ROCm ([ROCm issue #6416](https://github.com/ROCm/ROCm/issues/6416)). It is not observed in vLLM's Flash-Attention or llama.cpp's C++ GGML paths.
 
 ## Quick start (llama.cpp, recommended)
 
