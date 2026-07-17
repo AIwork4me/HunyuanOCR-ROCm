@@ -7,6 +7,7 @@ own 3.11 venv, and parses the resulting metric_result.json / run_summary.json.
 Overall = ((1 - text_EditDist)*100 + formula_CDM*100 + table_TEDS*100) / 3
 (reading-order EditDist is reported separately, NOT part of Overall).
 """
+
 from __future__ import annotations
 import json
 import subprocess
@@ -16,7 +17,23 @@ import yaml
 
 DEFAULT_VENV_PYTHON = "/root/ocr-eval/OmniDocBench/.venv/bin/python"
 DEFAULT_OMNIDOCBENCH_REPO = "/root/ocr-eval/OmniDocBench"
-TEMPLATE_CONFIG = Path(__file__).resolve().parents[2] / "eval" / "configs" / "hunyuanocr-1.5_linux-rocm.yaml"
+# The template is bundled inside the package (data/eval_config.yaml) so it ships
+# in the wheel; the repo's eval/configs/ copy is kept for human reference.
+_REPO_TEMPLATE = Path(__file__).resolve().parents[2] / "eval" / "configs" / "hunyuanocr-1.5_linux-rocm.yaml"
+
+
+def _load_eval_template() -> str:
+    """Return the OmniDocBench eval-config template text.
+
+    Prefers the resource bundled in the installed package (works under a wheel
+    install); falls back to the repo-relative file for editable/src layouts.
+    """
+    try:
+        from importlib.resources import files
+
+        return (files("hunyuan_ocr") / "data" / "eval_config.yaml").read_text(encoding="utf-8")
+    except Exception:
+        return _REPO_TEMPLATE.read_text(encoding="utf-8")
 
 
 def overall_score(metrics: dict) -> float | None:
@@ -35,7 +52,7 @@ def overall_score(metrics: dict) -> float | None:
 
 def write_eval_config(*, gt_json: str, pred_dir: str, out_yaml: Path) -> None:
     """Materialize an eval config from the template, substituting GT + pred paths."""
-    cfg = yaml.safe_load(TEMPLATE_CONFIG.read_text(encoding="utf-8"))
+    cfg = yaml.safe_load(_load_eval_template())
     cfg["end2end_eval"]["dataset"]["ground_truth"]["data_path"] = str(gt_json)
     cfg["end2end_eval"]["dataset"]["prediction"]["data_path"] = str(pred_dir)
     out_yaml = Path(out_yaml)
@@ -43,7 +60,9 @@ def write_eval_config(*, gt_json: str, pred_dir: str, out_yaml: Path) -> None:
     out_yaml.write_text(yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 
-def run_scorer(*, omnidocbench_repo: str, config_yaml: str, venv_python: str | None = None) -> subprocess.CompletedProcess:
+def run_scorer(
+    *, omnidocbench_repo: str, config_yaml: str, venv_python: str | None = None
+) -> subprocess.CompletedProcess:
     """Run pdf_validation.py --config <cfg> inside the OmniDocBench repo."""
     py = venv_python or DEFAULT_VENV_PYTHON
     cmd = [py, "pdf_validation.py", "--config", str(config_yaml)]
@@ -63,7 +82,7 @@ def parse_run_summary(result_dir: str | Path, save_name: str) -> dict:
         return ms.get(key, {}).get("raw")
 
     text = raw("text_block_Edit_dist")
-    cdm = raw("display_formula_CDM")          # None when no formula pages
+    cdm = raw("display_formula_CDM")  # None when no formula pages
     teds = raw("table_TEDS")
     order = raw("reading_order_Edit_dist")
     return {

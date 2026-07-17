@@ -31,24 +31,47 @@ if [[ "$ACTUAL" != "$LOCKED_LLAMA_COMMIT" ]]; then
   exit 1
 fi
 
-if compgen -G "$OUT_DIR/*.md" > /dev/null && [[ -z "${OVERWRITE:-}" ]]; then
-  echo "[fatal] $OUT_DIR already has predictions; set OVERWRITE=1 to resume/redo" >&2; exit 1
+RESUME="${RESUME:-0}"
+OVERWRITE="${OVERWRITE:-0}"
+if [[ "$RESUME" = "1" && "$OVERWRITE" = "1" ]]; then
+  echo "[fatal] set RESUME=1 OR OVERWRITE=1, not both" >&2; exit 1
+fi
+if compgen -G "$OUT_DIR/*.md" > /dev/null; then
+  if [[ "$RESUME" != "1" && "$OVERWRITE" != "1" ]]; then
+    echo "[fatal] $OUT_DIR already has predictions; set RESUME=1 to continue or OVERWRITE=1 to redo" >&2
+    exit 1
+  fi
 fi
 mkdir -p "$OUT_DIR"
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 
-echo "[repro] step 1/3: predict"
+MODE_FLAG=""
+[[ "$OVERWRITE" = "1" ]] && MODE_FLAG="--overwrite"
+MODE_DESC="fresh"
+[[ "$RESUME" = "1" ]] && MODE_DESC="resume"
+[[ "$OVERWRITE" = "1" ]] && MODE_DESC="overwrite"
+
+echo "[repro] step 1/4: predict ($MODE_DESC)"
 python "$REPO/scripts/run_phase2_vllm.py" \
+  --backend-name llamacpp --server-alias HYVL \
   --gt-json "$GT_JSON" --images-dir "$DATA_DIR/images" \
   --pred-dir "$OUT_DIR" --host "$HOST" --ports "$PORTS" \
-  --model HYVL --concurrency "$CONCURRENCY"
+  --model HYVL --concurrency "$CONCURRENCY" $MODE_FLAG
 
-echo "[repro] step 2/3: validate"
+echo "[repro] step 2/4: validate"
 python "$REPO/scripts/validate_predictions.py" --gt-json "$GT_JSON" --pred-dir "$OUT_DIR"
 
-echo "[repro] step 3/3: score"
+echo "[repro] step 3/4: score"
 python "$REPO/scripts/score_predictions.py" --pred-dir "$OUT_DIR" --gt-json "$GT_JSON" \
   --label llamacpp-canary-148
+
+echo "[repro] step 4/4: verify manifest conservation laws"
+PYTHONPATH="$REPO/src" python -c "import json,sys; from hunyuan_ocr import runner; \
+m=json.load(open('$OUT_DIR/run_manifest.json')); \
+errs=runner.validate_manifest(m); \
+print('[manifest] backend=%s run=%s final=%s' % (m.get('backend'), m.get('run_counts'), m.get('final_state'))); \
+sys.exit(1 if errs else 0)" \
+  || { echo "[fatal] run_manifest.json violates conservation laws: see above" >&2; exit 1; }
 
 echo "[repro] done."

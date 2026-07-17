@@ -1,0 +1,54 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-test-build:
+    name: lint + test + build (CPU, no torch)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install (CPU extras only — never torch or transformers)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[client,dev]"
+      - name: compileall
+        run: python -m compileall -q src scripts
+      - name: ruff check
+        run: ruff check .
+      - name: ruff format --check
+        run: ruff format --check .
+      - name: shell syntax
+        run: bash -n scripts/*.sh
+      - name: pytest (no-GPU subset)
+        run: pytest -q -m "not gpu"
+      - name: repo integrity (lock, canary manifest, doc links, SPDX)
+        run: python scripts/check_repo.py
+      - name: build sdist + wheel
+        run: python -m build
+      - name: import built wheel in a clean venv
+        run: |
+          python -m venv /tmp/ve
+          WHL="$(ls dist/*.whl | head -n1)"
+          /tmp/ve/bin/pip install --no-deps "$WHL"
+          /tmp/ve/bin/pip install pillow pyyaml tqdm requests openai
+          /tmp/ve/bin/python -c "import hunyuan_ocr; print('import ok', hunyuan_ocr.__version__)"
+      - name: upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

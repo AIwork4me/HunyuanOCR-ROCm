@@ -16,7 +16,7 @@ Some files (contract.py, tasks.py, postprocess.py, backends/*) derive from
 Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR). Those
 upstream-derived portions are licensed under the Tencent Hunyuan Community
 License Agreement
-(see LICENSES/Tencent-Hunyuan-Community-License.txt). When distributing those
+(see LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt). When distributing those
 portions you must include a copy of that agreement and prominent notices on
 any modified files stating that you changed them.
 

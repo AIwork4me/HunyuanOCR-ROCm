@@ -1,0 +1,8 @@
+# Default owner for the whole repo. Request review from this account on any PR.
+* @AIwork4me
+
+# Upstream-derived (Tencent-Hunyuan-Community-License) — flagged for careful review.
+/src/hunyuan_ocr/contract.py       @AIwork4me
+/src/hunyuan_ocr/tasks.py          @AIwork4me
+/src/hunyuan_ocr/postprocess.py    @AIwork4me
+/src/hunyuan_ocr/backends/         @AIwork4me

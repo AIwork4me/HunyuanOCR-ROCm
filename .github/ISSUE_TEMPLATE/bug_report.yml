@@ -1,0 +1,39 @@
+name: Bug report
+description: A crash, wrong output, or unexpected behavior (not a ROCm-compat or benchmark-score issue)
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Include the exact command and the full error output.
+      placeholder: "Running `python scripts/run_phase2_vllm.py ...` raised ..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Steps to reproduce from a clean checkout. Attach the run_manifest.json if a predict run failed.
+      placeholder: "1. ...\n2. ..."
+    validations:
+      required: true
+  - type: input
+    id: doctor
+    attributes:
+      label: `hunyuan-ocr doctor` output
+      description: Paste the doctor summary (it captures your env without loading the model).
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Repo commit / version
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true

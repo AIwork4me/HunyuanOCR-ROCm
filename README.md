@@ -1,121 +1,224 @@
 # HunyuanOCR-ROCm
 
-> Precision-aligned AMD ROCm port of [HunyuanOCR-1.5](https://github.com/Tencent-Hunyuan/HunyuanOCR) — evaluated on OmniDocBench v1.6, across three inference backends, on AMD gfx1100 (RDNA3).
+> Evaluation-backed AMD ROCm port of [HunyuanOCR-1.5](https://github.com/Tencent-Hunyuan/HunyuanOCR)
+> — runs the model on AMD gfx1100 (RDNA3) across three inference backends and
+> reports OmniDocBench v1.6 results. **Not** a precision-aligned port: no
+> same-page-set CUDA control exists, and the official headline is measured with a
+> different engine (TensorRT). See [Benchmark methodology](docs/benchmark-methodology.md).
 
 [![OmniDocBench v1.6](https://img.shields.io/badge/OmniDocBench-v1.6-blue)](https://github.com/opendatalab/OmniDocBench)
-[![vLLM Overall](https://img.shields.io/badge/vLLM%20canary-94.81-green)](reports/canary-baseline.md)
-[![llama.cpp Full](https://img.shields.io/badge/llama.cpp%20full%201651-92.09-yellow)](reports/project-stage-summary.md)
-[![License](https://img.shields.io/badge/license-mixed%20(see%20NOTICE)-blue)](NOTICE)
-[![Weights: Hunyuan Community License](https://img.shields.io/badge/weights-Hunyuan%20Community%20License-orange)](NOTICE)
+[![vLLM canary](https://img.shields.io/badge/vLLM%20canary%20148-94.81-green)](reports/canary-baseline.md)
+[![llama.cpp full](https://img.shields.io/badge/llama.cpp%20full%201651-92.09-yellow)](reports/project-stage-summary.md)
+[![status: evaluation-backed](https://img.shields.io/badge/status-evaluation--backed-blue)](docs/benchmark-methodology.md)
+[![license: mixed](https://img.shields.io/badge/license-mixed%20(see%20NOTICE)-blue)](NOTICE)
+
+## At a glance
+
+- **What it is.** Tooling to run Tencent HunyuanOCR-1.5 on AMD ROCm and score it
+  on OmniDocBench v1.6, across three inference backends (llama.cpp, vLLM,
+  transformers) with a frozen decoding contract.
+- **Where verified.** AMD **gfx1100 (RDNA3, 48 GB ×4), ROCm 7.2**, bf16.
+- **Most reliable formal result.** **llama.cpp full 1651 pages = 92.09 Overall**
+  (1651/1651 complete, scored twice).
+- **Most important limitation.** **Not precision-aligned.** No CUDA control on
+  the same page set exists, and the official 94.10 headline is measured with
+  **TensorRT** (a different engine) on an unlabeled OmniDocBench version. The
+  vLLM full-set run is **invalid** (server crashes).
+- **Fastest path to one page.** [Quick start (llama.cpp)](#quick-start-llamacpp-recommended)
+  — warm ~1.4 s/page on a single GPU.
 
 ## Results
 
-Three inference backends on AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, OmniDocBench v1.6:
+AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, OmniDocBench v1.6. Two
+**separate** page sets are reported below — they are never mixed into one
+column, because their numbers are not comparable. Full provenance and the
+definition of "precision-aligned" are in [Benchmark methodology](docs/benchmark-methodology.md).
 
-| Backend | Canary (148 pages) | Full (1651 pages) | formula CDM | >14k ViT stability | Speed |
-|---|---|---|---|---|---|
-| **vLLM** 0.16.1 (Flash-Attn) | **94.81** | — | 96.48 | ✅ (capped 3.4M) | ~6 s/page |
-| transformers 5.13 (SDPA) | 94.11 | — | 94.25 | ❌ NaN above 14.2k | ~180 s/page |
-| **llama.cpp** (C++ GGML, BF16 GGUF) | 93.33 | **92.09** | 89.64 | ✅ **(uncapped)** | **~1.4 s/page** |
-| Upstream (reported) | 94.74 | 94.74 | — | — | — |
+### Table A — same 148-page canary, three ROCm backends
+
+| Backend | Overall | text EditDist↓ | formula CDM↑ | table TEDS↑ | order EditDist↓ | Resolution | Status |
+|---|---|---|---|---|---|---|---|
+| **vLLM** 0.16.1 (Flash-Attn ViT) | **94.81** | 0.0514 | 0.9648 | 0.9308 | 0.1135 | capped 3.4M | 148/148 complete |
+| transformers 5.13.0 (SDPA ViT) | 94.11 | 0.0437 | 0.9425 | 0.9246 | 0.1184 | capped 3.4M | 148/148 complete |
+| **llama.cpp** (C++ GGML, BF16 GGUF) | 93.33 | 0.0512 | 0.9083 | 0.9429 | 0.1270 | uncapped | 148/148 complete |
+| upstream CUDA | _Not evaluated on this canary_ | — | — | — | — | — | — |
+
+Overall = `((1−text)·100 + CDM·100 + TEDS·100)/3`; order EditDist is reported
+separately and is **not** part of Overall. The upstream CUDA backend was not run
+on these 148 pages, so there is **no canary-vs-CUDA comparison** here.
+
+### Table B — full 1651-page set (OmniDocBench v1.6)
+
+| Backend / source | Overall | text EditDist↓ | formula CDM↑ | table TEDS↑ | Inference engine | Notes |
+|---|---|---|---|---|---|---|
+| **llama.cpp** (this repo, gfx1100/ROCm) | **92.09** | 0.0467 | 0.8964 | 0.9130 | llama.cpp C++ GGML (HIP) | 1651/1651, 0 errors; scored twice |
+| Official HunyuanOCR (OmniDocBench) | **94.10** | 0.042 | 0.9473 | 0.9181 | **TensorRT** | [official table](https://github.com/Tencent-Hunyuan/HunyuanOCR) |
+| Δ (ours − official) | −2.01 | +0.0047 | −0.0509 | −0.0051 | different engine | not a precision comparison |
+
+> The **−2.01 gap is not a measured ROCm-vs-CUDA delta.** The official number uses
+> a third inference engine (TensorRT) and an unlabeled dataset version; ours uses
+> llama.cpp on v1.6. A **94.74** figure quoted in some third-party summaries is
+> **not** in the official benchmark table and is treated as `not_verified`.
 
 > **vLLM full-set: NOT a valid result.** The 1651-page vLLM run never produced a
 > valid score — servers crashed under sustained load, yielding ~780 ERROR pages;
 > the resulting 46.31 is **not a valid benchmark** and is excluded from all
 > comparisons. The vLLM **canary (148 pages, 94.81) is the only reliable vLLM
-> number.** No "full run in progress."
+> number.**
 
 **Key findings:**
 - **Among the three tested backends, on the tested gfx1100/ROCm 7.2 stack**, llama.cpp is the fastest and most stable, and the only one of the three that runs with no pixel cap (full resolution). Its C++ ViT is deterministic at >14k vision tokens.
-- The **formula CDM gap** (~5.65 pts on the canary): after ruling out resolution, streaming, post-processing, and systematic formula omission, **inference-engine-level numerical divergence is the leading explanation** — not a singly-proven root cause ([analysis](docs/tencent-114-followup3-draft.md)).
+- The **formula CDM gap** (~5.65 pts vLLM-vs-llama.cpp on the canary): after ruling out resolution, streaming, post-processing, and systematic formula omission, **inference-engine-level numerical divergence is the leading explanation** — not a singly-proven root cause ([analysis](docs/tencent-114-followup3-draft.md)).
 - The **>14k ViT instability** is a sharp threshold (~14,200 patches) **observed in the transformers/ROCm full-ViT path using SDPA on the tested gfx1100 stack**; a standalone SDPA op does not reproduce it, so it is **not pinned to a single SDPA kernel**, and there is no NVIDIA control to bound it to ROCm ([ROCm issue #6416](https://github.com/ROCm/ROCm/issues/6416)). It is not observed in vLLM's Flash-Attention or llama.cpp's C++ GGML paths.
+
+## Hardware support
+
+| Use case | Status | Notes |
+|---|---|---|
+| Single-GPU inference — llama.cpp (HIP) | ✅ Verified | gfx1100 48 GB; warm ~1.4 s/page |
+| 4-GPU full-set throughput — llama.cpp | ✅ Verified | one server/GPU; full 1651 in ~hours |
+| vLLM canary (148) | ✅ Verified | 94.81 Overall |
+| transformers canary (148) | ✅ Verified | 94.11 Overall |
+| vLLM full-set (1651) | ❌ Not verified | servers crash under sustained load (invalid 46.31) |
+| transformers full-set (1651) | ⚠️ Not verified | ~40 h, impractical |
+| Minimum VRAM | ❔ Unknown | not measured — do **not** assume a number |
+| Other RDNA3 / non-gfx1100 | ❔ Unknown | not tested; file a ROCm-compat issue |
+
+A single gfx1100 is sufficient for inference and the canary; 4 GPUs are only
+needed for full-set throughput, not for correctness.
+
+## ⚖️ License — read before downloading weights
+
+Before downloading or using the weights, review the **Tencent Hunyuan Community
+License** ([LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt](LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt),
+[official](https://github.com/Tencent-Hunyuan/HunyuanOCR)). **The license does
+not apply in the EU, UK, or South Korea**, and it is **not OSI Open Source**.
+See [NOTICE](NOTICE) for the full mixed-license breakdown. Original
+packaging/tooling in this repo is Apache-2.0; code ported from HunyuanOCR and the
+weights are under the Tencent Hunyuan Community License.
 
 ## Quick start (llama.cpp, recommended)
 
-### Build llama.cpp with HIP on gfx1100
+### 1. Install (CPU-only core; no torch pulled from PyPI)
+
+```bash
+git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git
+cd HunyuanOCR-ROCm
+pip install -e ".[client,dev]"      # core + openai client + dev tools; NO torch
+```
+
+> ROCm PyTorch is **not** a dependency and is **not** installed by the above — it
+> is only needed for the transformers/vLLM backends. Install it separately from a
+> verified ROCm wheel source for your stack. The llama.cpp backend needs no torch.
+
+### 2. Build llama.cpp with HIP on gfx1100
 
 ```bash
 git clone https://github.com/ggml-org/llama.cpp.git
 cd llama.cpp
-git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # locked commit for published results
+git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # locked commit for the published results
 HIPCXX=/opt/rocm/llvm/bin/clang HIP_PATH=/opt/rocm \
 cmake -S . -B build -DGGML_HIP=ON -DGPU_TARGETS=gfx1100 \
   -DGGML_HIP_ROCWMMA_FATTN=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=ON
 cmake --build build --config Release -j$(nproc) --target llama-server
 ```
 
-### Download the BF16 GGUF
+> **`latest` master is not guaranteed to reproduce** the published numbers — always
+> check out the locked commit above. If your ROCm stack lacks the **rocWMMA**
+> headers, fall back to a non-rocWMMA build: drop `-DGGML_HIP_ROCWMMA_FATTN=ON`
+> (slower, but functional).
+
+### 3. Download the BF16 GGUF and verify its hash
 
 ```bash
 huggingface-cli download ggml-org/HunyuanOCR-GGUF \
   HunyuanOCR-bf16.gguf mmproj-HunyuanOCR-bf16.gguf \
   --local-dir ./HunyuanOCR-GGUF
+sha256sum ./HunyuanOCR-GGUF/*.gguf
+# compare against reproducibility.lock.yaml -> model.benchmark_artifact
 ```
 
-### Run inference
+### 4. Run inference (bind to localhost by default)
 
 ```bash
 ./build/bin/llama-server \
   --model ./HunyuanOCR-GGUF/HunyuanOCR-bf16.gguf \
   --mmproj ./HunyuanOCR-GGUF/mmproj-HunyuanOCR-bf16.gguf \
-  --host 0.0.0.0 --port 8080 --alias HYVL \
+  --host 127.0.0.1 --port 8080 --alias HYVL \
   -ngl 999 -c 65536 -n 32768
 ```
 
-### Evaluate on OmniDocBench v1.6
+> **Network safety.** `llama-server` has **no default strong authentication**. The
+> default bind is `127.0.0.1` (loopback only). For remote access, put a reverse
+> proxy with authentication in front and restrict it with a firewall — **do not
+> expose the server to the public internet**. The `-c 65536` context is required
+> for large uncapped images (32768 overflows).
+
+### 5. Predict → validate → score on OmniDocBench v1.6
 
 ```bash
-git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git
-cd HunyuanOCR-ROCm
-pip install -e . --no-deps && pip install pillow tqdm pyyaml requests openai
-
-# run predictions (one server per GPU for throughput)
+# one server per GPU for throughput; note --backend-name llamacpp
 python scripts/run_phase2_vllm.py \
-  --gt-json /path/to/OmniDocBench.json \
-  --images-dir /path/to/images \
-  --pred-dir ./predictions \
-  --ports 8080 --model HYVL --concurrency 8
+  --backend-name llamacpp --server-alias HYVL \
+  --gt-json /path/to/OmniDocBench.json --images-dir /path/to/images \
+  --pred-dir ./predictions --host 127.0.0.1 --ports 8080 \
+  --model HYVL --concurrency 8
 
-# score (requires OmniDocBench scorer)
-python scripts/score_predictions.py \
-  --pred-dir ./predictions \
-  --gt-json /path/to/OmniDocBench.json
+python scripts/validate_predictions.py \
+  --gt-json /path/to/OmniDocBench.json --pred-dir ./predictions
+
+python scripts/score_predictions.py \      # requires the OmniDocBench scorer
+  --pred-dir ./predictions --gt-json /path/to/OmniDocBench.json
 ```
+
+Or via the unified CLI (`hunyuan-ocr doctor | validate | manifest verify | canary
+materialize | predict | score`). Run `hunyuan-ocr doctor` to check your env.
 
 ## Architecture
 
 ```
-HunyuanOCR-ROCm/
-├── src/hunyuan_ocr/            # frozen decoding contract + shared post-processors
-│   ├── contract.py             # prompt, sampling, image config (FROZEN)
-│   ├── tasks.py                # 12 task prompts (verbatim port from upstream)
-│   ├── postprocess.py          # clean_repeated_substrings + process_one (verbatim port)
-│   ├── omnidocbench.py         # dataset iteration + prediction filename mapping
-│   ├── scoring.py              # OmniDocBench config writer + scorer + result parser
-│   └── backends/
-│       ├── transformers.py     # Phase 1: transformers backend (oracle)
-│       ├── vllm_client.py      # Phase 2: vLLM OpenAI-compatible client
-│       └── (llamacpp reuses vllm_client — llama-server is OAI-compatible)
-├── scripts/
-│   ├── run_phase1_transformers.py   # multi-GPU transformers driver
-│   ├── run_phase2_vllm.py          # multi-server vLLM/llama.cpp driver (resumable)
-│   ├── serve_vllm.sh               # start a vLLM server (HIP, compiled, tuned)
-│   ├── score_predictions.py        # OmniDocBench scoring wrapper
-│   └── regression_canary.py        # 150-page canary regression oracle
-├── eval/configs/               # OmniDocBench eval config template
-├── reports/                    # canary BASELINE + project stage summary
-├── docs/superpowers/           # design spec + implementation plans
-└── Makefile                    # demo, eval-linux, eval-canary, score targets
+src/hunyuan_ocr/
+├── contract.py           # FROZEN decoding contract (prompt, sampling, image config)
+├── tasks.py              # 12 task prompts (verbatim port from upstream)
+├── postprocess.py        # clean_repeated_substrings + process_one (verbatim port)
+├── runner.py             # atomic writes, resumability, run-manifest, writer lock
+├── validation.py         # pre-score prediction-dir validation
+├── preflight.py          # input validation + sharding (fail before model load)
+├── endpoint_pool.py      # circuit-breaking OpenAI-compatible endpoint pool
+├── scoring.py            # OmniDocBench config writer + scorer + result parser
+├── canary.py             # rebuild the 148-page canary from the full GT
+├── cli.py                # unified `hunyuan-ocr` CLI
+├── omnidocbench.py       # dataset iteration + prediction filename mapping
+└── backends/
+    ├── transformers.py   # transformers backend (Phase 1 oracle)
+    └── vllm_client.py    # OpenAI-compatible client (vLLM / llama-server / any OAI)
+
+scripts/
+├── run_phase2_vllm.py / run_openai_compatible.py  # multi-server OAI driver (resumable)
+├── run_phase1_transformers.py                     # multi-GPU transformers driver
+├── serve_vllm.sh               # start a vLLM server (HIP, compiled, tuned)
+├── score_predictions.py / validate_predictions.py # score / validate wrappers
+├── reproduce_llamacpp_{canary,full}.sh            # locked-commit reproduce scripts
+├── create_canary_manifest.py   # (re)generate eval/canary_148.manifest.json
+└── check_repo.py               # CI integrity checks (lock, manifest, links, SPDX)
+
+eval/canary_148.manifest.json   # the 148 canary pages (file order) + source-GT SHA256
+reproducibility.lock.yaml       # pinned inputs: commits, GT/model SHA256, env, metrics
+reports/                        # canary BASELINE + stage summary (Historical)
+LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
 ```
+
+> Internal design/planning notes live under `docs/superpowers/` and are **not**
+> part of the user-facing architecture.
 
 ## gfx1100 adaptations
 
-| Adaptation | Reason | File |
+| Adaptation | Reason | Where |
 |---|---|---|
-| ViT pixel cap (3.4M, `GFX1100_VIT_MAX_PIXELS`) | ROCm SDPA ViT NaN above ~14.2k tokens ([#6416](https://github.com/ROCm/ROCm/issues/6416)) | `backends/transformers.py` |
+| ViT pixel cap (3.4M, `HUNYUANOCR_VIT_MAX_PIXELS`) | ROCm SDPA ViT NaN above ~14.2k tokens ([#6416](https://github.com/ROCm/ROCm/issues/6416)) | `backends/transformers.py` |
 | SDPA attention (vs eager) | ~1.4× faster on RDNA3 | `backends/transformers.py` |
 | torch.compile for vLLM | ~28× decode speedup (2→150 tok/s) | `scripts/serve_vllm.sh` |
-| `-c 65536` for llama-server | large pages overflow 32768 ctx at full res | `scripts/serve_vllm.sh` |
+| `-c 65536` for **llama-server** | large pages overflow 32768 ctx at full res | `scripts/reproduce_llamacpp_*.sh` (llama-server flags) |
 
 ## Issues filed
 
@@ -125,18 +228,20 @@ HunyuanOCR-ROCm/
 ## Reproducibility
 
 - **Lock file:** [`reproducibility.lock.yaml`](reproducibility.lock.yaml) pins every
-  verified input (repo + llama.cpp commits, GT SHA256, env versions) for the published
-  results. Unreachable-from-our-env fields (HF model revision, GGUF LFS oid) are
-  `not_recorded` with a fill command.
+  verified input (repo + llama.cpp commits, GT/model SHA256, env versions, metric
+  formula) for the published results. Unreachable-from-our-env fields (HF model
+  revision, GGUF LFS oid) are `not_recorded` with a fill command.
 - **Canary manifest:** [`eval/canary_148.manifest.json`](eval/canary_148.manifest.json)
-  lists the 148 canary pages with the source-GT SHA256. Regenerate with
-  `scripts/create_canary_manifest.py`.
+  lists the 148 canary pages **in file order** with the source-GT SHA256.
+  Regenerate with `scripts/create_canary_manifest.py`; rebuild the canary subset
+  byte-identically from the full GT with `hunyuan-ocr canary materialize`.
 - **Reproduce scripts:** `scripts/reproduce_llamacpp_canary.sh` (148) and
-  `scripts/reproduce_llamacpp_full.sh` (1651) run predict → validate → score against a
-  locked llama.cpp commit, binding `127.0.0.1`. Set `LLAMA_DIR/GGUF_DIR/DATA_DIR/OUT_DIR`.
+  `scripts/reproduce_llamacpp_full.sh` (1651) run predict → validate → score →
+  verify-manifest against the locked llama.cpp commit, binding `127.0.0.1`.
+  `RESUME=1` continues an existing run; `OVERWRITE=1` redoes it. Set
+  `LLAMA_DIR/GGUF_DIR/DATA_DIR/OUT_DIR`.
 - **Which numbers are formal vs diagnostic:**
-  - **Formal/reliable:** llama.cpp full 1651 = **92.09**; canary vLLM 94.81, transformers
-    94.11, llama.cpp 93.33.
+  - **Formal/reliable:** llama.cpp full 1651 = **92.09**; canary vLLM 94.81, transformers 94.11, llama.cpp 93.33.
   - **Diagnostic only:** the >14k ViT isolation, throughput tuning, formula-CDM ablation.
   - **Invalid (excluded):** vLLM full-set 46.31 (server crashes, ~780 ERROR pages).
 - **Why newer deps may differ:** the benchmark used transformers 5.13.0 in an isolated
@@ -147,8 +252,8 @@ HunyuanOCR-ROCm/
 
 This repository is **mixed-licensed** (see [NOTICE](NOTICE)):
 
-1. **Original packaging/tooling** (drivers, `runner.py`, `validation.py`, `scoring.py`, `omnidocbench.py`): **Apache-2.0** ([LICENSE](LICENSE), [LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
-2. **Code ported from HunyuanOCR** (`contract.py`, `tasks.py`, `postprocess.py`, `backends/*`): upstream-derived portions under the **Tencent Hunyuan Community License** ([LICENSES/Tencent-Hunyuan-Community-License.txt](LICENSES/Tencent-Hunyuan-Community-License.txt)) — *not* Apache.
+1. **Original packaging/tooling** (`runner.py`, `validation.py`, `scoring.py`, `omnidocbench.py`, `endpoint_pool.py`, `preflight.py`, `canary.py`, `cli.py`, drivers, scripts): **Apache-2.0** ([LICENSE](LICENSE), [LICENSES/Apache-2.0.txt](LICENSES/Apache-2.0.txt)).
+2. **Code ported from HunyuanOCR** (`contract.py`, `tasks.py`, `postprocess.py`, `backends/*`): upstream-derived portions under the **Tencent Hunyuan Community License** ([LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt](LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt)) — *not* Apache.
 3. **HunyuanOCR model weights** (`tencent/HunyuanOCR`, `ggml-org/HunyuanOCR-GGUF`): **Tencent Hunyuan Community License** — **not OSI Open Source**; excludes EU/UK/KR; "Powered by Tencent Hunyuan" is *encouraged*, not required.
 4. **llama.cpp**: MIT. **vLLM**: Apache-2.0.
 

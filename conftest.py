@@ -5,6 +5,7 @@ The package is NOT installed editable in CI/dev; this adds `src` to sys.path so
 `pytest -q` (the documented acceptance command) collects tests that import
 `hunyuan_ocr`.
 """
+
 import sys
 from pathlib import Path
 

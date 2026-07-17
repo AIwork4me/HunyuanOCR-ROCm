@@ -6,6 +6,7 @@ Pure function: read GT json + pred dir -> structured Report. No GPU, no model.
 A non-clean report blocks scoring (see scripts/validate_predictions.py and the
 gate in scripts/score_predictions.py).
 """
+
 from __future__ import annotations
 
 import json
@@ -17,7 +18,7 @@ from .runner import ERROR_PREFIX, _OWN_ARTIFACTS
 
 @dataclass
 class Problem:
-    severity: str   # "error" | "warning"
+    severity: str  # "error" | "warning"
     code: str
     message: str
     detail: object = None
@@ -57,9 +58,9 @@ def _gt_stems(gt_json) -> tuple[list[str], list[Problem]]:
         stems.append(stem)
     for stem, n in seen.items():
         if n > 1:
-            problems.append(Problem("error", "duplicate_stem",
-                                    f"GT maps {n} pages to stem '{stem}'",
-                                    {"stem": stem, "count": n}))
+            problems.append(
+                Problem("error", "duplicate_stem", f"GT maps {n} pages to stem '{stem}'", {"stem": stem, "count": n})
+            )
     return stems, problems
 
 
@@ -93,32 +94,32 @@ def validate_predictions(gt_json, pred_dir, *, strict: bool = True) -> Report:
     for stem in missing:
         problems.append(Problem("error", "missing", f"'{stem}.md' missing", {"stem": stem}))
     for stem in error_markers:
-        problems.append(Problem("error", "error_marker",
-                                f"'{stem}.md' starts with 'ERROR:'", {"stem": stem}))
+        problems.append(Problem("error", "error_marker", f"'{stem}.md' starts with 'ERROR:'", {"stem": stem}))
 
     for p in sorted(pred_dir.glob("*.partial")):
-        problems.append(Problem("error", "partial",
-                                f"leftover partial '{p.name}'", {"file": p.name}))
+        problems.append(Problem("error", "partial", f"leftover partial '{p.name}'", {"file": p.name}))
 
     edir = pred_dir / "_errors"
     if edir.is_dir():
         for ef in sorted(edir.glob("*.json")):
-            problems.append(Problem("error", "unresolved_error",
-                                    f"unresolved error record '_errors/{ef.name}'",
-                                    {"stem": ef.stem}))
+            problems.append(
+                Problem("error", "unresolved_error", f"unresolved error record '_errors/{ef.name}'", {"stem": ef.stem})
+            )
 
     if pred_dir.is_dir():
         for entry in sorted(pred_dir.iterdir()):
             if entry.is_dir():
                 if entry.name not in _OWN_ARTIFACTS:
-                    problems.append(Problem("warning", "unexpected_dir",
-                                            f"unexpected dir '{entry.name}/'", {"name": entry.name}))
+                    problems.append(
+                        Problem("warning", "unexpected_dir", f"unexpected dir '{entry.name}/'", {"name": entry.name})
+                    )
                 continue
             if entry.name in _OWN_ARTIFACTS:
                 continue
             if entry.name.endswith(".md") or entry.name.endswith(".partial"):
                 continue
-            problems.append(Problem("warning", "unexpected_file",
-                                    f"unexpected file '{entry.name}'", {"name": entry.name}))
+            problems.append(
+                Problem("warning", "unexpected_file", f"unexpected file '{entry.name}'", {"name": entry.name})
+            )
 
     return Report(expected=expected, valid=valid, problems=problems)

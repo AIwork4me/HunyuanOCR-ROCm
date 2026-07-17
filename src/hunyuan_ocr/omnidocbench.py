@@ -7,6 +7,7 @@ of page dicts; each page_info.image_path is a BARE basename resolved under the
 dataset's images/ directory. Subsets OmniDocBench_150.json / OmniDocBench_30.json
 share the same format.
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path

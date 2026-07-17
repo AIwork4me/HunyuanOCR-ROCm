@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 AIwork4me
 """Generate a verifiable canary manifest from an OmniDocBench GT json.
 
 Emits JSON: subset name, source dataset/version, expected_count, sorted page
@@ -13,6 +15,7 @@ Usage:
       --name canary-148 --dataset OmniDocBench --dataset-version v1.6 \
       --out eval/canary_148.manifest.json
 """
+
 from __future__ import annotations
 import argparse
 import hashlib
@@ -30,12 +33,15 @@ def sha256_file(p) -> str:
 
 def build_manifest(gt_json, *, name, dataset, dataset_version) -> dict:
     pages = json.load(open(gt_json, encoding="utf-8"))
-    entries = sorted((Path(p["page_info"]["image_path"]).stem,
-                      p["page_info"]["image_path"]) for p in pages)
+    # Preserve the SOURCE FILE ORDER (not sorted): the order is load-bearing —
+    # `hunyuan_ocr.canary.materialize` rebuilds the subset byte-identically from
+    # the full GT by selecting pages in this exact order.
+    entries = [(Path(p["page_info"]["image_path"]).stem, p["page_info"]["image_path"]) for p in pages]
     return {
         "subset_name": name,
         "source_dataset": dataset,
         "source_dataset_version": dataset_version,
+        "serialization": "json_compact_utf8",  # json.dumps(subset, ensure_ascii=False)
         "expected_count": len(entries),
         "pages": [{"stem": s, "image_path": ip} for s, ip in entries],
         "source_json_sha256": sha256_file(gt_json),
@@ -57,16 +63,16 @@ def main():
     p.add_argument("--out", required=True)
     args = p.parse_args()
 
-    m = build_manifest(args.gt_json, name=args.name, dataset=args.dataset,
-                       dataset_version=args.dataset_version)
+    m = build_manifest(args.gt_json, name=args.name, dataset=args.dataset, dataset_version=args.dataset_version)
     m["manifest_sha256"] = manifest_sha256(m)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(m, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-                   encoding="utf-8")
-    print(f"wrote {out}: {m['expected_count']} pages, "
-          f"source_sha256={m['source_json_sha256'][:12]}..., "
-          f"manifest_sha256={m['manifest_sha256'][:12]}...")
+    out.write_text(json.dumps(m, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"wrote {out}: {m['expected_count']} pages, "
+        f"source_sha256={m['source_json_sha256'][:12]}..., "
+        f"manifest_sha256={m['manifest_sha256'][:12]}..."
+    )
 
 
 if __name__ == "__main__":

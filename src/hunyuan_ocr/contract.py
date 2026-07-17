@@ -1,10 +1,10 @@
-# SPDX-License-Identifier: NOASSERTION
+# SPDX-License-Identifier: LicenseRef-Tencent-Hunyuan-Community-License
 # Copyright (c) Tencent. All rights reserved.
 # Copyright 2026 AIwork4me (modifications for the ROCm port)
 #
 # This file derives from Tencent HunyuanOCR (https://github.com/Tencent-Hunyuan/HunyuanOCR),
 # licensed under the Tencent Hunyuan Community License Agreement. Upstream-derived
-# portions retain that license; see LICENSES/Tencent-Hunyuan-Community-License.txt.
+# portions retain that license; see LICENSES/LicenseRef-Tencent-Hunyuan-Community-License.txt.
 # The "Powered by Tencent Hunyuan" mark is encouraged (license §3c), not required.
 """The FROZEN decoding contract — the single shared layer across backends.
 
@@ -14,7 +14,7 @@ All values are copied verbatim from the upstream HunyuanOCR-1.5 inference recipe
 (inference/transformers/infer_hf_8gpu_hyocr15.py, aligned with infer_vllm_client.py).
 """
 from __future__ import annotations
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 # Sampling kwargs passed straight to model.generate() / mapped onto each backend.

@@ -5,30 +5,86 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hunyuan-ocr"
 version = "0.1.0"
-description = "Precision-aligned AMD ROCm port of HunyuanOCR-1.5 for OmniDocBench v1.6"
+description = "Evaluation-backed AMD ROCm port of HunyuanOCR-1.5 for OmniDocBench v1.6"
+readme = "README.md"
 requires-python = ">=3.12"
+# Mixed license: see NOTICE and LICENSES/. Original packaging/tooling is Apache-2.0;
+# code ported from HunyuanOCR and the model weights are under the Tencent Hunyuan
+# Community License (not OSI open source; excludes EU/UK/KR).
+license = { text = "Mixed: Apache-2.0 (original packaging/tooling) AND Tencent Hunyuan Community License (code ported from HunyuanOCR + model weights). See NOTICE and LICENSES/." }
+authors = [{ name = "AIwork4me" }]
+keywords = [
+  "hunyuanocr", "ocr", "document-ai", "amd-gpu", "rocm", "rdna3",
+  "llama-cpp", "vllm", "omnidocbench", "vision-language-model",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Core deps are intentionally GPU-free: importing the package, validating,
+# scoring-wrapper config, and the CLI all work on a plain CPU. The heavy / GPU
+# deps are opt-in extras. Plain-PyPI torch is NEVER a dependency — on ROCm you
+# must install torch from a verified ROCm wheel source separately (see README).
 dependencies = [
-  "transformers==5.13.0",
-  "torch",          # installed from ROCm wheel, not PyPI — do NOT pin here
   "pillow",
-  "tqdm",
   "pyyaml",
+  "tqdm",
   "requests",
-  "openai",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-mock"]
+# OpenAI-compatible client (vLLM / llama-server / any OAI server).
+client = ["openai>=1.0"]
+# transformers backend (Phase 1 oracle). Pinned to the benchmark version for
+# reproducibility; see reproducibility.lock.yaml. Requires a separate ROCm torch.
+transformers = ["transformers==5.13.0"]
+# Convenience alias; pyyaml is already core. Reserved for future eval-only deps.
+eval = ["pyyaml"]
+# Development / CI tooling.
+dev = ["pytest>=8", "pytest-mock", "ruff>=0.6", "build"]
+
+[project.urls]
+Homepage = "https://github.com/AIwork4me/HunyuanOCR-ROCm"
+Repository = "https://github.com/AIwork4me/HunyuanOCR-ROCm"
+Issues = "https://github.com/AIwork4me/HunyuanOCR-ROCm/issues"
+
+[project.scripts]
+hunyuan-ocr = "hunyuan_ocr.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+hunyuan_ocr = ["data/*.yaml"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-# Vendored/upstream-derived algorithm files: intentionally NOT reformatted so
-# diffs against upstream stay trackable. Lint only; never auto-format these.
+
 [tool.ruff.lint.per-file-ignores]
-"src/hunyuan_ocr/postprocess.py" = ["E501", "E741"]
+# Vendored / verbatim upstream-derived algorithm files: lint only, never reformat,
+# so diffs against Tencent HunyuanOCR stay trackable. The multi-statement (E701/
+# E702) and import-layout (E401) styles and the placeholder f-string (F541) are
+# preserved verbatim from upstream on purpose.
+"src/hunyuan_ocr/postprocess.py" = ["E501", "E741", "E701", "E702", "E401", "F541"]
 "src/hunyuan_ocr/tasks.py" = ["E501"]
 "src/hunyuan_ocr/contract.py" = ["E501"]
+
+[tool.ruff.format]
+# per-file-ignores is lint-only; the formatter must exclude the same vendored
+# files explicitly so `ruff format` never rewrites them.
+exclude = [
+  "src/hunyuan_ocr/postprocess.py",
+  "src/hunyuan_ocr/tasks.py",
+  "src/hunyuan_ocr/contract.py",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "gpu: end-to-end test requiring a real gfx1100 ROCm GPU + model weights (deselected in CI)",
+]

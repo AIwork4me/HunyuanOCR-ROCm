@@ -1,0 +1,68 @@
+name: ROCm / GPU compatibility
+description: It crashes, NaNs, or misbehaves specifically on AMD ROCm / gfx hardware
+labels: ["rocm-compat"]
+body:
+  - type: input
+    id: gpu
+    attributes:
+      label: GPU model
+      placeholder: "e.g. Radeon RX 7900 XTX"
+    validations:
+      required: true
+  - type: input
+    id: gfx
+    attributes:
+      label: gfx architecture
+      placeholder: "e.g. gfx1100 (run `rocminfo | grep gfx`)"
+    validations:
+      required: true
+  - type: input
+    id: rocm
+    attributes:
+      label: ROCm version
+      placeholder: "e.g. 7.2 (`hipconfig --version`)"
+    validations:
+      required: true
+  - type: input
+    id: kernel
+    attributes:
+      label: Kernel / driver
+      placeholder: "uname -r ; rocminfo --human-readable | grep -i driver"
+    validations:
+      required: false
+  - type: input
+    id: torch
+    attributes:
+      label: torch version
+      placeholder: "python -c 'import torch;print(torch.__version__,torch.version.hip)'"
+    validations:
+      required: false
+  - type: textarea
+    id: commits
+    attributes:
+      label: Engine commits/versions
+      description: transformers / vLLM / llama.cpp commit or version.
+      placeholder: "transformers=..., vllm=..., llama.cpp commit=..."
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command + logs
+      description: The exact command and the relevant log/error tail.
+    validations:
+      required: true
+  - type: input
+    id: resolution
+    attributes:
+      label: Input image resolution + vision-token count
+      placeholder: "WxH, and approx patch/token count if known"
+    validations:
+      required: false
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction + manifest
+      description: Minimal repro. Attach run_manifest.json if available.
+    validations:
+      required: true

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Getting help / support
+    url: https://github.com/AIwork4me/HunyuanOCR-ROCm/blob/main/SUPPORT.md
+    about: Read SUPPORT.md before opening an issue.
+  - name: Benchmark methodology
+    url: https://github.com/AIwork4me/HunyuanOCR-ROCm/blob/main/docs/benchmark-methodology.md
+    about: How each formal number is produced and what it is comparable to.
+  - name: Security report (private)
+    url: https://github.com/AIwork4me/HunyuanOCR-ROCm/security/advisories/new
+    about: Report a security issue privately (see SECURITY.md).
