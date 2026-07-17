@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 AIwork4me
 """OmniDocBench v1.6 scoring driver.
 
 Writes an eval config, invokes the OmniDocBench scorer (pdf_validation.py) in its

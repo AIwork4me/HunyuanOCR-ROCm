@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 AIwork4me
 """Pre-score validation of a prediction directory against OmniDocBench GT.
 
 Pure function: read GT json + pred dir -> structured Report. No GPU, no model.

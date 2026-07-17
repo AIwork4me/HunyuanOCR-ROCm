@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright 2026 AIwork4me
 """Prediction-integrity primitives shared by the phase drivers.
 
 Centralizes the rules that prevent "false completion":
