@@ -51,3 +51,72 @@ def write_atomic(path: Path, content: str) -> None:
         except FileNotFoundError:
             pass
         raise
+
+
+def _error_path(pred_dir, stem: str, ext: str = ".md") -> Path:
+    return Path(pred_dir) / "_errors" / f"{stem}.json"
+
+
+def record_error(pred_dir, stem: str, *, image_path, backend, endpoint,
+                 exc, attempt: int, ts: float | None = None) -> None:
+    """Write ``_errors/<stem>.json`` (one file per page -> no concurrent-write race).
+
+    The presence of this file means the page is FAILED. ``write_atomic`` is used
+    so the record is never half-written.
+    """
+    ts = time.time() if ts is None else ts
+    rec = {
+        "image_path": str(image_path),
+        "stem": stem,
+        "backend": backend,
+        "endpoint": str(endpoint),
+        "exception_type": type(exc).__name__,
+        "exception_message": str(exc),
+        "attempt": attempt,
+        "timestamp": ts,
+    }
+    write_atomic(_error_path(pred_dir, stem), json.dumps(rec, ensure_ascii=False, indent=2))
+
+
+def commit_success(pred_dir, stem: str, md: str, *, ext: str = ".md") -> Path:
+    """Atomically write the final prediction AND clear any stale error record.
+
+    Preserves the invariant  COMPLETE <=> valid .md present AND no _errors/<stem>.json
+    across retries: a page that failed attempt 1 then succeeded attempt 2 must not
+    retain a stale error file. All success paths go through here, never raw write_atomic.
+    """
+    out = Path(pred_dir) / f"{stem}{ext}"
+    write_atomic(out, md)
+    try:
+        _error_path(pred_dir, stem, ext).unlink()
+    except FileNotFoundError:
+        pass
+    return out
+
+
+def is_complete(pred_dir, stem: str, ext: str = ".md") -> bool:
+    """True iff a valid prediction exists (non-empty, not ERROR:) and no unresolved error."""
+    out = Path(pred_dir) / f"{stem}{ext}"
+    if not out.is_file():
+        return False
+    try:
+        if out.stat().st_size == 0:
+            return False
+        with open(out, "r", encoding="utf-8") as f:
+            head = f.read(len(ERROR_PREFIX) + 32)
+    except OSError:
+        return False
+    if head.lstrip().startswith(ERROR_PREFIX):
+        return False
+    if _error_path(pred_dir, stem, ext).exists():
+        return False
+    return True
+
+
+def page_status(pred_dir, stem: str, ext: str = ".md") -> str:
+    """'failed' | 'complete' | 'pending'."""
+    if _error_path(pred_dir, stem, ext).exists():
+        return "failed"
+    if is_complete(pred_dir, stem, ext):
+        return "complete"
+    return "pending"
