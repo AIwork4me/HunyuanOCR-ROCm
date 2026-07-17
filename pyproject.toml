@@ -21,3 +21,13 @@ dev = ["pytest>=8", "pytest-mock"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+# Vendored/upstream-derived algorithm files: intentionally NOT reformatted so
+# diffs against upstream stay trackable. Lint only; never auto-format these.
+[tool.ruff.lint.per-file-ignores]
+"src/hunyuan_ocr/postprocess.py" = ["E501", "E741"]
+"src/hunyuan_ocr/tasks.py" = ["E501"]
+"src/hunyuan_ocr/contract.py" = ["E501"]
