@@ -125,3 +125,56 @@ def test_phase2_conflict_aborts(tmp_path, monkeypatch):
                 "1",
             ]
         )
+
+
+def test_phase2_unexpected_crash_still_writes_manifest(tmp_path, monkeypatch):
+    """A worker unexpected-exception must not abort before the manifest is written:
+    the run_manifest.json exists, status is 'crashed', and the crash is recorded."""
+    import hunyuan_ocr.runner as runner_mod
+
+    drv = _import_driver()
+    gt, img = _make_gt(tmp_path, ["a", "b"])
+    pred = tmp_path / "pred"
+
+    # infer_one fails for both pages (max-retries=1 -> one attempt each). Then the
+    # crash is forced by making record_error raise an UNEXPECTED error, which is
+    # outside work()'s bounded inner try -> propagates via f.result() -> captured.
+    def failing_infer(client, image_path, prompt, *, model, max_pixels):
+        raise RuntimeError("server 500")
+
+    def exploding_record_error(*a, **k):
+        raise RuntimeError("disk full while recording error")
+
+    monkeypatch.setattr(drv, "infer_one", failing_infer)
+    monkeypatch.setattr(drv, "OpenAI", lambda *a, **k: object())
+    monkeypatch.setattr(drv, "health_check", lambda url: True)
+    monkeypatch.setattr(runner_mod, "record_error", exploding_record_error)
+
+    with pytest.raises(SystemExit) as ei:
+        drv.main_with_args(
+            [
+                "--gt-json",
+                str(gt),
+                "--images-dir",
+                str(img),
+                "--pred-dir",
+                str(pred),
+                "--ports",
+                "9999",
+                "--concurrency",
+                "1",
+                "--max-retries",
+                "1",
+            ]
+        )
+    assert ei.value.code != 0
+    # the manifest MUST exist even though the run crashed
+    mp = pred / "run_manifest.json"
+    assert mp.exists(), "run_manifest.json was not written after the crash"
+    m = json.loads(mp.read_text("utf-8"))
+    assert m["status"] == "crashed"
+    assert m["extensions"]["crash"]["exception_type"] == "RuntimeError"
+    assert "disk full" in m["extensions"]["crash"]["exception_message"]
+    assert m["run_counts"]["interrupted"] >= 1
+    # and it still satisfies the conservation laws
+    assert runner_mod.validate_manifest(m) == []

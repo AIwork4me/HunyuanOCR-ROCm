@@ -230,7 +230,61 @@ _SECRET_FLAGS = {
     "--venv-python",
 }
 
-MANIFEST_SCHEMA_VERSION = 1
+MANIFEST_SCHEMA_VERSION = 2
+# Readers accept both v1 (legacy: top-level ``extra`` keys, no ``interrupted``)
+# and v2 (current: ``extensions`` namespace, ``run_counts.interrupted``). Writers
+# always emit v2. ``interrupted`` defaults to 0 when absent (v1 manifests), so
+# the conservation law ``attempted == succeeded + failed + interrupted`` holds
+# for both versions.
+SUPPORTED_SCHEMA_VERSIONS = (1, 2)
+KNOWN_RUN_STATUSES = ("ok", "failed", "crashed", "interrupted")
+REQUIRED_RUN_COUNTS = ("attempted", "succeeded", "failed", "skipped")
+REQUIRED_FINAL_STATE = ("expected", "complete", "failed", "pending")
+# Top-level manifest keys owned by write_run_manifest. ``extra`` passed to
+# write_run_manifest is nested under ``extensions`` and may NOT collide with any
+# of these (prevents an extension from silently overwriting a core field such as
+# ``status`` or ``run_counts``).
+RESERVED_MANIFEST_KEYS = frozenset(
+    {
+        "schema_version",
+        "repo_commit",
+        "backend",
+        "backend_provenance",
+        "model",
+        "model_revision",
+        "command",
+        "timestamp",
+        "timestamp_iso",
+        "run_counts",
+        "final_state",
+        "ports",
+        "gpu_ids",
+        "pixel_cap",
+        "max_tokens",
+        "env",
+        "platform",
+        "status",
+        "extensions",
+    }
+)
+
+
+def _is_nonneg_int(val) -> bool:
+    """True only for a genuine non-negative int (booleans are rejected)."""
+    return isinstance(val, int) and not isinstance(val, bool) and val >= 0
+
+
+def _parse_iso(ts) -> bool:
+    """True if ``ts`` parses as ISO-8601 (best-effort; never raises)."""
+    if not isinstance(ts, str) or not ts.strip():
+        return False
+    import datetime
+
+    try:
+        datetime.datetime.fromisoformat(ts)
+        return True
+    except (ValueError, TypeError):
+        return False
 
 
 def safe_argv(argv=None) -> list[str]:
@@ -325,37 +379,95 @@ def _env_versions() -> dict:
 
 
 def validate_manifest(m: dict) -> list[str]:
-    """Return a list of conservation-law violations in a manifest (empty == valid).
+    """Return a list of structural + conservation violations (empty == valid).
 
-    Enforced invariants:
-      run_counts:  attempted == succeeded + failed
-      cross:       expected == attempted + skipped
-      final_state: expected == complete + failed + pending
-    All counts must be present (non-None) and non-negative.
+    Never raises on bad input — corrupt JSON, missing fields, wrong types, and
+    unknown schema versions all become structured error strings so callers (the
+    CLI, reproduce scripts) can present a friendly message instead of a traceback.
+
+    Checks:
+      * schema_version in SUPPORTED_SCHEMA_VERSIONS.
+      * backend / model are non-empty strings; status is a known value.
+      * repo_commit + timestamp_iso present; timestamp_iso parses as ISO-8601.
+      * run_counts.{attempted,succeeded,failed,skipped} and
+        final_state.{expected,complete,failed,pending} are non-negative ints
+        (booleans are rejected as ints).
+      * conservation: attempted == succeeded + failed + interrupted;
+        expected == attempted + skipped; expected == complete + failed + pending.
+      * status == "ok" implies final_state.failed == 0 and pending == 0.
     """
     errs: list[str] = []
-    if m.get("schema_version") != MANIFEST_SCHEMA_VERSION:
-        errs.append(f"schema_version must be {MANIFEST_SCHEMA_VERSION} (got {m.get('schema_version')!r})")
-    rc = m.get("run_counts") or {}
-    fs = m.get("final_state") or {}
-    for label, d in (("run_counts", rc), ("final_state", fs)):
-        for k, val in d.items():
-            if val is None:
-                errs.append(f"{label}.{k} is None")
-            elif not isinstance(val, int) or isinstance(val, bool):
-                errs.append(f"{label}.{k} is not an int ({val!r})")
-            elif val < 0:
-                errs.append(f"{label}.{k} is negative ({val})")
-    if errs:
-        return errs
-    a, s, f, sk = rc["attempted"], rc["succeeded"], rc["failed"], rc["skipped"]
-    exp, c, ff, p = fs["expected"], fs["complete"], fs["failed"], fs["pending"]
-    if a != s + f:
-        errs.append(f"run_counts: attempted({a}) != succeeded({s}) + failed({f})")
-    if exp != a + sk:
-        errs.append(f"expected({exp}) != attempted({a}) + skipped({sk})")
-    if exp != c + ff + p:
-        errs.append(f"final_state: expected({exp}) != complete({c}) + failed({ff}) + pending({p})")
+    if not isinstance(m, dict):
+        return ["manifest is not a JSON object"]
+    sv = m.get("schema_version")
+    if sv not in SUPPORTED_SCHEMA_VERSIONS:
+        errs.append(f"schema_version must be one of {list(SUPPORTED_SCHEMA_VERSIONS)} (got {sv!r})")
+    backend = m.get("backend")
+    if not isinstance(backend, str) or not backend.strip():
+        errs.append(f"backend must be a non-empty string (got {backend!r})")
+    model = m.get("model")
+    if not isinstance(model, str) or not model.strip():
+        errs.append(f"model must be a non-empty string (got {model!r})")
+    if "repo_commit" not in m:
+        errs.append("repo_commit is missing")
+    ts = m.get("timestamp_iso")
+    if not isinstance(ts, str) or not ts.strip():
+        errs.append(f"timestamp_iso must be a non-empty string (got {ts!r})")
+    elif not _parse_iso(ts):
+        errs.append(f"timestamp_iso is not a parseable ISO-8601 timestamp (got {ts!r})")
+    status = m.get("status")
+    if status not in KNOWN_RUN_STATUSES:
+        errs.append(f"status must be one of {list(KNOWN_RUN_STATUSES)} (got {status!r})")
+
+    rc = m.get("run_counts")
+    if not isinstance(rc, dict):
+        errs.append("run_counts is missing or not an object")
+        rc = {}
+    fs = m.get("final_state")
+    if not isinstance(fs, dict):
+        errs.append("final_state is missing or not an object")
+        fs = {}
+
+    rc_bad = False
+    for k in REQUIRED_RUN_COUNTS:
+        if k not in rc:
+            errs.append(f"run_counts.{k} is missing")
+            rc_bad = True
+        elif not _is_nonneg_int(rc[k]):
+            errs.append(f"run_counts.{k} must be a non-negative integer (got {rc[k]!r})")
+            rc_bad = True
+    interrupted = rc.get("interrupted", 0)
+    if "interrupted" in rc and not _is_nonneg_int(interrupted):
+        errs.append(f"run_counts.interrupted must be a non-negative integer (got {interrupted!r})")
+        rc_bad = True
+    elif not _is_nonneg_int(interrupted):
+        rc_bad = True
+
+    fs_bad = False
+    for k in REQUIRED_FINAL_STATE:
+        if k not in fs:
+            errs.append(f"final_state.{k} is missing")
+            fs_bad = True
+        elif not _is_nonneg_int(fs[k]):
+            errs.append(f"final_state.{k} must be a non-negative integer (got {fs[k]!r})")
+            fs_bad = True
+
+    # Conservation laws only when every count is a valid int (else the arithmetic
+    # would be meaningless and the type errors above already explain the problem).
+    if not rc_bad and not fs_bad:
+        a, s, f, sk = rc["attempted"], rc["succeeded"], rc["failed"], rc["skipped"]
+        exp, c, ff, p = fs["expected"], fs["complete"], fs["failed"], fs["pending"]
+        if a != s + f + interrupted:
+            errs.append(f"run_counts: attempted({a}) != succeeded({s}) + failed({f}) + interrupted({interrupted})")
+        if exp != a + sk:
+            errs.append(f"cross: expected({exp}) != attempted({a}) + skipped({sk})")
+        if exp != c + ff + p:
+            errs.append(f"final_state: expected({exp}) != complete({c}) + failed({ff}) + pending({p})")
+        if status == "ok":
+            if ff != 0:
+                errs.append(f"status is 'ok' but final_state.failed = {ff} (must be 0)")
+            if p != 0:
+                errs.append(f"status is 'ok' but final_state.pending = {p} (must be 0)")
     return errs
 
 
@@ -400,6 +512,10 @@ def write_run_manifest(
             "succeeded": rc.get("succeeded"),
             "failed": rc.get("failed"),
             "skipped": rc.get("skipped"),
+            # pages dispatched this run whose outcome is unresolved (only > 0 on
+            # a crash/interrupt). Kept in run_counts so the conservation law
+            # attempted == succeeded + failed + interrupted always holds.
+            "interrupted": rc.get("interrupted", 0),
         },
         "final_state": {
             "expected": fs.get("expected"),
@@ -415,8 +531,17 @@ def write_run_manifest(
         "platform": _platform_info(),
         "status": status,
     }
+    # Extensions are namespaced — they may NOT silently overwrite a core field.
+    extensions: dict = {}
     if extra:
-        manifest.update(extra)
+        for key, val in extra.items():
+            if key in RESERVED_MANIFEST_KEYS:
+                raise ValueError(
+                    f"manifest extra key {key!r} collides with a reserved core field; "
+                    "nest it under a non-reserved name (it will land under 'extensions')."
+                )
+            extensions[key] = val
+    manifest["extensions"] = extensions
     out = Path(pred_dir) / "run_manifest.json"
     write_atomic(out, json.dumps(manifest, ensure_ascii=False, indent=2))
     return out
@@ -486,15 +611,35 @@ class RunLock:
         except OSError as exc:
             os.close(fd)
             holder = self._read_holder()
-            detail = f" (held by pid={holder.pid} host={holder.host} started={holder.started_iso})" if holder else ""
+            if holder is not None:
+                detail = f" (held by pid={holder.pid} host={holder.host} started={holder.started_iso})"
+                alive = "alive" if holder.is_alive() else "apparently dead"
+                advice = (
+                    f"flock auto-releases when the holder process exits, and it is {alive}; "
+                    f"if pid {holder.pid} is genuinely gone but the lock file remains, only then "
+                    f"remove '{self.path}'."
+                )
+            else:
+                detail = ""
+                advice = (
+                    "flock auto-releases when the holder process exits; wait for the other writer "
+                    f"to finish, and only remove '{self.path}' if you have confirmed its process is dead."
+                )
             raise RunLockHeld(
-                f"prediction directory '{self.pred_dir}' is locked by another "
-                f"live writer{detail}; refusing to write concurrently. "
-                f"If the holder is dead, remove '{self.path}'."
+                f"prediction directory '{self.pred_dir}' is locked by another live writer{detail}; "
+                f"refusing to write concurrently. {advice}"
             ) from exc
         self._fd = fd
         info = LockInfo(pid=os.getpid(), host=_hostname(), started_iso=iso_utc(), command=self.command)
-        os.write(fd, json.dumps(asdict(info), ensure_ascii=False).encode("utf-8"))
+        payload = json.dumps(asdict(info), ensure_ascii=False).encode("utf-8")
+        # The lock file may still hold a *longer* stale JSON body from a previous
+        # (dead) holder whose flock has been released. Overwriting from offset 0
+        # without truncating would leave the old tail appended after the new
+        # payload, producing invalid JSON. Seek to 0, write, then ftruncate to the
+        # exact new length so no stale tail can survive.
+        os.lseek(fd, 0, os.SEEK_SET)
+        written = os.write(fd, payload)
+        os.ftruncate(fd, written)
         os.fsync(fd)
         return self
 
