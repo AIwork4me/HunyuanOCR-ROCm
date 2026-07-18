@@ -31,11 +31,23 @@ def materialize(full_gt, manifest_path, out_path) -> str:
     the original subset), writes to ``out_path``, and verifies the SHA256 equals
     the manifest's ``source_json_sha256``. Returns the written SHA256.
 
-    Raises CanaryError on missing pages, duplicate image_paths, count mismatch,
-    or a SHA256 mismatch (materialization not byte-identical).
+    Raises CanaryError on missing/unreadable inputs, missing pages, duplicate
+    image_paths, count mismatch, or a SHA256 mismatch (materialization not
+    byte-identical). All error paths raise CanaryError so callers never see a
+    raw FileNotFoundError/JSONDecodeError traceback.
     """
-    manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
-    full = json.loads(Path(full_gt).read_text(encoding="utf-8"))
+    try:
+        manifest = json.loads(Path(manifest_path).read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise CanaryError(f"manifest not found: {manifest_path}") from exc
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CanaryError(f"manifest not readable/parseable: {manifest_path}: {exc}") from exc
+    try:
+        full = json.loads(Path(full_gt).read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise CanaryError(f"full GT not found: {full_gt}") from exc
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CanaryError(f"full GT not readable/parseable: {full_gt}: {exc}") from exc
     by_image = {p["page_info"]["image_path"]: p for p in full}
 
     order = [pg["image_path"] for pg in manifest["pages"]]
