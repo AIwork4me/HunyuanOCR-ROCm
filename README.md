@@ -99,24 +99,41 @@ weights are under the Tencent Hunyuan Community License.
 
 ## Quick start (llama.cpp, recommended)
 
+The flow is split across **two terminals** so a long-running server and the
+evaluation driver never depend on which directory you happen to be in. Set the
+directory variables **once** in each terminal first — every later command uses
+them explicitly.
+
+```bash
+# Run this in BOTH terminals, from the repo root after cloning:
+export HUNYUAN_ROCM_DIR="$PWD"                                 # this checkout
+export LLAMA_DIR="$HUNYUAN_ROCM_DIR/third_party/llama.cpp"     # llama.cpp build
+export GGUF_DIR="$HUNYUAN_ROCM_DIR/models/HunyuanOCR-GGUF"     # downloaded weights
+export DATA_DIR="/path/to/OmniDocBench_data"                   # GT json + images/
+```
+
 ### 1. Install (CPU-only core; no torch pulled from PyPI)
 
 ```bash
+# from $HUNYUAN_ROCM_DIR
 git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git
-cd HunyuanOCR-ROCm
-pip install -e ".[client,dev]"      # core + openai client + dev tools; NO torch
+cd "$HUNYUAN_ROCM_DIR"
+pip install -e ".[client,download]"      # core + openai client + hf downloader; NO torch
+# developers: pip install -e ".[client,download,dev]"
 ```
 
 > ROCm PyTorch is **not** a dependency and is **not** installed by the above — it
 > is only needed for the transformers/vLLM backends. Install it separately from a
 > verified ROCm wheel source for your stack. The llama.cpp backend needs no torch.
 
-### 2. Build llama.cpp with HIP on gfx1100
+### 2. (Terminal A) Build llama.cpp with HIP on gfx1100
 
 ```bash
-git clone https://github.com/ggml-org/llama.cpp.git
-cd llama.cpp
-git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5   # locked commit for the published results
+# from anywhere — uses $LLAMA_DIR explicitly
+git clone https://github.com/ggml-org/llama.cpp.git "$LLAMA_DIR"
+cd "$LLAMA_DIR"
+git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5
+# locked commit for the published results (see reproducibility.lock.yaml)
 HIPCXX=/opt/rocm/llvm/bin/clang HIP_PATH=/opt/rocm \
 cmake -S . -B build -DGGML_HIP=ON -DGPU_TARGETS=gfx1100 \
   -DGGML_HIP_ROCWMMA_FATTN=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=ON
@@ -131,20 +148,22 @@ cmake --build build --config Release -j$(nproc) --target llama-server
 ### 3. Download the BF16 GGUF and verify its hash
 
 ```bash
-huggingface-cli download ggml-org/HunyuanOCR-GGUF \
+# from anywhere — uses $GGUF_DIR explicitly
+hf download ggml-org/HunyuanOCR-GGUF \
   HunyuanOCR-bf16.gguf mmproj-HunyuanOCR-bf16.gguf \
-  --local-dir ./HunyuanOCR-GGUF
-sha256sum ./HunyuanOCR-GGUF/*.gguf
+  --local-dir "$GGUF_DIR"
+sha256sum "$GGUF_DIR"/*.gguf
 # compare against reproducibility.lock.yaml -> model.benchmark_artifact
 ```
 
-### 4. Run inference (bind to localhost by default)
+### 4. (Terminal A) Run the server (bind to localhost by default)
 
 ```bash
-./build/bin/llama-server \
-  --model ./HunyuanOCR-GGUF/HunyuanOCR-bf16.gguf \
-  --mmproj ./HunyuanOCR-GGUF/mmproj-HunyuanOCR-bf16.gguf \
-  --host 127.0.0.1 --port 8080 --alias HYVL \
+# one server per GPU for throughput; here, one on port 8081
+"$LLAMA_DIR/build/bin/llama-server" \
+  --model "$GGUF_DIR/HunyuanOCR-bf16.gguf" \
+  --mmproj "$GGUF_DIR/mmproj-HunyuanOCR-bf16.gguf" \
+  --host 127.0.0.1 --port 8081 --alias HYVL \
   -ngl 999 -c 65536 -n 32768
 ```
 
@@ -152,27 +171,46 @@ sha256sum ./HunyuanOCR-GGUF/*.gguf
 > default bind is `127.0.0.1` (loopback only). For remote access, put a reverse
 > proxy with authentication in front and restrict it with a firewall — **do not
 > expose the server to the public internet**. The `-c 65536` context is required
-> for large uncapped images (32768 overflows).
+> for large uncapped images (32768 overflows). Leave this running in Terminal A.
 
-### 5. Predict → validate → score on OmniDocBench v1.6
+### 5. (Terminal B) Predict → validate → score on OmniDocBench v1.6
+
+All commands run **from `$HUNYUAN_ROCM_DIR`** (the repo root) — they never depend
+on you being inside `llama.cpp`.
 
 ```bash
-# one server per GPU for throughput; note --backend-name llamacpp
+cd "$HUNYUAN_ROCM_DIR"
+
+# (optional) materialize the 148-page canary from the full GT, byte-identically:
+hunyuan-ocr canary materialize \
+  --full-gt "$DATA_DIR/OmniDocBench.json" \
+  --manifest "$HUNYUAN_ROCM_DIR/eval/canary_148.manifest.json" \
+  --out "$DATA_DIR/OmniDocBench_canary_148.json"
+
+# predict (note --backend-name llamacpp; --ports must match Terminal A)
 python scripts/run_phase2_vllm.py \
   --backend-name llamacpp --server-alias HYVL \
-  --gt-json /path/to/OmniDocBench.json --images-dir /path/to/images \
-  --pred-dir ./predictions --host 127.0.0.1 --ports 8080 \
-  --model HYVL --concurrency 8
+  --gt-json "$DATA_DIR/OmniDocBench_canary_148.json" \
+  --images-dir "$DATA_DIR/images" \
+  --pred-dir "$HUNYUAN_ROCM_DIR/artifacts/predictions" \
+  --host 127.0.0.1 --ports 8081 --model HYVL --concurrency 8
 
+# validate (blocks scoring on missing/empty/ERROR pages)
 python scripts/validate_predictions.py \
-  --gt-json /path/to/OmniDocBench.json --pred-dir ./predictions
+  --gt-json "$DATA_DIR/OmniDocBench_canary_148.json" \
+  --pred-dir "$HUNYUAN_ROCM_DIR/artifacts/predictions"
 
-python scripts/score_predictions.py \      # requires the OmniDocBench scorer
-  --pred-dir ./predictions --gt-json /path/to/OmniDocBench.json
+# score (requires the OmniDocBench scorer venv; see reproducibility.lock.yaml)
+python scripts/score_predictions.py \
+  --pred-dir "$HUNYUAN_ROCM_DIR/artifacts/predictions" \
+  --gt-json "$DATA_DIR/OmniDocBench_canary_148.json"
 ```
 
-Or via the unified CLI (`hunyuan-ocr doctor | validate | manifest verify | canary
-materialize | predict | score`). Run `hunyuan-ocr doctor` to check your env.
+The same steps are available via the unified CLI
+(`hunyuan-ocr doctor | validate | manifest verify | canary materialize | predict | score`);
+`predict` and `score` work from a wheel install too. Run `hunyuan-ocr doctor` to
+check your environment, or `hunyuan-ocr doctor --strict --backend llamacpp --json`
+for a CI-friendly gate.
 
 ## Architecture
 
@@ -227,10 +265,13 @@ LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
 
 ## Reproducibility
 
-- **Lock file:** [`reproducibility.lock.yaml`](reproducibility.lock.yaml) pins every
-  verified input (repo + llama.cpp commits, GT/model SHA256, env versions, metric
-  formula) for the published results. Unreachable-from-our-env fields (HF model
-  revision, GGUF LFS oid) are `not_recorded` with a fill command.
+- **Lock file (single source of truth):** [`reproducibility.lock.yaml`](reproducibility.lock.yaml)
+  pins every verified input for the published results — the repo + llama.cpp +
+  OmniDocBench commits, the GT/model SHA256s, **and** the HF model/GGUF revisions
+  and LFS OIDs (cross-checked byte-for-byte against the official repos), the env
+  versions, and the Overall metric formula. The exact model revisions, LFS OIDs,
+  and artifact SHA256 values are recorded there as the machine-readable source of
+  truth, so they are not duplicated here.
 - **Canary manifest:** [`eval/canary_148.manifest.json`](eval/canary_148.manifest.json)
   lists the 148 canary pages **in file order** with the source-GT SHA256.
   Regenerate with `scripts/create_canary_manifest.py`; rebuild the canary subset

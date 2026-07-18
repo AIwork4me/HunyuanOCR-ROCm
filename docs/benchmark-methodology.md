@@ -44,11 +44,12 @@ Two further, independent reasons a same-number comparison is not apples-to-apple
 This repo reports on **two different page sets**. They are never placed in the
 same column, because their numbers are not comparable.
 
-- **Canary (148 pages)** — `OmniDocBench_150.json`, a project-defined subset. All
-  three backends ran the *same* 148 pages. The upstream CUDA backend was **not**
-  evaluated on these 148 pages. (`eval/canary_148.manifest.json` lists the pages
-  and the source-GT SHA256; `scripts/create_canary_manifest.py` regenerates it;
-  `hunyuan-ocr canary materialize` rebuilds the subset from the full GT.)
+- **Canary (148 pages)** — `OmniDocBench_canary_148.json`, a project-defined
+  subset (historically named `OmniDocBench_150.json`; same 148 pages, same SHA256).
+  All three backends ran the *same* 148 pages. The upstream CUDA backend was
+  **not** evaluated on these 148 pages. (`eval/canary_148.manifest.json` lists the
+  pages and the source-GT SHA256; `scripts/create_canary_manifest.py` regenerates
+  it; `hunyuan-ocr canary materialize` rebuilds the subset from the full GT.)
 - **Full (1651 pages)** — the complete OmniDocBench v1.6 set. Only the llama.cpp
   backend completed a valid full-set run. The vLLM full-set run is **invalid**
   (server crashes → ~780 ERROR pages → a false 46.31 that is excluded).

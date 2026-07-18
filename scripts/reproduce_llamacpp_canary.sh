@@ -10,7 +10,11 @@ set -euo pipefail
 LLAMA_DIR="${LLAMA_DIR:?LLAMA_DIR must point to a llama.cpp checkout at the locked commit}"
 GGUF_DIR="${GGUF_DIR:?GGUF_DIR must contain HunyuanOCR-bf16.gguf + mmproj-HunyuanOCR-bf16.gguf}"
 DATA_DIR="${DATA_DIR:?DATA_DIR must be the OmniDocBench data dir}"
-GT_JSON="${GT_JSON:-$DATA_DIR/OmniDocBench_150.json}"
+# Canonical canary filename (148 pages). Materialize it from the full GT if you
+# only have OmniDocBench.json:
+#   hunyuan-ocr canary materialize --full-gt "$DATA_DIR/OmniDocBench.json" \
+#     --manifest "$REPO/eval/canary_148.manifest.json" --out "$DATA_DIR/OmniDocBench_canary_148.json"
+GT_JSON="${GT_JSON:-$DATA_DIR/OmniDocBench_canary_148.json}"
 OUT_DIR="${OUT_DIR:?OUT_DIR must be set (output predictions dir)}"
 PORTS="${PORTS:-8081,8082,8083,8084}"
 HOST="${HOST:-127.0.0.1}"
