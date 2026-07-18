@@ -99,3 +99,64 @@ def test_build_output_failure_includes_log_tail():
     assert "server did not become healthy" in summary
 
 
+import json  # noqa: E402
+
+from hunyuan_ocr.ci.github import GitHubClient  # noqa: E402
+
+
+class FakeGH:
+    """Records the argv passed to `gh api` and returns canned JSON."""
+
+    def __init__(self, responses):
+        self.responses = list(responses)
+        self.calls: list[list[str]] = []
+
+    def __call__(self, argv):
+        self.calls.append(list(argv))
+        return self.responses.pop(0)
+
+
+def test_ref_to_sha_calls_gh_and_parses():
+    gh = FakeGH([json.dumps({"object": {"sha": "deadbeef"}})])
+    c = GitHubClient("AIwork4me", "HunyuanOCR-ROCm", runner=gh)
+    assert c.ref_to_sha("main") == "deadbeef"
+    assert gh.calls[0][:3] == ["api", "repos/AIwork4me/HunyuanOCR-ROCm/git/refs/heads/main"]
+
+
+def test_ref_to_sha_passthrough_for_full_sha():
+    gh = FakeGH([])
+    assert GitHubClient("o", "r", runner=gh).ref_to_sha("a" * 40) == "a" * 40
+    assert gh.calls == []  # no API call for a raw SHA
+
+
+def test_latest_tag_returns_name_and_sha():
+    gh = FakeGH([json.dumps([{"ref": "refs/tags/v0.1.1", "object": {"sha": "tagsha"}}])])
+    assert GitHubClient("o", "r", runner=gh).latest_tag() == ("v0.1.1", "tagsha")
+
+
+def test_latest_tag_none_when_no_tags():
+    gh = FakeGH([json.dumps([])])
+    assert GitHubClient("o", "r", runner=gh).latest_tag() is None
+
+
+def test_list_check_runs_filters_to_check_name():
+    payload = {"check_runs": [
+        {"id": 1, "head_sha": "s", "status": "queued", "conclusion": None, "started_at": "2026-07-18T03:00:00Z",
+         "external_id": "s", "name": "gpu-smoke (gfx1100)"},
+        {"id": 2, "head_sha": "s", "status": "completed", "conclusion": "success", "started_at": None,
+         "external_id": "s", "name": "other-check"},
+    ]}
+    gh = FakeGH([json.dumps(payload)])
+    runs = GitHubClient("o", "r", runner=gh).list_check_runs("s")
+    assert [r.id for r in runs] == [1]  # only our check name
+    assert runs[0].created_at == "2026-07-18T03:00:00Z"  # created_at tracks started_at (for stale-sweep)
+
+
+def test_complete_sends_conclusion_title_summary():
+    gh = FakeGH(["{}"])
+    GitHubClient("o", "r", runner=gh).complete(99, conclusion="success", title="T", summary="S")
+    joined = " ".join(gh.calls[0])
+    assert "check-runs/99" in joined and "success" in joined and "T" in joined and "S" in joined
+
+
+
