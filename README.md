@@ -36,6 +36,20 @@ AMD gfx1100 (RDNA3, 48 GB ×4, ROCm 7.2), bf16, OmniDocBench v1.6. Two
 column, because their numbers are not comparable. Full provenance and the
 definition of "precision-aligned" are in [Benchmark methodology](docs/benchmark-methodology.md).
 
+<!-- BEGIN GENERATED RESULTS -->
+<!-- Auto-generated from reproducibility.lock.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->
+
+| Page set | Backend | Overall | Source |
+|---|---|---|---|
+| canary 148 | llama.cpp | 93.33 | reproducibility.lock.yaml |
+| canary 148 | transformers | 94.11 | reproducibility.lock.yaml |
+| canary 148 | vLLM | 94.81 | reproducibility.lock.yaml |
+| full 1651 | llama.cpp | 92.09 | reproducibility.lock.yaml |
+| full 1651 | vLLM | invalid (excluded; see reproducibility.lock.yaml) | reproducibility.lock.yaml |
+| official | TensorRT | 94.10 | official HunyuanOCR table |
+
+<!-- END GENERATED RESULTS -->
+
 ### Table A — same 148-page canary, three ROCm backends
 
 | Backend | Overall | text EditDist↓ | formula CDM↑ | table TEDS↑ | order EditDist↓ | Resolution | Status |

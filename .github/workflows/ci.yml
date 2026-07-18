@@ -48,6 +48,8 @@ jobs:
         run: pytest -q -m "not gpu" --cov=hunyuan_ocr --cov-report=term-missing --cov-fail-under=65
       - name: repo integrity (lock, manifest, links, SPDX, doc/lock consistency)
         run: python scripts/check_repo.py
+      - name: README results match the lock (single source of truth)
+        run: python scripts/render_benchmark_tables.py --check
       - name: build sdist + wheel
         run: python -m build
       - name: import + exercise built wheel in a clean venv
