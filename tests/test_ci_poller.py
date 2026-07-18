@@ -299,6 +299,46 @@ def test_once_stale_sweep_times_out_queued(tmp_path, monkeypatch):
     assert client.completions == [(1, "failure")]
 
 
+from hunyuan_ocr.ci import poller as poller_mod  # noqa: E402
+
+
+def _fresh_created() -> str:
+    import datetime as _dt
+
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
+    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", _fresh_created())]})
+    monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
+    monkeypatch.setattr(poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {}, None, 1.0, ""))
+    rc = poller_mod.main([
+        "--owner", "o", "--repo", "r", "--dry-run",
+        "--workdir-parent", str(tmp_path), "--smoke-script", str(tmp_path / "s.sh"),
+        "--lock", str(tmp_path / "l.lock"),
+    ])
+    assert rc == 0
+    assert client.completions == []  # dry-run never completes
+    out = capsys.readouterr().out
+    assert "would run" in out and "mainsha" in out
+
+
+def test_main_once_runs_one_pass(tmp_path, monkeypatch):
+    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", _fresh_created())]})
+    monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
+    monkeypatch.setattr(poller_mod, "run_smoke",
+                        lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""))
+    rc = poller_mod.main([
+        "--owner", "o", "--repo", "r", "--once",
+        "--workdir-parent", str(tmp_path), "--smoke-script", str(tmp_path / "s.sh"),
+        "--lock", str(tmp_path / "l.lock"),
+    ])
+    assert rc == 0
+    assert client.completions == [(1, "success")]
+
+
+
+
 
 
 

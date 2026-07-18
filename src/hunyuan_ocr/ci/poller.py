@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -12,7 +13,8 @@ import tempfile
 import time
 from pathlib import Path
 
-from hunyuan_ocr.ci.models import SMOKE_TIMEOUT_SEC, STALE_AFTER_SEC, CheckRun, SmokeResult, _parse_iso
+from hunyuan_ocr.ci.github import GitHubClient
+from hunyuan_ocr.ci.models import POLL_INTERVAL_SEC, SMOKE_TIMEOUT_SEC, STALE_AFTER_SEC, CheckRun, SmokeResult, _parse_iso
 
 
 def decide(queued_run: CheckRun, has_completed_for_sha: bool, now: float) -> str:
@@ -65,10 +67,12 @@ def build_output(result: SmokeResult) -> tuple[str, str]:
 
 def _checkout_sha(sha: str, dest: Path) -> None:
     """Materialize <sha> of the box repo into dest as a detached worktree.
-    Runtime-only; patched in tests."""
-    repo = Path(os.environ.get("HUNYUANOCR_ROCM_DIR", "/workspace/HunyuanOCR-ROCm"))
-    subprocess.run(["git", "-C", str(repo), "fetch", "origin", sha], check=False, capture_output=True)
-    subprocess.run(["git", "-C", str(repo), "worktree", "add", "--detach", str(dest), sha], check=True)
+    Runtime-only (uses HUNYUANOCR_ROCM_DIR); patched in tests."""
+    repo = os.environ.get("HUNYUANOCR_ROCM_DIR")
+    if not repo:
+        raise RuntimeError("HUNYUANOCR_ROCM_DIR must point at the box repo checkout to materialize a SHA")
+    subprocess.run(["git", "-C", repo, "fetch", "origin", sha], check=False, capture_output=True)
+    subprocess.run(["git", "-C", repo, "worktree", "add", "--detach", str(dest), sha], check=True)
 
 
 def _parse_env_summary(log: str) -> dict:
@@ -173,6 +177,67 @@ def once(client, *, trusted_smoke_script, workdir_parent, env, now):
                             title=title, summary=smry)
             summary["ran"].append(sha)
     return summary
+
+
+def _driven_once(client, *, trusted_smoke_script, workdir_parent, env, now, dry_run):
+    """Dry-run-aware wrapper: prints would-do instead of mutating when dry_run."""
+    if not dry_run:
+        return once(client, trusted_smoke_script=trusted_smoke_script,
+                    workdir_parent=workdir_parent, env=env, now=now)
+    watched = [("main", client.ref_to_sha("main"))]
+    tag = client.latest_tag()
+    if tag:
+        watched.append(tag)
+    for _n, sha in watched:
+        for r in client.list_check_runs(sha):
+            if r.status == "queued":
+                print(f"[dry-run] would run smoke for {sha} (check-run {r.id})", flush=True)
+    return {"ran": [], "skipped_done": [], "timed_out": [], "dry_run": True}
+
+
+def _resolve_smoke_script(arg: str | None) -> str:
+    if arg:
+        return arg
+    repo = os.environ.get("HUNYUANOCR_ROCM_DIR")
+    if not repo:
+        raise SystemExit("[fatal] --smoke-script not given and HUNYUANOCR_ROCM_DIR is unset")
+    return str(Path(repo) / "scripts" / "rocm_smoke.sh")
+
+
+def main(argv=None) -> int:
+    p = argparse.ArgumentParser(prog="hunyuan_ocr.ci.poller", description="GPU-CI bridge poller")
+    p.add_argument("--owner", default="AIwork4me")
+    p.add_argument("--repo", default="HunyuanOCR-ROCm")
+    p.add_argument("--smoke-script", default=None, help="trusted rocm_smoke.sh (default: $HUNYUANOCR_ROCM_DIR/scripts/rocm_smoke.sh)")
+    p.add_argument("--workdir-parent", default="/tmp")
+    p.add_argument("--lock", default=os.path.expanduser("~/.rocm_ci_poller.lock"))
+    p.add_argument("--interval", type=int, default=POLL_INTERVAL_SEC)
+    p.add_argument("--once", action="store_true", help="run a single pass and exit")
+    p.add_argument("--dry-run", action="store_true", help="report what would run; no mutations")
+    args = p.parse_args(argv)
+
+    smoke_script = _resolve_smoke_script(args.smoke_script)
+    client = GitHubClient(args.owner, args.repo)
+    env = dict(os.environ)
+    while True:
+        fd = _acquire_lock(args.lock)
+        if fd is None:
+            print("[poller] another pass holds the lock; skipping", flush=True)
+        else:
+            try:
+                _driven_once(client, trusted_smoke_script=smoke_script,
+                             workdir_parent=args.workdir_parent, env=env,
+                             now=time.time(), dry_run=args.dry_run)
+            finally:
+                os.close(fd)
+        if args.once or args.dry_run:
+            return 0
+        time.sleep(args.interval)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
 
 
 
