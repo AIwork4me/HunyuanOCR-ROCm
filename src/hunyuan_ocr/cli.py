@@ -9,6 +9,8 @@ Self-contained subcommands (work from a wheel install, no repo checkout):
   canary materialize— rebuild the 148-page canary from the full GT
   predict           — multi-server predict via hunyuan_ocr.driver (llamacpp/vllm/openai)
   score             — OmniDocBench scoring via hunyuan_ocr.scoring (needs the scorer venv)
+  benchmark         — print the verified results from reproducibility.lock.yaml (read-only)
+  report            — assemble a benchmark release-artifact bundle from a run_manifest.json
 
 ``predict --backend transformers`` is the one exception: it still delegates to the
 repo-only ``scripts/run_phase1_transformers.py`` driver and needs a ROCm torch.
@@ -387,6 +389,35 @@ def _clean_extra(extra):
     return extra
 
 
+def _benchmark(args) -> int:
+    """Print the verified benchmark results from reproducibility.lock.yaml (read-only)."""
+    import yaml
+
+    from hunyuan_ocr.results import render_results_block
+
+    lock_path = Path(args.lock) if getattr(args, "lock", None) else Path.cwd() / "reproducibility.lock.yaml"
+    if not lock_path.is_file():
+        print(f"[error] lock not found: {lock_path}", file=sys.stderr)
+        return 2
+    lock = yaml.safe_load(lock_path.read_text(encoding="utf-8"))
+    print(render_results_block(lock))
+    return 0
+
+
+def _report(args) -> int:
+    """Assemble a benchmark release-artifact bundle (see docs/release-artifact.md)."""
+    from hunyuan_ocr.report import assemble_release_artifact
+
+    repo_root = Path(args.repo_root) if getattr(args, "repo_root", None) else Path(__file__).resolve().parents[2]
+    try:
+        out = assemble_release_artifact(args.pred_dir, args.out, repo_root)
+    except FileNotFoundError as exc:
+        print(f"[error] {exc}", file=sys.stderr)
+        return 2
+    print(f"[OK] wrote release artifact -> {out} (run_manifest, environment, commands, lock, checksums)")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hunyuan-ocr", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -437,6 +468,14 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("--omnidocbench-repo", default=scoring.DEFAULT_OMNIDOCBENCH_REPO)
     sc.add_argument("--venv-python", default=scoring.DEFAULT_VENV_PYTHON)
     sc.add_argument("--skip-validation", action="store_true", help="DANGEROUS: bypass pre-score validation")
+
+    bm = sub.add_parser("benchmark", help="print the verified results from the lock (read-only)")
+    bm.add_argument("--lock", help="path to reproducibility.lock.yaml (default: ./reproducibility.lock.yaml)")
+
+    rep = sub.add_parser("report", help="assemble a benchmark release-artifact bundle")
+    rep.add_argument("--pred-dir", required=True, help="prediction dir containing run_manifest.json")
+    rep.add_argument("--out", required=True, help="output artifact directory")
+    rep.add_argument("--repo-root", help="repo root (to copy reproducibility.lock.yaml); default: this package's repo")
     return p
 
 
@@ -449,6 +488,8 @@ def main(argv=None) -> int:
         "canary": lambda a: _canary_materialize(a) if a.ccmd == "materialize" else 2,
         "predict": _predict,
         "score": _score,
+        "benchmark": _benchmark,
+        "report": _report,
     }
     handler = dispatch[args.cmd]
     rc = handler(args)
