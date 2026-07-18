@@ -9,14 +9,28 @@ Overall = ((1 - text_EditDist)*100 + formula_CDM*100 + table_TEDS*100) / 3
 """
 
 from __future__ import annotations
+
 import json
+import os
 import subprocess
+import tempfile
 from pathlib import Path
 
 import yaml
 
-DEFAULT_VENV_PYTHON = "/root/ocr-eval/OmniDocBench/.venv/bin/python"
-DEFAULT_OMNIDOCBENCH_REPO = "/root/ocr-eval/OmniDocBench"
+# Machine-local defaults from the benchmark environment. Override per-host via the
+# OMNIDOCBENCH_VENV / OMNIDOCBENCH_REPO env vars (or --venv-python /
+# --omnidocbench-repo) so `hunyuan-ocr score` works from a wheel install anywhere.
+DEFAULT_VENV_PYTHON = os.environ.get("OMNIDOCBENCH_VENV", "/root/ocr-eval/OmniDocBench/.venv/bin/python")
+DEFAULT_OMNIDOCBENCH_REPO = os.environ.get("OMNIDOCBENCH_REPO", "/root/ocr-eval/OmniDocBench")
+
+
+class ScoringError(RuntimeError):
+    """Raised when a prediction directory cannot be scored (validation failure or
+    scorer non-zero exit). Carries a structured message so the CLI can present a
+    friendly error instead of a traceback."""
+
+
 # The template is bundled inside the package (data/eval_config.yaml) so it ships
 # in the wheel; the repo's eval/configs/ copy is kept for human reference.
 _REPO_TEMPLATE = Path(__file__).resolve().parents[2] / "eval" / "configs" / "hunyuanocr-1.5_linux-rocm.yaml"
@@ -92,3 +106,78 @@ def parse_run_summary(result_dir: str | Path, save_name: str) -> dict:
         "table_teds": teds,
         "reading_order_edit": order,
     }
+
+
+def score_directory(
+    *,
+    gt_json: str,
+    pred_dir: str,
+    omnidocbench_repo: str | None = None,
+    venv_python: str | None = None,
+    skip_validation: bool = False,
+    strict: bool = True,
+) -> dict:
+    """Validate (unless skipped) and score a prediction directory end-to-end.
+
+    The OmniDocBench eval config is written into a PRIVATE temp dir (never the
+    prediction dir) so repeated scoring passes the strict validator. Runs the
+    scorer in the pinned OmniDocBench venv and parses ``run_summary.json``.
+
+    Returns ``{"validation_report": Report|None, "metrics": {...}}``. Raises
+    :class:`ScoringError` on validation failure or a non-zero scorer exit — the
+    message is user-facing (no raw traceback). Shared by the CLI ``score``
+    command and ``scripts/score_predictions.py``.
+    """
+    from hunyuan_ocr.validation import validate_predictions
+
+    repo = omnidocbench_repo or DEFAULT_OMNIDOCBENCH_REPO
+    venv = venv_python or DEFAULT_VENV_PYTHON
+    report = None
+    if not skip_validation:
+        report = validate_predictions(gt_json, pred_dir, strict=strict)
+        ok = report.ok_strict if strict else report.ok
+        if not ok:
+            lines = [
+                f"  [{'ERROR' if p.severity == 'error' else 'WARN'}] {p.code}: {p.message}" for p in report.problems
+            ]
+            raise ScoringError(
+                f"predictions invalid ({len(report.errors())} error(s), "
+                f"{len(report.warnings())} warning(s)); refusing to score:\n" + "\n".join(lines)
+            )
+    save_name = f"{Path(pred_dir).name}_quick_match"
+    with tempfile.TemporaryDirectory(prefix="hunyuanocr_eval_") as tmpd:
+        cfg_path = Path(tmpd) / "_eval_config.yaml"
+        write_eval_config(gt_json=gt_json, pred_dir=pred_dir, out_yaml=cfg_path)
+        res = run_scorer(omnidocbench_repo=repo, config_yaml=str(cfg_path), venv_python=venv)
+        if res.returncode != 0:
+            tail = (res.stderr or "")[-2000:]
+            raise ScoringError(f"scorer failed (rc={res.returncode})\n{tail}")
+        metrics = parse_run_summary(Path(repo) / "result", save_name)
+    return {"validation_report": report, "metrics": metrics}
+
+
+def format_score_table(label: str, metrics: dict) -> str:
+    """Render the per-task metrics as the human-readable score table."""
+
+    def fmt(v, pct=False):
+        if v is None:
+            return "n/a"
+        return f"{v * 100:.2f}" if pct else f"{v:.4f}"
+
+    ov = metrics["overall"]
+    recomputed = overall_score(
+        {
+            "text_edit_dist": metrics["text_edit_dist"],
+            "formula_cdm": metrics["formula_cdm"],
+            "table_teds": metrics["table_teds"],
+        }
+    )
+    return (
+        f"\n=== {label} -- OmniDocBench v1.6 ===\n"
+        f"  Overall          : {'n/a (CDM missing on this subset)' if ov is None else f'{ov:.2f}'}\n"
+        f"  text  EditDist   : {fmt(metrics['text_edit_dist'])}   -> {fmt(metrics['text_edit_dist'], pct=True)}\n"
+        f"  formula CDM      : {fmt(metrics['formula_cdm'])}   -> {fmt(metrics['formula_cdm'], pct=True)}\n"
+        f"  table  TEDS      : {fmt(metrics['table_teds'])}   -> {fmt(metrics['table_teds'], pct=True)}\n"
+        f"  order  EditDist  : {fmt(metrics['reading_order_edit'])}\n"
+        f"  (overall recomputed: {'n/a' if recomputed is None else f'{recomputed:.2f}'})\n"
+    )
