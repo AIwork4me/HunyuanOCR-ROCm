@@ -99,7 +99,7 @@ benchmark:
   # version — not a same-engine, same-page-set comparison. See docs/benchmark-methodology.md.
   official_reference:
     source: https://github.com/Tencent-Hunyuan/HunyuanOCR
-    omnidocbench_overall: 94.10
+    omnidocbench_overall: "94.10"   # quoted to preserve the exact figure (YAML would parse 94.10 as 94.1)
     text_edit: 0.042
     formula_cdm: 0.9473
     table_teds: 0.9181
