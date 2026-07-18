@@ -1,11 +1,11 @@
 name: gpu-smoke
 
 # Request a real gfx1100 smoke on the Radeon Cloud box. This workflow runs on a
-# GitHub-hosted CPU runner ONLY to create a `queued` Check Run (with started_at
-# set, so the box-side poller can age it for the 30-min stale sweep); the poller
-# at src/hunyuan_ocr/ci/poller.py picks it up, runs the smoke, and completes the
-# Check Run. workflow_dispatch only (never on push/PR); a maintainer triggers it
-# on main or a release tag.
+# GitHub-hosted CPU runner ONLY to post a `pending` commit STATUS with context
+# `gpu-smoke (gfx1100)`; the box-side poller at src/hunyuan_ocr/ci/poller.py (a
+# user OAuth token can read AND write statuses, unlike check-runs which need a
+# GitHub App) picks it up, runs the smoke, and posts success/failure. workflow_dispatch
+# only (never on push/PR); a maintainer triggers it on main or a release tag.
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ on:
 
 permissions:
   contents: read
-  checks: write
+  statuses: write
 
 jobs:
   request:
@@ -29,20 +29,17 @@ jobs:
           fetch-depth: 0
       - id: sha
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      - name: create queued gpu-smoke check-run
+      - name: post pending gpu-smoke commit status
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SHA: ${{ steps.sha.outputs.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          gh api --method POST "repos/${GITHUB_REPOSITORY}/check-runs" \
-            -f name="gpu-smoke (gfx1100)" \
-            -f head_sha="$SHA" \
-            -f status="queued" \
-            -f started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-            -f external_id="$SHA" \
-            -f 'output[title]=GPU smoke requested' \
-            -f "output[summary]=waiting for the gfx1100 runner on Radeon Cloud; dispatched from $RUN_URL"
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/statuses/$SHA" \
+            -f state="pending" \
+            -f context="gpu-smoke (gfx1100)" \
+            -f "description=waiting for the gfx1100 runner on Radeon Cloud" \
+            -f "target_url=$RUN_URL"
       - name: summary
-        run: echo "Requested gpu-smoke on ${{ steps.sha.outputs.sha }} — the box poller will complete it."
+        run: echo "Requested gpu-smoke on ${{ steps.sha.outputs.sha }} — the box poller will post the result."
