@@ -74,3 +74,28 @@ def test_decide_timeout_when_older_than_stale():
 def test_decide_never_timeout_if_completed_exists():
     assert decide(_queued(45), has_completed_for_sha=True, now=NOW) == "skip_done"
 
+
+from hunyuan_ocr.ci.poller import build_output  # noqa: E402
+
+
+def test_build_output_success_includes_env_manifest_latency():
+    sr = SmokeResult(
+        ok=True, sha="abc1234",
+        env_summary={"rocm": "7.2.1", "torch": "2.9.1", "llama_cpp_commit": "a320cbf", "gpu": "gfx1100"},
+        manifest={"status": "ok", "run_counts": {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0, "interrupted": 0},
+                  "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0}},
+        latency_sec=42.5, log_tail="",
+    )
+    title, summary = build_output(sr)
+    assert title == "gpu-smoke PASSED"
+    assert "gfx1100" in summary and "ROCm 7.2.1" in summary
+    assert "complete=1" in summary and "42.5s" in summary
+
+
+def test_build_output_failure_includes_log_tail():
+    sr = SmokeResult(ok=False, sha="abc", env_summary={}, manifest=None, latency_sec=5.0, log_tail="server did not become healthy")
+    title, summary = build_output(sr)
+    assert title == "gpu-smoke FAILED"
+    assert "server did not become healthy" in summary
+
+
