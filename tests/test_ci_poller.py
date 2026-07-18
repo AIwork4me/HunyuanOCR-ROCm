@@ -218,5 +218,87 @@ def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
     assert "timed out" in res.log_tail.lower()
 
 
+import sys  # noqa: E402
+
+import pytest  # noqa: E402
+
+from hunyuan_ocr.ci.poller import _acquire_lock, once  # noqa: E402
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="fcntl flock is POSIX")
+def test_acquire_lock_second_call_returns_none(tmp_path):
+    lock = tmp_path / "x.lock"
+    fd1 = _acquire_lock(lock)
+    assert fd1 is not None
+    fd2 = _acquire_lock(lock)
+    assert fd2 is None
+
+
+class FakeClient:
+    def __init__(self, runs_by_sha, main_sha="mainsha", tags=None):
+        self.runs_by_sha = runs_by_sha
+        self._main_sha = main_sha
+        self.tags = tags or []
+        self.completions: list = []
+
+    def ref_to_sha(self, ref):
+        return self._main_sha
+
+    def latest_tag(self, prefix="v"):
+        return self.tags[-1] if self.tags else None
+
+    def list_check_runs(self, sha):
+        return self.runs_by_sha.get(sha, [])
+
+    def set_in_progress(self, cid):
+        pass
+
+    def complete(self, cid, *, conclusion, title, summary):
+        self.completions.append((cid, conclusion))
+
+
+def _cr(cid, sha, status, created="2026-07-18T03:00:00Z"):
+    conclusion = "success" if status == "completed" else None
+    return CheckRun(cid, sha, status, conclusion, None, sha, CHECK_NAME, created)
+
+
+def test_once_runs_queued_and_completes_success(tmp_path, monkeypatch):
+    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued")]})
+    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke",
+                        lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""))
+    s = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path,
+             env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=NOW)
+    assert s["ran"] == ["mainsha"]
+    assert client.completions == [(1, "success")]
+
+
+def test_once_skip_done_when_completed_exists(tmp_path, monkeypatch):
+    client = FakeClient({"mainsha": [_cr(2, "mainsha", "completed"), _cr(1, "mainsha", "queued")]})
+    ran = []
+    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke",
+                        lambda sha, **k: ran.append(sha) or SmokeResult(True, sha, {}, None, 1.0, ""))
+    s = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path,
+             env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=NOW)
+    assert s["skipped_done"] == ["mainsha"] and ran == []
+    assert client.completions == []
+
+
+def test_once_stale_sweep_times_out_queued(tmp_path, monkeypatch):
+    import datetime as _dt
+
+    old_created = (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=45)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", old_created)]})
+
+    def boom(sha, **k):
+        pytest.fail("should not run a stale job")
+
+    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", boom)
+    s = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path,
+             env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=NOW)
+    assert s["timed_out"] == ["mainsha"]
+    assert client.completions == [(1, "failure")]
+
+
+
 
 

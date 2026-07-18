@@ -124,3 +124,55 @@ def run_smoke(sha, *, trusted_smoke_script, workdir_parent, env, timeout_s=SMOKE
                        check=False, capture_output=True)
 
 
+def _acquire_lock(path):
+    """Non-blocking exclusive flock. Returns the held fd (close to release) or None."""
+    import fcntl
+
+    try:
+        fd = os.open(str(path), os.O_CREAT | os.O_RDWR, 0o644)
+    except OSError:
+        return None
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        os.close(fd)
+        return None
+    return fd
+
+
+def once(client, *, trusted_smoke_script, workdir_parent, env, now):
+    """One polling pass. Returns a summary dict {ran, skipped_done, timed_out}."""
+    summary = {"ran": [], "skipped_done": [], "timed_out": []}
+    watched = [("main", client.ref_to_sha("main"))]
+    tag = client.latest_tag()
+    if tag:
+        watched.append(tag)  # (name, sha)
+
+    seen: set[str] = set()
+    for _name, sha in watched:
+        if sha in seen:
+            continue
+        seen.add(sha)
+        runs = client.list_check_runs(sha)
+        has_completed = any(r.status == "completed" for r in runs)
+        for q in [r for r in runs if r.status == "queued"]:
+            action = decide(q, has_completed_for_sha=has_completed, now=now)
+            if action == "skip_done":
+                summary["skipped_done"].append(sha)
+                continue
+            if action == "timeout":
+                client.complete(q.id, conclusion="failure", title="gpu-smoke FAILED",
+                                summary="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?")
+                summary["timed_out"].append(sha)
+                continue
+            client.set_in_progress(q.id)
+            result = run_smoke(sha, trusted_smoke_script=trusted_smoke_script,
+                               workdir_parent=workdir_parent, env=env)
+            title, smry = build_output(result)
+            client.complete(q.id, conclusion="success" if result.ok else "failure",
+                            title=title, summary=smry)
+            summary["ran"].append(sha)
+    return summary
+
+
+
