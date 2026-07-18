@@ -44,3 +44,33 @@ def test_parse_iso_handles_z_suffix():
     assert _parse_iso("2026-07-18T03:00:00Z") == 1784343600.0
     assert _parse_iso("garbage") == 0.0  # unparseable -> 0, never raises
     assert _parse_iso(None) == 0.0
+
+
+from hunyuan_ocr.ci.poller import decide  # noqa: E402
+
+NOW = 1784343600.0  # == 2026-07-18T03:00:00Z
+
+
+def _queued(created_minutes_before_now: float, cid: int = 1, sha: str = "abc") -> CheckRun:
+    import datetime as _dt
+
+    created = (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=created_minutes_before_now)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return CheckRun(cid, sha, "queued", None, None, sha, CHECK_NAME, created)
+
+
+def test_decide_runs_for_fresh_queued():
+    assert decide(_queued(5), has_completed_for_sha=False, now=NOW + 5 * 60) == "run"
+
+
+def test_decide_skip_done_when_completed_exists():
+    assert decide(_queued(5), has_completed_for_sha=True, now=NOW + 5 * 60) == "skip_done"
+
+
+def test_decide_timeout_when_older_than_stale():
+    # 45 min old > 30 min STALE_AFTER_SEC
+    assert decide(_queued(45), has_completed_for_sha=False, now=NOW) == "timeout"
+
+
+def test_decide_never_timeout_if_completed_exists():
+    assert decide(_queued(45), has_completed_for_sha=True, now=NOW) == "skip_done"
+
