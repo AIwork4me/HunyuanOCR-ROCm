@@ -40,11 +40,27 @@ class GitHubClient:
         return out["object"]["sha"]
 
     def latest_tag(self, prefix: str = "v") -> tuple[str, str] | None:
-        out = json.loads(self._run(["api", f"{self._base}/git/refs/tags/{prefix}*"]))
-        if not out:
+        """Best-effort latest `<prefix>*` tag, dereferenced to its COMMIT sha
+        (annotated tags point at a tag object, not the commit). Degrades to None
+        on any API error (e.g. 404 / no tags) so the poller watches `main` only."""
+        try:
+            out = json.loads(self._run(["api", f"{self._base}/git/refs/tags"]))
+        except (RuntimeError, ValueError):
             return None
-        last = out[-1]  # take the last returned tag as "latest"
-        return last["ref"].rsplit("/", 1)[-1], last["object"]["sha"]
+        matches = [t for t in out if t["ref"].rsplit("/", 1)[-1].startswith(prefix)]
+        if not matches:
+            return None
+        last = matches[-1]  # refs come back sorted; last == alphabetically latest
+        name = last["ref"].rsplit("/", 1)[-1]
+        obj = last["object"]
+        sha = obj["sha"]
+        if obj.get("type") == "tag":  # annotated tag → dereference to the commit
+            try:
+                tagobj = json.loads(self._run(["api", f"{self._base}/git/tags/{sha}"]))
+                sha = tagobj["object"]["sha"]
+            except (RuntimeError, ValueError, KeyError):
+                return None
+        return name, sha
 
     def list_check_runs(self, sha: str) -> list[CheckRun]:
         out = json.loads(self._run(["api", f"{self._base}/commits/{sha}/check-runs"]))

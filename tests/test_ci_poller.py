@@ -158,6 +158,40 @@ def test_latest_tag_none_when_no_tags():
     assert GitHubClient("o", "r", runner=gh).latest_tag() is None
 
 
+def test_latest_tag_filters_non_v_and_picks_last():
+    gh = FakeGH(
+        [
+            json.dumps(
+                [
+                    {"ref": "refs/tags/old", "object": {"sha": "x"}},
+                    {"ref": "refs/tags/v0.1.1", "object": {"sha": "s1"}},
+                    {"ref": "refs/tags/v0.1.2", "object": {"sha": "s2"}},
+                ]
+            )
+        ]
+    )
+    assert GitHubClient("o", "r", runner=gh).latest_tag() == ("v0.1.2", "s2")
+
+
+def test_latest_tag_degrades_to_none_on_api_error():
+    class BoomGH:
+        def __call__(self, argv):
+            raise RuntimeError("HTTP 404")
+
+    assert GitHubClient("o", "r", runner=BoomGH()).latest_tag() is None
+
+
+def test_latest_tag_dereferences_annotated_tag_to_commit():
+    # refs/tags/v0.1.1 points at a tag object (type=tag); git/tags/<obj> -> commit
+    gh = FakeGH(
+        [
+            json.dumps([{"ref": "refs/tags/v0.1.1", "object": {"sha": "tagobj", "type": "tag"}}]),
+            json.dumps({"object": {"sha": "commitsha", "type": "commit"}}),
+        ]
+    )
+    assert GitHubClient("o", "r", runner=gh).latest_tag() == ("v0.1.1", "commitsha")
+
+
 def test_list_check_runs_filters_to_check_name():
     payload = {
         "check_runs": [
