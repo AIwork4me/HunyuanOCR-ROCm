@@ -49,6 +49,28 @@ def test_release_removes_lock_file(tmp_path):
     assert not (tmp_path / runner.RunLock.LOCK_NAME).exists()
 
 
+def test_stale_tail_truncated_on_reclaim(tmp_path):
+    # A previous holder wrote a LONG lock JSON, then died (flock auto-released)
+    # but left the file on disk with trailing garbage. The new acquire must
+    # ftruncate so the lock file stays valid JSON — no stale tail.
+    long_body = json.dumps(
+        {
+            "pid": 999999,
+            "host": "deadhost" + "x" * 4000,
+            "started_iso": "2026-01-01T00:00:00+00:00",
+            "command": "old-cmd" + "y" * 4000,
+        }
+    )
+    (tmp_path / runner.RunLock.LOCK_NAME).write_text(long_body + "\nGARBAGE_TAIL" * 30, encoding="utf-8")
+    with runner.acquire_run_lock(tmp_path, command=["fresh"]):
+        raw = (tmp_path / runner.RunLock.LOCK_NAME).read_text("utf-8")
+        info = json.loads(raw)  # would raise if a stale tail survived
+        assert info["command"] == "fresh"
+        assert "GARBAGE_TAIL" not in raw
+        assert "deadhost" not in raw
+    assert not (tmp_path / runner.RunLock.LOCK_NAME).exists()
+
+
 def test_lockinfo_records_pid_host_command(tmp_path):
     with runner.acquire_run_lock(tmp_path, command=["run", "--flag", "v"]):
         info = json.loads((tmp_path / runner.RunLock.LOCK_NAME).read_text("utf-8"))
