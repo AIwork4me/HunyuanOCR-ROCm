@@ -2,15 +2,16 @@
 # Copyright 2026 AIwork4me
 """Unified ``hunyuan-ocr`` CLI.
 
-Self-contained, package-only subcommands (work from a wheel install):
+Self-contained subcommands (work from a wheel install, no repo checkout):
   doctor            — environment/dataset/scorer readiness (no model load)
   validate          — pre-score validation of a prediction dir
   manifest verify   — conservation-law check of a run_manifest.json
   canary materialize— rebuild the 148-page canary from the full GT
+  predict           — multi-server predict via hunyuan_ocr.driver (llamacpp/vllm/openai)
+  score             — OmniDocBench scoring via hunyuan_ocr.scoring (needs the scorer venv)
 
-Repo-required subcommands (delegate to scripts/, need a checkout):
-  predict           — multi-server predict via the OpenAI-compatible / transformers driver
-  score             — OmniDocBench scoring (also needs the OmniDocBench scorer venv)
+``predict --backend transformers`` is the one exception: it still delegates to the
+repo-only ``scripts/run_phase1_transformers.py`` driver and needs a ROCm torch.
 """
 
 from __future__ import annotations
@@ -52,81 +53,216 @@ def _import_script(name):
 # --- doctor ------------------------------------------------------------------
 
 
-def _doctor(args) -> int:
-    print("hunyuan-ocr doctor")
-    _info("python", platform.python_version())
-    _info("platform", f"{platform.system()} {platform.machine()}")
+def _check(name, state, detail, *, critical=False, advice=""):
+    """One doctor check. ``state`` in {"ok","miss","info"}; ``critical`` marks
+    checks whose failure makes ``--strict`` exit non-zero for the target backend."""
+    return {"name": name, "state": state, "detail": detail, "critical": critical, "advice": advice}
 
-    for mod in ("openai",):
-        try:
-            m = importlib.import_module(mod)
-            _ok(f"{mod}", getattr(m, "__version__", "?"))
-        except Exception:
-            _warn(mod, "not installed", 'pip install ".[client]"')
 
-    for mod in ("torch", "transformers", "vllm"):
-        try:
-            m = importlib.import_module(mod)
-            _info(mod, getattr(m, "__version__", "?"))
-        except Exception:
-            _info(mod, "not installed (optional; needed only for that backend)")
+def _try_version(modname):
+    try:
+        m = importlib.import_module(modname)
+        return getattr(m, "__version__", None)
+    except Exception:  # noqa: BLE001
+        return None
 
-    ls = shutil.which("llama-server")
-    if ls:
-        _ok("llama-server", ls)
-    else:
-        _warn("llama-server", "not on PATH", "build llama.cpp with HIP (see README Quick Start)")
 
-    if Path("/opt/rocm").exists() or shutil.which("rocm-smi"):
-        _ok("ROCm", "/opt/rocm present")
-    else:
-        _info("ROCm", "not detected (optional; required only on AMD GPUs)")
+def _has_rocm_toolchain():
+    return Path("/opt/rocm").exists() or bool(shutil.which("rocm-smi"))
 
-    model = os.environ.get("HUNYUANOCR_MODEL")
-    if model:
-        (
-            _ok("model dir", model)
-            if Path(model).is_dir()
-            else _warn("model dir", f"{model} missing", "set HUNYUANOCR_MODEL to the weights dir")
+
+def _torch_hip():
+    """Return the torch version + hip string if a ROCm torch is importable, else None."""
+    try:
+        import torch  # type: ignore
+    except Exception:  # noqa: BLE001
+        return None
+    hip = getattr(getattr(torch, "version", None), "hip", None)
+    if not hip:  # a CUDA/stock torch is NOT a ROCm torch
+        return None
+    return {"torch": getattr(torch, "__version__", "?"), "hip": hip}
+
+
+def _collect_doctor_checks(backend: str | None) -> list[dict]:
+    """Build the check list. Checks not relevant to the (optional) target backend
+    are still reported for visibility, but only critical checks for the target
+    backend count toward ``--strict`` failure."""
+    checks: list[dict] = []
+    backend = (backend or "").lower()
+
+    checks.append(_check("python", "ok", platform.python_version()))
+    checks.append(_check("platform", "ok", f"{platform.system()} {platform.machine()}"))
+
+    # ROCm toolchain — critical for every GPU backend.
+    rocm = _has_rocm_toolchain()
+    checks.append(
+        _check(
+            "ROCm toolchain",
+            "ok" if rocm else "miss",
+            "/opt/rocm present" if rocm else "not detected",
+            critical=backend in {"llamacpp", "transformers", "vllm"},
+            advice="install the ROCm stack (gfx1100/RDNA3); required for every GPU backend",
         )
-    else:
-        _info("model dir", "HUNYUANOCR_MODEL env not set")
-
-    gt = os.environ.get("HUNYUANOCR_GT")
-    if gt:
-        if not Path(gt).is_file():
-            _warn("GT json", f"{gt} missing", "set HUNYUANOCR_GT to OmniDocBench.json")
-        else:
-            try:
-                pages = json.loads(Path(gt).read_text(encoding="utf-8"))
-                _ok("GT json", f"{len(pages)} pages ({gt})")
-            except Exception as exc:
-                _warn("GT json", f"unparseable: {exc}", "check the file")
-    else:
-        _info("GT json", "HUNYUANOCR_GT env not set")
-
-    from hunyuan_ocr import scoring
-
-    vp = Path(scoring.DEFAULT_VENV_PYTHON)
-    (
-        _ok("scorer venv", str(vp))
-        if vp.exists()
-        else _warn("scorer venv", f"{vp} missing", "install the OmniDocBench scorer (see reproducibility.lock.yaml)")
     )
 
-    out = os.environ.get("HUNYUANOCR_OUT_DIR")
-    if out:
+    # openai client (optional; needed by predict for OAI backends).
+    ov = _try_version("openai")
+    checks.append(
+        _check("openai client", "ok" if ov else "miss", ov or "not installed", advice='pip install ".[client]"')
+    )
+
+    # llama.cpp backend: llama-server binary + GGUF weights.
+    ls = shutil.which("llama-server")
+    checks.append(
+        _check(
+            "llama-server",
+            "ok" if ls else "miss",
+            ls or "not on PATH",
+            critical=backend == "llamacpp",
+            advice="build llama.cpp with HIP (see README Quick Start)",
+        )
+    )
+    gguf_dir = os.environ.get("HUNYUANOCR_GGUF_DIR") or os.environ.get("GGUF_DIR")
+    gguf_ok = bool(gguf_dir) and Path(gguf_dir).is_dir()
+    gguf_detail = gguf_dir or "HUNYUANOCR_GGUF_DIR env not set"
+    if gguf_ok:
+        main_gguf = any(Path(gguf_dir).glob("HunyuanOCR-bf16.gguf"))
+        mmproj = any(Path(gguf_dir).glob("mmproj-HunyuanOCR-bf16.gguf"))
+        gguf_ok = main_gguf and mmproj
+        gguf_detail = f"{gguf_dir} (main={main_gguf}, mmproj={mmproj})"
+    checks.append(
+        _check(
+            "GGUF weights",
+            "ok" if gguf_ok else ("miss" if gguf_dir else "info"),
+            gguf_detail,
+            critical=backend == "llamacpp",
+            advice="set HUNYUANOCR_GGUF_DIR to a dir with HunyuanOCR-bf16.gguf + mmproj-HunyuanOCR-bf16.gguf",
+        )
+    )
+
+    # ROCm torch — critical for transformers + vllm.
+    thip = _torch_hip()
+    checks.append(
+        _check(
+            "ROCm torch (hip)",
+            "ok" if thip else "miss",
+            f"{thip['torch']} (hip {thip['hip']})" if thip else "no ROCm torch (CUDA/stock/absent)",
+            critical=backend in {"transformers", "vllm"},
+            advice="install a ROCm torch wheel (see reproducibility.lock.yaml); stock PyPI torch is not ROCm",
+        )
+    )
+
+    # transformers importable — critical for transformers.
+    tv = _try_version("transformers")
+    checks.append(
+        _check(
+            "transformers",
+            "ok" if tv else "miss",
+            tv or "not installed",
+            critical=backend == "transformers",
+            advice='pip install ".[transformers]" (and a ROCm torch)',
+        )
+    )
+
+    # vLLM importable — critical for vllm.
+    vv = _try_version("vllm")
+    checks.append(
+        _check(
+            "vLLM",
+            "ok" if vv else "miss",
+            vv or "not installed",
+            critical=backend == "vllm",
+            advice="install a ROCm vLLM build (see reproducibility.lock.yaml)",
+        )
+    )
+
+    # model dir (safetensors) — critical for transformers + vllm.
+    model = os.environ.get("HUNYUANOCR_MODEL")
+    model_ok = bool(model) and Path(model).is_dir()
+    checks.append(
+        _check(
+            "model dir (safetensors)",
+            "ok" if model_ok else ("miss" if model else "info"),
+            model or "HUNYUANOCR_MODEL env not set",
+            critical=backend in {"transformers", "vllm"},
+            advice="set HUNYUANOCR_MODEL to the tencent/HunyuanOCR weights dir",
+        )
+    )
+
+    # GT json (informational; needed to actually run a benchmark, not to install).
+    gt = os.environ.get("HUNYUANOCR_GT")
+    if gt and Path(gt).is_file():
         try:
-            Path(out).mkdir(parents=True, exist_ok=True)
-            (Path(out) / ".w").write_text("x")
-            (Path(out) / ".w").unlink()
-            _ok("out dir", f"writable ({out})")
-        except OSError as exc:
-            _warn("out dir", f"{out} not writable: {exc}", "choose a writable OUT_DIR")
+            pages = json.loads(Path(gt).read_text(encoding="utf-8"))
+            checks.append(_check("GT json", "ok", f"{len(pages)} pages ({gt})"))
+        except Exception as exc:  # noqa: BLE001
+            checks.append(_check("GT json", "miss", f"unparseable: {exc}", advice="check the file"))
     else:
-        _info("out dir", "HUNYUANOCR_OUT_DIR env not set")
-    print("doctor is advisory; it never loads the model. Fix any [MISS] above.")
-    return 0
+        checks.append(_check("GT json", "info", gt or "HUNYUANOCR_GT env not set"))
+
+    # OmniDocBench scorer venv (needed to score; informational unless scoring).
+    try:
+        from hunyuan_ocr import scoring
+
+        vp = Path(scoring.DEFAULT_VENV_PYTHON)
+        checks.append(
+            _check(
+                "scorer venv",
+                "ok" if vp.exists() else "miss",
+                str(vp),
+                advice="install the OmniDocBench scorer (see reproducibility.lock.yaml) or set OMNIDOCBENCH_VENV",
+            )
+        )
+    except Exception:  # noqa: BLE001
+        pass
+
+    return checks
+
+
+def _doctor(args) -> int:
+    backend = getattr(args, "backend", None)
+    checks = _collect_doctor_checks(backend)
+    critical_failures = [c for c in checks if c["critical"] and c["state"] != "ok"]
+    ok = not critical_failures
+
+    if getattr(args, "json", False):
+        env = {
+            "python": platform.python_version(),
+            "platform": f"{platform.system()} {platform.machine()}",
+            "has_rocm_toolchain": _has_rocm_toolchain(),
+            "openai": _try_version("openai"),
+            "torch_hip": _torch_hip(),
+            "transformers": _try_version("transformers"),
+            "vllm": _try_version("vllm"),
+            "llama_server": shutil.which("llama-server"),
+            "gguf_dir": os.environ.get("HUNYUANOCR_GGUF_DIR") or os.environ.get("GGUF_DIR"),
+            "model_dir": os.environ.get("HUNYUANOCR_MODEL"),
+            "gt_json": os.environ.get("HUNYUANOCR_GT"),
+        }
+        payload = {"ok": ok, "backend": backend, "checks": checks, "environment": env}
+        print(json.dumps(payload, indent=2))
+        return 0 if ok else 1
+
+    print("hunyuan-ocr doctor" + (f" (--strict --backend {backend})" if backend else ""))
+    for c in checks:
+        if c["state"] == "ok":
+            _ok(c["name"], c["detail"])
+        elif c["state"] == "miss":
+            _warn(c["name"], c["detail"], c["advice"])
+        else:
+            _info(c["name"], c["detail"])
+    if backend:
+        if ok:
+            print(f"strict: all critical checks for backend '{backend}' passed.")
+        else:
+            print(
+                f"strict: {len(critical_failures)} critical check(s) for backend '{backend}' failed: "
+                + ", ".join(c["name"] for c in critical_failures),
+                file=sys.stderr,
+            )
+    else:
+        print("doctor is advisory (no --backend); it never loads the model. Fix any [MISS] above.")
+    return 0 if ok else 1
 
 
 # --- validate / manifest / canary (package-only) -----------------------------
@@ -152,7 +288,22 @@ def _manifest_verify(args) -> int:
     if not mp.is_file():
         print(f"[error] no run_manifest.json in {args.pred_dir}", file=sys.stderr)
         return 2
-    m = json.loads(mp.read_text(encoding="utf-8"))
+    try:
+        raw = mp.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"[error] cannot read {mp}: {exc}", file=sys.stderr)
+        return 2
+    if not raw.strip():
+        print(f"[error] {mp} is empty", file=sys.stderr)
+        return 1
+    try:
+        m = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"[error] {mp} is not valid JSON: {exc.msg} (line {exc.lineno} col {exc.colno})", file=sys.stderr)
+        return 1
+    if not isinstance(m, dict):
+        print(f"[error] {mp} is valid JSON but not an object (got {type(m).__name__})", file=sys.stderr)
+        return 1
     errs = runner.validate_manifest(m)
     if errs:
         print(f"[FAIL] manifest violates {len(errs)} invariant(s):")
@@ -175,37 +326,65 @@ def _canary_materialize(args) -> int:
     return 0
 
 
-# --- predict / score (repo scripts required) ---------------------------------
+# --- predict / score (package-resident; work from a wheel install) -----------
 
 
 def _predict(args) -> int:
+    """Self-contained for the OpenAI-compatible backends (llamacpp/vllm/openai):
+    runs the package driver directly, no ``scripts/`` checkout required. The
+    ``transformers`` backend still needs the repo checkout + a ROCm torch install
+    (it is a separate, GPU-only driver)."""
     if args.backend == "transformers":
         drv = _import_script("run_phase1_transformers")
         if drv is None:
-            print("[error] predict needs a repo checkout (scripts/ not found).", file=sys.stderr)
-            print("        run instead: python scripts/run_phase1_transformers.py ...", file=sys.stderr)
+            print(
+                "[error] predict --backend transformers needs a repo checkout AND a ROCm torch install;\n"
+                "        it is a separate GPU-only driver. Run instead:\n"
+                "        python scripts/run_phase1_transformers.py ...",
+                file=sys.stderr,
+            )
             return 2
         drv.main_with_args(args.extra)
         return 0
-    drv = _import_script("run_phase2_vllm")
-    if drv is None:
-        print("[error] predict needs a repo checkout (scripts/ not found).", file=sys.stderr)
-        print(
-            f"        run instead: python scripts/run_phase2_vllm.py --backend-name {args.backend} ...", file=sys.stderr
-        )
+    try:
+        from openai import OpenAI
+    except ImportError:
+        print('[error] predict needs the OpenAI client: pip install ".[client]"', file=sys.stderr)
         return 2
-    drv.main_with_args(["--backend-name", args.backend, *args.extra])
-    return 0
+    from hunyuan_ocr import driver
+    from hunyuan_ocr.backends.vllm_client import infer_one
+
+    drv_args = driver.parse_args(["--backend-name", args.backend, *_clean_extra(args.extra)])
+    return int(driver.dispatch(drv_args, infer_one=infer_one, client_factory=OpenAI) or 0)
 
 
 def _score(args) -> int:
-    sp = _import_script("score_predictions")
-    if sp is None:
-        print("[error] score needs a repo checkout (scripts/ not found).", file=sys.stderr)
-        print("        run instead: python scripts/score_predictions.py ...", file=sys.stderr)
-        return 2
-    sp.main_with_args(args.extra)
+    """Score a prediction dir via the package scorer (shared with the
+    ``scripts/score_predictions.py`` wrapper). Needs the OmniDocBench scorer venv
+    (set via --venv-python or OMNIDOCBENCH_VENV)."""
+    from hunyuan_ocr import scoring
+
+    try:
+        result = scoring.score_directory(
+            gt_json=args.gt_json,
+            pred_dir=args.pred_dir,
+            omnidocbench_repo=args.omnidocbench_repo,
+            venv_python=args.venv_python,
+            skip_validation=args.skip_validation,
+        )
+    except scoring.ScoringError as exc:
+        print(f"[error] {exc}", file=sys.stderr)
+        return 1
+    print(scoring.format_score_table(args.label, result["metrics"]))
     return 0
+
+
+def _clean_extra(extra):
+    """Drop a leading '--' that argparse.REMAINDER may capture."""
+    extra = list(extra or [])
+    if extra and extra[0] == "--":
+        extra = extra[1:]
+    return extra
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -214,7 +393,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("doctor", help="environment + dataset + scorer readiness")
+    doc = sub.add_parser("doctor", help="environment + dataset + scorer readiness")
+    doc.add_argument("--strict", action="store_true", help="exit non-zero if critical checks fail")
+    doc.add_argument(
+        "--backend",
+        choices=["llamacpp", "transformers", "vllm"],
+        help="target backend whose critical checks gate --strict",
+    )
+    doc.add_argument("--json", action="store_true", help="emit stable JSON (no secrets)")
 
     v = sub.add_parser("validate", help="validate a prediction dir against GT")
     v.add_argument("--gt-json", required=True)
@@ -233,12 +419,24 @@ def build_parser() -> argparse.ArgumentParser:
     cmv.add_argument("--manifest", required=True)
     cmv.add_argument("--out", required=True)
 
-    pr = sub.add_parser("predict", help="multi-server predict (repo scripts required)")
+    pr = sub.add_parser(
+        "predict",
+        help="multi-server predict (llamacpp/vllm/openai are self-contained; transformers needs checkout)",
+    )
     pr.add_argument("--backend", default="llamacpp", choices=["llamacpp", "vllm", "openai", "transformers"])
-    pr.add_argument("extra", nargs=argparse.REMAINDER, help="driver flags")
+    pr.add_argument(
+        "extra", nargs=argparse.REMAINDER, help="driver flags (--gt-json, --images-dir, --pred-dir, --ports, ...)"
+    )
 
-    sc = sub.add_parser("score", help="OmniDocBench scoring (repo scripts + scorer required)")
-    sc.add_argument("extra", nargs=argparse.REMAINDER, help="score_predictions.py flags")
+    from hunyuan_ocr import scoring  # noqa: PLC0415 — only for the score defaults below
+
+    sc = sub.add_parser("score", help="OmniDocBench scoring (scorer venv required)")
+    sc.add_argument("--pred-dir", required=True)
+    sc.add_argument("--gt-json", required=True)
+    sc.add_argument("--label", default="backend")
+    sc.add_argument("--omnidocbench-repo", default=scoring.DEFAULT_OMNIDOCBENCH_REPO)
+    sc.add_argument("--venv-python", default=scoring.DEFAULT_VENV_PYTHON)
+    sc.add_argument("--skip-validation", action="store_true", help="DANGEROUS: bypass pre-score validation")
     return p
 
 
