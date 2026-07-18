@@ -1,14 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AIwork4me
-"""Thin `gh api` wrapper for the GPU-CI bridge. The `runner` callable is injected
-so tests never touch the network."""
+"""Thin `gh api` wrapper for the GPU-CI bridge, over **commit statuses**
+(user-token read+write). The `runner` callable is injected so tests never touch
+the network."""
 
 from __future__ import annotations
 
 import json
 import subprocess
 
-from hunyuan_ocr.ci.models import CHECK_NAME, CheckRun
+from hunyuan_ocr.ci.models import CHECK_NAME, SmokeStatus
 
 
 def _gh(argv: list[str]) -> str:
@@ -20,7 +21,7 @@ def _gh(argv: list[str]) -> str:
 
 
 class GitHubClient:
-    """Minimal `gh api` client. `runner(argv)->str` is injectable (default _gh)."""
+    """Minimal `gh api` client over commit statuses. `runner(argv)->str` injectable."""
 
     def __init__(self, owner: str, repo: str, *, runner=_gh):
         self.owner = owner
@@ -62,54 +63,37 @@ class GitHubClient:
                 return None
         return name, sha
 
-    def list_check_runs(self, sha: str) -> list[CheckRun]:
-        out = json.loads(self._run(["api", f"{self._base}/commits/{sha}/check-runs"]))
-        runs = []
-        for r in out.get("check_runs", []):
-            if r.get("name") != CHECK_NAME:
+    def list_smoke_statuses(self, sha: str) -> list[SmokeStatus]:
+        """Commit statuses for our context on `sha`, most-recent-first."""
+        out = json.loads(self._run(["api", f"{self._base}/commits/{sha}/statuses"]))
+        res = []
+        for s in out:
+            if s.get("context") != CHECK_NAME:
                 continue
-            # created_at tracks started_at so the stale-sweep can age a queued run
-            # (the request workflow sets started_at at creation; see gpu-smoke.yml).
-            runs.append(
-                CheckRun(
-                    id=r["id"],
-                    head_sha=r["head_sha"],
-                    status=r["status"],
-                    conclusion=r.get("conclusion"),
-                    started_at=r.get("started_at"),
-                    external_id=r.get("external_id"),
-                    name=r["name"],
-                    created_at=r.get("started_at"),
+            res.append(
+                SmokeStatus(
+                    sha=sha,
+                    context=s["context"],
+                    state=s["state"],
+                    created_at=s.get("updated_at") or s.get("created_at"),
+                    target_url=s.get("target_url"),
                 )
             )
-        return runs
+        return res
 
-    def set_in_progress(self, check_run_id: int) -> None:
-        self._run(
-            [
-                "api",
-                "--method",
-                "PATCH",
-                f"{self._base}/check-runs/{check_run_id}",
-                "-f",
-                "status=in_progress",
-            ]
-        )
-
-    def complete(self, check_run_id: int, *, conclusion: str, title: str, summary: str) -> None:
-        self._run(
-            [
-                "api",
-                "--method",
-                "PATCH",
-                f"{self._base}/check-runs/{check_run_id}",
-                "-f",
-                "status=completed",
-                "-f",
-                f"conclusion={conclusion}",
-                "-f",
-                f"output[title]={title}",
-                "-f",
-                f"output[summary]={summary}",
-            ]
-        )
+    def create_status(self, sha: str, *, state: str, description: str, target_url: str = "") -> None:
+        args = [
+            "api",
+            "--method",
+            "POST",
+            f"{self._base}/statuses/{sha}",
+            "-f",
+            f"state={state}",
+            "-f",
+            f"context={CHECK_NAME}",
+            "-f",
+            f"description={description[:140]}",
+        ]
+        if target_url:
+            args += ["-f", f"target_url={target_url}"]
+        self._run(args)
