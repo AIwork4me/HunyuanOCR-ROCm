@@ -1,5 +1,7 @@
 # HunyuanOCR-ROCm
 
+![HunyuanOCR-ROCm](docs/assets/hunyuanocr_rocm.jpg)
+
 > Evaluation-backed AMD ROCm port of [HunyuanOCR-1.5](https://github.com/Tencent-Hunyuan/HunyuanOCR)
 > — runs the model on AMD gfx1100 (RDNA3) across three inference backends and
 > reports OmniDocBench v1.6 results. **Not** a precision-aligned port: no
