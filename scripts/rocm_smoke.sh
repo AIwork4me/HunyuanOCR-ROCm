@@ -20,11 +20,12 @@
 # any missing prereq or bad output. No secrets are printed.
 set -euo pipefail
 
-REPO="$(cd "$(dirname "$0")/.." && pwd)"
+REPO="${REPO:-$(cd "$(dirname "$0")/.." && pwd)}"
 GGUF_DIR="${HUNYUANOCR_GGUF_DIR:?HUNYUANOCR_GGUF_DIR must point to the GGUF weights dir}"
 SMOKE_GT="${HUNYUANOCR_SMOKE_GT:?HUNYUANOCR_SMOKE_GT must be a 1-page OmniDocBench GT json (provided by the runner)}"
 SMOKE_IMAGES="${HUNYUANOCR_SMOKE_IMAGES:?HUNYUANOCR_SMOKE_IMAGES must hold the smoke image}"
 LLAMA_SERVER="${HUNYUANOCR_LLAMA_SERVER:-llama-server}"
+PYTHON="${HUNYUANOCR_PYTHON:-python3}"
 PORT="${HUNYUANOCR_SMOKE_PORT:-8081}"
 OUT="${HUNYUANOCR_SMOKE_OUT:-$REPO/smoke-artifacts}"
 HOST=127.0.0.1
@@ -56,6 +57,16 @@ trap cleanup EXIT INT TERM
 command -v rocm-smi >/dev/null 2>&1 || [[ -d /opt/rocm ]] || die "ROCm not detected (no rocm-smi, no /opt/rocm)"
 command -v "$LLAMA_SERVER" >/dev/null 2>&1      || die "llama-server not found ($LLAMA_SERVER)"
 log "prerequisites OK (ROCm + weights + server present)"
+
+# Pin one GPU if requested, then print env markers the poller scrapes into the
+# check-run summary. Each line begins with a literal token + value.
+if [[ -n "${HIP_VISIBLE_DEVICES:-}" ]]; then export HIP_VISIBLE_DEVICES; fi
+log "ROCm $($PYTHON -c 'import torch;print((torch.version.hip or "unknown").split("-")[0])' 2>/dev/null || echo unknown)"
+log "torch $($PYTHON -c 'import torch;print(torch.__version__)' 2>/dev/null || echo unknown)"
+LLAMA_BIN="$(command -v "$LLAMA_SERVER" 2>/dev/null || echo "$LLAMA_SERVER")"
+LLAMA_DIR="$(cd "$(dirname "$LLAMA_BIN")/../.." 2>/dev/null && pwd || echo)"
+log "llama.cpp $(git -C "$LLAMA_DIR" rev-parse --short HEAD 2>/dev/null || echo unknown)"
+log "gpu $(rocminfo 2>/dev/null | grep -m1 -oE 'gfx[0-9]+' || echo gfxunknown)"
 
 # --- 2. start a local llama-server (loopback only) ---------------------------
 log "starting llama-server on $HOST:$PORT"
