@@ -75,6 +75,10 @@ on these 148 pages, so there is **no canary-vs-CUDA comparison** here.
 
 ## Hardware support
 
+> Full per-GPU matrix (verified / community / unknown): see
+> [docs/hardware-matrix.md](docs/hardware-matrix.md). Only gfx1100/ROCm 7.2 is
+> maintainer-verified; everything else is honestly marked.
+
 | Use case | Status | Notes |
 |---|---|---|
 | Single-GPU inference — llama.cpp (HIP) | ✅ Verified | gfx1100 48 GB; warm ~1.4 s/page |
@@ -227,6 +231,9 @@ for a CI-friendly gate.
 
 ## Architecture
 
+> Contributor orientation (pipeline + per-module roles, 5-minute read):
+> [docs/architecture.md](docs/architecture.md).
+
 ```
 src/hunyuan_ocr/
 ├── contract.py           # FROZEN decoding contract (prompt, sampling, image config)
@@ -280,6 +287,10 @@ LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
 
 ## Reproducibility
 
+- **Benchmark release artifacts:** each release ships an evidence bundle
+  (`run_manifest.json`, `metrics.json`, `environment.json`, the lock, `commands.txt`,
+  `checksums.sha256`) so a number is reproducible from recorded inputs — see
+  [docs/release-artifact.md](docs/release-artifact.md).
 - **Lock file (single source of truth):** [`reproducibility.lock.yaml`](reproducibility.lock.yaml)
   pins every verified input for the published results — the repo + llama.cpp +
   OmniDocBench commits, the GT/model SHA256s, **and** the HF model/GGUF revisions
