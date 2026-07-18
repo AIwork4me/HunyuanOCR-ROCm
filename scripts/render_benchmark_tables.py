@@ -19,48 +19,16 @@ from pathlib import Path
 
 import yaml
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from hunyuan_ocr.results import render_results_block  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[1]
 LOCK_PATH = REPO / "reproducibility.lock.yaml"
 README_PATH = REPO / "README.md"
 REGION_RE = re.compile(r"<!-- BEGIN GENERATED RESULTS -->.*?<!-- END GENERATED RESULTS -->", re.DOTALL)
 
-BACKEND_DISPLAY = {"llamacpp": "llama.cpp", "transformers": "transformers", "vllm": "vLLM"}
-
-
-def _fmt_value(v) -> str:
-    if isinstance(v, str) and v.strip().lower() == "invalid":
-        return "invalid (excluded; see reproducibility.lock.yaml)"
-    return str(v)
-
-
-def render_block(lock: dict) -> str:
-    """Render the BEGIN..END block (without surrounding README text) from the lock."""
-    bench = (lock or {}).get("benchmark", {}) or {}
-    lines = [
-        "<!-- BEGIN GENERATED RESULTS -->",
-        "<!-- Auto-generated from reproducibility.lock.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->",
-        "",
-        "| Page set | Backend | Overall | Source |",
-        "|---|---|---|---|",
-    ]
-    for page_key, label in (("canary_148", "canary 148"), ("full_1651", "full 1651")):
-        section = bench.get(page_key, {}) or {}
-        rows = []
-        for k, v in section.items():
-            if not k.endswith("_overall"):
-                continue
-            backend = k[: -len("_overall")]
-            rows.append((BACKEND_DISPLAY.get(backend, backend), _fmt_value(v)))
-        for display, value in sorted(rows):
-            lines.append(f"| {label} | {display} | {value} | reproducibility.lock.yaml |")
-    official = bench.get("official_reference", {}) or {}
-    if official:
-        engine = official.get("inference_engine", "official")
-        overall = _fmt_value(official.get("omnidocbench_overall"))
-        lines.append(f"| official | {engine} | {overall} | official HunyuanOCR table |")
-    lines.append("")
-    lines.append("<!-- END GENERATED RESULTS -->")
-    return "\n".join(lines)
+# Shared with the `hunyuan-ocr benchmark` CLI via hunyuan_ocr.results.
+render_block = render_results_block
 
 
 def current_region(readme: str) -> str | None:
