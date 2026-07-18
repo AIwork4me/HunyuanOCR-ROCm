@@ -94,7 +94,7 @@ PRED_DIR="$OUT/predictions"
 rm -rf "$PRED_DIR"
 mkdir -p "$PRED_DIR"
 log "predicting one page -> $PRED_DIR"
-python "$REPO/scripts/run_phase2_vllm.py" \
+python "$REPO/scripts/run_inference.py" \
   --backend-name llamacpp --server-alias HYVL \
   --gt-json "$SMOKE_GT" --images-dir "$SMOKE_IMAGES" \
   --pred-dir "$PRED_DIR" --host "$HOST" --ports "$PORT" \

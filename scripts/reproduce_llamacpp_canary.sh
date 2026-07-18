@@ -57,7 +57,7 @@ MODE_DESC="fresh"
 [[ "$OVERWRITE" = "1" ]] && MODE_DESC="overwrite"
 
 echo "[repro] step 1/4: predict ($MODE_DESC)"
-python "$REPO/scripts/run_phase2_vllm.py" \
+python "$REPO/scripts/run_inference.py" \
   --backend-name llamacpp --server-alias HYVL \
   --gt-json "$GT_JSON" --images-dir "$DATA_DIR/images" \
   --pred-dir "$OUT_DIR" --host "$HOST" --ports "$PORTS" \

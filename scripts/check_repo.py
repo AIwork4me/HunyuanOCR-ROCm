@@ -229,6 +229,38 @@ def check_readme_bash_continuation(readme: str) -> list[str]:
     return errs
 
 
+REPO_CLONE_RE = re.compile(r"git clone https://github\.com/AIwork4me/HunyuanOCR-ROCm\.git")
+REQUIRED_QUICKSTART_ENVVARS = ("HUNYUAN_ROCM_DIR", "LLAMA_DIR", "GGUF_DIR", "DATA_DIR")
+
+
+def check_readme_quickstart_structure(readme: str) -> list[str]:
+    """The Quick Start must clone BEFORE exporting HUNYUAN_ROCM_DIR (the old flow
+    exported the var then re-cloned, a contradiction), define all four env vars,
+    use the canonical ``run_inference.py`` command, and not publish the legacy
+    ``run_phase2_vllm.py`` command."""
+    errs: list[str] = []
+    clone_m = REPO_CLONE_RE.search(readme)
+    export_idx = readme.find("export HUNYUAN_ROCM_DIR=")
+    if clone_m is None:
+        errs.append("README.md: Quick Start missing the `git clone .../HunyuanOCR-ROCm.git` step")
+    elif export_idx == -1:
+        errs.append("README.md: Quick Start missing `export HUNYUAN_ROCM_DIR=...`")
+    elif clone_m.start() > export_idx:
+        errs.append(
+            "README.md: Quick Start exports HUNYUAN_ROCM_DIR before the `git clone` — clone must come first (Step 0)"
+        )
+    for var in REQUIRED_QUICKSTART_ENVVARS:
+        if f"export {var}=" not in readme:
+            errs.append(f"README.md: Quick Start does not define required env var {var}")
+    if "python scripts/run_inference.py" not in readme:
+        errs.append("README.md: Quick Start does not use the canonical `python scripts/run_inference.py` command")
+    if "python scripts/run_phase2_vllm.py" in readme:
+        errs.append(
+            "README.md: publishes the legacy `python scripts/run_phase2_vllm.py` command — use run_inference.py"
+        )
+    return errs
+
+
 def check_metric_formula_consistency(lock) -> list[str]:
     """The Overall formula must be consistent across README, the methodology doc,
     and the lock. Only docs that actually state the Overall formula are checked
@@ -275,6 +307,7 @@ def all_errors() -> list[str]:
     errs += check_no_positive_precision_claim(readme)
     errs += check_readme_scripts_exist(readme)
     errs += check_readme_bash_continuation(readme)
+    errs += check_readme_quickstart_structure(readme)
     errs += check_metric_formula_consistency(lock)
     return errs
 

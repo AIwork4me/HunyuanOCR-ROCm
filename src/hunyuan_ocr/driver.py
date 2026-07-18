@@ -74,7 +74,7 @@ def _provenance(args, endpoints) -> dict:
 
 def parse_args(argv) -> argparse.Namespace:
     p = argparse.ArgumentParser(
-        prog="run_phase2_vllm",
+        prog="run_inference",
         description="OpenAI-compatible driver: run HunyuanOCR-1.5 over OmniDocBench via a server.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
