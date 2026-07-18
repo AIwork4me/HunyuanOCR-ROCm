@@ -7,9 +7,11 @@ Uses a fake clock and fake health check — no network, no GPU.
 
 from __future__ import annotations
 
+import threading
+
 import pytest
 
-from hunyuan_ocr.endpoint_pool import EndpointPool, NoHealthyEndpoint
+from hunyuan_ocr.endpoint_pool import AllProbesInFlight, EndpointPool, NoHealthyEndpoint
 
 
 class FakeClock:
@@ -103,3 +105,106 @@ def test_empty_or_duplicate_endpoints_rejected():
         EndpointPool([], check=lambda u: True)
     with pytest.raises(ValueError):
         EndpointPool([("a", "http://h:1/v1"), ("b", "http://h:1/v1")], check=lambda u: True)
+
+
+def test_half_open_single_probe_one_at_a_time():
+    """While one endpoint is half-open, only ONE acquire may take it; the rest
+    are refused (AllProbesInFlight) until report() resolves the probe."""
+    clk = FakeClock()
+    pool = _pool({"http://h:1/v1": True}, failure_threshold=2, cooldown=30.0, clock=clk)
+    pool.probe_initial()
+    ep = pool.acquire().base_url
+    pool.report(ep, False)
+    pool.report(ep, False)  # circuit opens
+    clk.t += 31  # -> half_open
+    # first acquire reserves the half-open endpoint for a single probe
+    got = pool.acquire().base_url
+    assert got == ep
+    snap = pool.snapshot()[0]
+    assert snap["state"] == "half_open" and snap["half_open_in_flight"] is True
+    # a second acquire while the probe is outstanding must be refused
+    with pytest.raises(AllProbesInFlight):
+        pool.acquire()
+    # resolving the probe (success) releases the reservation and closes
+    pool.report(ep, True)
+    snap = pool.snapshot()[0]
+    assert snap["state"] == "closed" and snap["half_open_in_flight"] is False
+
+
+def test_half_open_failed_probe_releases_reservation():
+    clk = FakeClock()
+    pool = _pool({"http://h:1/v1": True}, failure_threshold=2, cooldown=30.0, clock=clk)
+    pool.probe_initial()
+    ep = pool.acquire().base_url
+    pool.report(ep, False)
+    pool.report(ep, False)
+    clk.t += 31
+    pool.acquire()  # reserves half-open probe
+    assert pool.snapshot()[0]["half_open_in_flight"] is True
+    pool.report(ep, False)  # probe fails
+    snap = pool.snapshot()[0]
+    # reservation cleared even on failure; circuit re-opens and will cool down
+    assert snap["state"] == "open"
+    assert snap["half_open_in_flight"] is False
+
+
+def test_concurrent_half_open_probe_not_double_acquired():
+    """10 threads racing a single half-open endpoint: exactly ONE acquires it,
+    the other 9 raise AllProbesInFlight. Proves the in-flight reservation holds
+    under real concurrency (not just sequential calls)."""
+    import time
+
+    clk = FakeClock()
+    pool = _pool({"http://h:1/v1": True}, failure_threshold=2, cooldown=30.0, clock=clk)
+    pool.probe_initial()
+    ep = pool.acquire().base_url
+    pool.report(ep, False)
+    pool.report(ep, False)  # open
+    clk.t += 31  # -> half_open
+
+    n_threads = 10
+    start = threading.Barrier(n_threads)
+    winner_release = threading.Event()  # winner holds the probe in-flight until set
+    outcomes: list[tuple[str, str | None]] = []
+    out_lock = threading.Lock()
+
+    def racer():
+        try:
+            start.wait()
+            ep_got = pool.acquire().base_url
+            with out_lock:
+                outcomes.append(("got", ep_got))
+            # Hold the probe outstanding so stragglers observe it in-flight.
+            winner_release.wait(timeout=5)
+            pool.report(ep_got, True)
+        except AllProbesInFlight:
+            with out_lock:
+                outcomes.append(("probe_in_flight", None))
+        except NoHealthyEndpoint:
+            with out_lock:
+                outcomes.append(("no_healthy", None))
+
+    threads = [threading.Thread(target=racer) for _ in range(n_threads)]
+    for t in threads:
+        t.start()
+
+    # Wait until 9 threads have refused (i.e. observed the in-flight probe),
+    # then release the single winner so the suite never deadlocks.
+    deadline = time.monotonic() + 5
+    while time.monotonic() < deadline:
+        with out_lock:
+            refusals = sum(1 for o in outcomes if o[0] in ("probe_in_flight", "no_healthy"))
+        if refusals >= n_threads - 1:
+            break
+        time.sleep(0.005)
+    winner_release.set()
+    for t in threads:
+        t.join(timeout=5)
+
+    got = [o for o in outcomes if o[0] == "got"]
+    refused = [o for o in outcomes if o[0] in ("probe_in_flight", "no_healthy")]
+    assert len(outcomes) == n_threads
+    assert len(got) == 1, f"expected exactly 1 winner, got {len(got)}: {outcomes}"
+    assert len(refused) == n_threads - 1
+    # the losers must be told it was a probe-in-flight, not a hard outage
+    assert all(o[0] == "probe_in_flight" for o in refused)

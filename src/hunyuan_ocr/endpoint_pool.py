@@ -24,6 +24,16 @@ class NoHealthyEndpoint(RuntimeError):
     """Raised when every endpoint's circuit is open and none are half-open."""
 
 
+class AllProbesInFlight(NoHealthyEndpoint):
+    """Raised when the only usable endpoints are half-open and already probing.
+
+    A subclass of :class:`NoHealthyEndpoint` so existing ``except NoHealthyEndpoint``
+    handlers still catch it. Callers that want to distinguish "permanently out"
+    from "momentarily saturated while a probe resolves" can catch this type
+    specifically and back off briefly instead of hard-failing the page.
+    """
+
+
 @dataclass
 class EndpointStats:
     alias: str
@@ -36,6 +46,11 @@ class EndpointStats:
     circuit_open_count: int = 0
     state: str = "closed"  # "closed" | "open" | "half_open"
     opened_at: float | None = None
+    # True while a single half-open probe for this endpoint is outstanding.
+    # Enforces the documented "one probe at a time" contract: once a thread has
+    # acquired a half-open endpoint, no other thread may acquire it again until
+    # report() resolves the probe (success -> closed, failure -> open).
+    half_open_in_flight: bool = False
 
     def as_dict(self) -> dict:
         return {
@@ -48,6 +63,7 @@ class EndpointStats:
             "consecutive_failures": self.consecutive_failures,
             "circuit_open_count": self.circuit_open_count,
             "state": self.state,
+            "half_open_in_flight": self.half_open_in_flight,
         }
 
 
@@ -108,17 +124,36 @@ class EndpointPool:
                 st.state = "half_open"
 
     def acquire(self) -> EndpointStats:
-        """Return a usable endpoint (closed or half_open), round-robin among them.
+        """Return a usable endpoint, round-robin among them.
 
-        Raises NoHealthyEndpoint if none is available, so the driver stops
-        dispatching instead of queuing predictable failures.
+        A *usable* endpoint is either ``closed`` (fully healthy, any number of
+        concurrent requests) or ``half_open`` with **no probe in flight**. The
+        first thread to acquire a half-open endpoint marks it in-flight, so no
+        other thread can acquire it again until :meth:`report` resolves the probe
+        — enforcing the documented "one half-open probe at a time" contract.
+
+        Raises :class:`NoHealthyEndpoint` if every circuit is open and none is
+        half-open, or :class:`AllProbesInFlight` (a subclass) if usable endpoints
+        exist but every half-open one already has a probe outstanding. Either way
+        the driver stops dispatching instead of queuing predictable failures.
         """
         with self._lock:
             candidates = list(self._stats.values())
             for st in candidates:
                 self._maybe_half_open(st)
-            usable = [s for s in candidates if s.state in ("closed", "half_open")]
+            usable = [
+                s for s in candidates if s.state == "closed" or (s.state == "half_open" and not s.half_open_in_flight)
+            ]
             if not usable:
+                # Distinguish "nothing half-open at all" from "half-open probes
+                # are resolving" so callers can back off rather than hard-fail.
+                probing = [s for s in candidates if s.state == "half_open" and s.half_open_in_flight]
+                if probing:
+                    raise AllProbesInFlight(
+                        "no routable endpoint: every half-open circuit already has a probe "
+                        f"in flight ({len(probing)}). Back off briefly and retry. "
+                        f"Endpoints: {[s.as_dict() for s in candidates]}"
+                    )
                 raise NoHealthyEndpoint(
                     f"no healthy endpoint available; all circuits open. Endpoints: {[s.as_dict() for s in candidates]}"
                 )
@@ -126,11 +161,19 @@ class EndpointPool:
             order = [s for s in candidates if s in usable]
             pick = order[self._rr % len(order)]
             self._rr += 1
+            if pick.state == "half_open":
+                # Reserve this endpoint for a single probe until report() resolves.
+                pick.half_open_in_flight = True
             pick.requests += 1
             return pick
 
     def report(self, base_url: str, ok: bool) -> None:
-        """Record the outcome of a request and update circuit state."""
+        """Record the outcome of a request and update circuit state.
+
+        Always clears ``half_open_in_flight`` when resolving a half-open probe,
+        whether the probe succeeded (-> closed) or failed (-> open), so the
+        endpoint never gets stuck reserved if the probing request errors.
+        """
         with self._lock:
             st = self._stats[base_url]
             if ok:
@@ -139,6 +182,7 @@ class EndpointPool:
                 if st.state == "half_open":
                     st.state = "closed"
                     st.opened_at = None
+                    st.half_open_in_flight = False
             else:
                 st.failures += 1
                 st.consecutive_failures += 1
@@ -147,12 +191,15 @@ class EndpointPool:
                         st.circuit_open_count += 1
                     st.state = "open"
                     st.opened_at = self._now()
+                    # A failed probe concludes the half-open trial: release the
+                    # reservation (the endpoint is now open and will cool down).
+                    st.half_open_in_flight = False
 
     def has_healthy(self) -> bool:
         with self._lock:
             for st in self._stats.values():
                 self._maybe_half_open(st)
-                if st.state in ("closed", "half_open"):
+                if st.state == "closed" or (st.state == "half_open" and not st.half_open_in_flight):
                     return True
             return False
 
