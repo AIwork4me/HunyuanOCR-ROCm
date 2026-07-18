@@ -7,7 +7,7 @@ name = "hunyuan-ocr"
 version = "0.1.0"
 description = "Evaluation-backed AMD ROCm port of HunyuanOCR-1.5 for OmniDocBench v1.6"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 # Mixed license: see NOTICE and LICENSES/. Original packaging/tooling is Apache-2.0;
 # code ported from HunyuanOCR and the model weights are under the Tencent Hunyuan
 # Community License (not OSI open source; excludes EU/UK/KR).
@@ -22,7 +22,9 @@ classifiers = [
   "Intended Audience :: Science/Research",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
 # Core deps are intentionally GPU-free: importing the package, validating,
@@ -39,13 +41,15 @@ dependencies = [
 [project.optional-dependencies]
 # OpenAI-compatible client (vLLM / llama-server / any OAI server).
 client = ["openai>=1.0"]
+# Hugging Face model/artifact downloader (provides the `hf` CLI used in Quick Start).
+download = ["huggingface_hub>=0.25"]
 # transformers backend (Phase 1 oracle). Pinned to the benchmark version for
 # reproducibility; see reproducibility.lock.yaml. Requires a separate ROCm torch.
 transformers = ["transformers==5.13.0"]
 # Convenience alias; pyyaml is already core. Reserved for future eval-only deps.
 eval = ["pyyaml"]
 # Development / CI tooling.
-dev = ["pytest>=8", "pytest-mock", "ruff>=0.6", "build"]
+dev = ["pytest>=8", "pytest-mock", "ruff>=0.6", "build", "pytest-cov>=4"]
 
 [project.urls]
 Homepage = "https://github.com/AIwork4me/HunyuanOCR-ROCm"
@@ -63,7 +67,7 @@ hunyuan_ocr = ["data/*.yaml"]
 
 [tool.ruff]
 line-length = 120
-target-version = "py312"
+target-version = "py311"
 
 [tool.ruff.lint.per-file-ignores]
 # Vendored / verbatim upstream-derived algorithm files: lint only, never reformat,

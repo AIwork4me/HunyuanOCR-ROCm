@@ -1,0 +1,65 @@
+name: rocm-runner-preflight
+
+# Preflight + real one-page smoke on a self-hosted gfx1100 ROCm runner.
+#
+# This is NOT a fake "echo" smoke. It runs `hunyuan-ocr doctor --strict --backend
+# llamacpp --json` (a real environment gate, non-zero on missing ROCm/weights/
+# server) and then `scripts/rocm_smoke.sh`, which starts a local llama-server and
+# performs a real one-page predict -> validate -> manifest-verify. It is named
+# "preflight" because, in the generic repo state, it requires a runner that
+# already holds the weights and a smoke page; without those it fails fast rather
+# than pretending to pass.
+#
+# SECURITY: runs untrusted checkout + model inference on a self-hosted runner.
+# NEVER triggered by push or pull_request; must NOT be enabled on fork PRs. Only a
+# trusted maintainer dispatches it on a dedicated, isolated machine.
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Ref (branch/tag/sha) to test"
+        required: false
+        default: "main"
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: [self-hosted, linux, rocm, gfx1100]
+    timeout-minutes: 60
+    env:
+      # Provided by the trusted runner (repo/runner secrets mapped to env). The
+      # smoke script verifies each file exists and fails fast otherwise.
+      HUNYUANOCR_GGUF_DIR: ${{ secrets.HUNYUANOCR_GGUF_DIR }}
+      HUNYUANOCR_SMOKE_GT: ${{ secrets.HUNYUANOCR_SMOKE_GT }}
+      HUNYUANOCR_SMOKE_IMAGES: ${{ secrets.HUNYUANOCR_SMOKE_IMAGES }}
+      HUNYUANOCR_LLAMA_SERVER: ${{ secrets.HUNYUANOCR_LLAMA_SERVER }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install (client + dev; no torch from PyPI)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[client,download,dev]"
+      - name: doctor --strict --backend llamacpp (real environment gate)
+        run: |
+          hunyuan-ocr doctor --strict --backend llamacpp --json | tee doctor.json
+          # fail the step if doctor reports the backend not ready
+          python -c "import json,sys; sys.exit(0 if json.load(open('doctor.json'))['ok'] else 1)"
+      - name: one-page smoke (start server, predict, validate, manifest verify)
+        run: bash scripts/rocm_smoke.sh
+      - name: upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rocm-preflight
+          path: |
+            smoke-artifacts/
+            doctor.json
+          if-no-files-found: warn
