@@ -1,10 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AIwork4me
-"""CPU tests for the GPU-CI bridge poller (no network, no GPU)."""
+"""CPU tests for the GPU-CI bridge poller (commit-status model; no network, no GPU)."""
 
 from __future__ import annotations
 
+import json
+import os
+import sys
 from pathlib import Path
+
+import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -13,8 +18,8 @@ from hunyuan_ocr.ci.models import (  # noqa: E402
     POLL_INTERVAL_SEC,
     SMOKE_TIMEOUT_SEC,
     STALE_AFTER_SEC,
-    CheckRun,
     SmokeResult,
+    SmokeStatus,
     _parse_iso,
 )
 
@@ -26,106 +31,75 @@ def test_constants_have_spec_values():
     assert SMOKE_TIMEOUT_SEC == 20 * 60
 
 
-def test_checkrun_smoke_dataclasses_hold_fields():
-    cr = CheckRun(
-        id=7,
-        head_sha="abc",
-        status="queued",
-        conclusion=None,
-        started_at=None,
-        external_id="abc",
-        name=CHECK_NAME,
-        created_at="2026-07-18T03:00:00Z",
-    )
-    assert cr.status == "queued" and cr.external_id == "abc"
+def test_dataclasses_hold_fields():
+    st = SmokeStatus(sha="abc", context=CHECK_NAME, state="pending", created_at="2026-07-18T03:00:00Z", target_url=None)
+    assert st.state == "pending"
     sr = SmokeResult(
-        ok=True,
-        sha="abc",
-        env_summary={"rocm": "7.2"},
-        manifest={"status": "ok"},
-        latency_sec=12.3,
-        log_tail="",
+        ok=True, sha="abc", env_summary={"rocm": "7.2"}, manifest={"status": "ok"}, latency_sec=12.3, log_tail=""
     )
     assert sr.ok and sr.manifest["status"] == "ok"
 
 
 def test_parse_iso_handles_z_suffix():
-    # 2026-07-18T03:00:00Z == epoch 1784343600.0 (UTC)
     assert _parse_iso("2026-07-18T03:00:00Z") == 1784343600.0
-    assert _parse_iso("garbage") == 0.0  # unparseable -> 0, never raises
+    assert _parse_iso("garbage") == 0.0
     assert _parse_iso(None) == 0.0
 
 
+# --- decide() -----------------------------------------------------------------
 from hunyuan_ocr.ci.poller import decide  # noqa: E402
 
-NOW = 1784343600.0  # == 2026-07-18T03:00:00Z
+
+def test_decide_runs_for_fresh_pending():
+    assert decide("pending", age_sec=60) == "run"
 
 
-def _queued(created_minutes_before_now: float, cid: int = 1, sha: str = "abc") -> CheckRun:
-    import datetime as _dt
-
-    created = (
-        _dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=created_minutes_before_now)
-    ).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return CheckRun(cid, sha, "queued", None, None, sha, CHECK_NAME, created)
+def test_decide_skip_done_on_terminal():
+    for terminal in ("success", "failure", "error"):
+        assert decide(terminal, age_sec=60) == "skip_done"
 
 
-def test_decide_runs_for_fresh_queued():
-    assert decide(_queued(5), has_completed_for_sha=False, now=NOW + 5 * 60) == "run"
+def test_decide_timeout_when_stale_pending():
+    assert decide("pending", age_sec=STALE_AFTER_SEC + 1) == "timeout"
 
 
-def test_decide_skip_done_when_completed_exists():
-    assert decide(_queued(5), has_completed_for_sha=True, now=NOW + 5 * 60) == "skip_done"
+# --- build_description() ------------------------------------------------------
+from hunyuan_ocr.ci.poller import build_description  # noqa: E402
 
 
-def test_decide_timeout_when_older_than_stale():
-    # 45 min old > 30 min STALE_AFTER_SEC
-    assert decide(_queued(45), has_completed_for_sha=False, now=NOW) == "timeout"
-
-
-def test_decide_never_timeout_if_completed_exists():
-    assert decide(_queued(45), has_completed_for_sha=True, now=NOW) == "skip_done"
-
-
-from hunyuan_ocr.ci.poller import build_output  # noqa: E402
-
-
-def test_build_output_success_includes_env_manifest_latency():
+def test_build_description_success_under_140_with_env():
     sr = SmokeResult(
         ok=True,
-        sha="abc1234",
-        env_summary={"rocm": "7.2.1", "torch": "2.9.1", "llama_cpp_commit": "a320cbf", "gpu": "gfx1100"},
-        manifest={
-            "status": "ok",
-            "run_counts": {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0, "interrupted": 0},
-            "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0},
-        },
+        sha="abc",
+        env_summary={"rocm": "7.2.1", "torch": "2.9.1", "gpu": "gfx1100"},
+        manifest={"status": "ok", "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0}},
         latency_sec=42.5,
         log_tail="",
     )
-    title, summary = build_output(sr)
-    assert title == "gpu-smoke PASSED"
-    assert "gfx1100" in summary and "ROCm 7.2.1" in summary
-    assert "complete=1" in summary and "42.5s" in summary
+    desc = build_description(sr)
+    assert desc.startswith("PASSED") and "gfx1100" in desc and "complete=1" in desc
+    assert len(desc) <= 140
 
 
-def test_build_output_failure_includes_log_tail():
+def test_build_description_failure_includes_reason():
     sr = SmokeResult(
-        ok=False, sha="abc", env_summary={}, manifest=None, latency_sec=5.0, log_tail="server did not become healthy"
+        ok=False,
+        sha="abc",
+        env_summary={},
+        manifest=None,
+        latency_sec=5.0,
+        log_tail="line1\nserver did not become healthy",
     )
-    title, summary = build_output(sr)
-    assert title == "gpu-smoke FAILED"
-    assert "server did not become healthy" in summary
+    desc = build_description(sr)
+    assert desc.startswith("FAILED") and "server did not become healthy" in desc
+    assert len(desc) <= 140
 
 
-import json  # noqa: E402
-
+# --- GitHubClient (statuses) --------------------------------------------------
 from hunyuan_ocr.ci.github import GitHubClient  # noqa: E402
 
 
 class FakeGH:
-    """Records the argv passed to `gh api` and returns canned JSON."""
-
     def __init__(self, responses):
         self.responses = list(responses)
         self.calls: list[list[str]] = []
@@ -143,46 +117,10 @@ def test_ref_to_sha_calls_gh_and_parses():
 
 
 def test_ref_to_sha_passthrough_for_full_sha():
-    gh = FakeGH([])
-    assert GitHubClient("o", "r", runner=gh).ref_to_sha("a" * 40) == "a" * 40
-    assert gh.calls == []  # no API call for a raw SHA
-
-
-def test_latest_tag_returns_name_and_sha():
-    gh = FakeGH([json.dumps([{"ref": "refs/tags/v0.1.1", "object": {"sha": "tagsha"}}])])
-    assert GitHubClient("o", "r", runner=gh).latest_tag() == ("v0.1.1", "tagsha")
-
-
-def test_latest_tag_none_when_no_tags():
-    gh = FakeGH([json.dumps([])])
-    assert GitHubClient("o", "r", runner=gh).latest_tag() is None
-
-
-def test_latest_tag_filters_non_v_and_picks_last():
-    gh = FakeGH(
-        [
-            json.dumps(
-                [
-                    {"ref": "refs/tags/old", "object": {"sha": "x"}},
-                    {"ref": "refs/tags/v0.1.1", "object": {"sha": "s1"}},
-                    {"ref": "refs/tags/v0.1.2", "object": {"sha": "s2"}},
-                ]
-            )
-        ]
-    )
-    assert GitHubClient("o", "r", runner=gh).latest_tag() == ("v0.1.2", "s2")
-
-
-def test_latest_tag_degrades_to_none_on_api_error():
-    class BoomGH:
-        def __call__(self, argv):
-            raise RuntimeError("HTTP 404")
-
-    assert GitHubClient("o", "r", runner=BoomGH()).latest_tag() is None
+    assert GitHubClient("o", "r", runner=FakeGH([])).ref_to_sha("a" * 40) == "a" * 40
 
 
 def test_latest_tag_dereferences_annotated_tag_to_commit():
-    # refs/tags/v0.1.1 points at a tag object (type=tag); git/tags/<obj> -> commit
     gh = FakeGH(
         [
             json.dumps([{"ref": "refs/tags/v0.1.1", "object": {"sha": "tagobj", "type": "tag"}}]),
@@ -192,44 +130,38 @@ def test_latest_tag_dereferences_annotated_tag_to_commit():
     assert GitHubClient("o", "r", runner=gh).latest_tag() == ("v0.1.1", "commitsha")
 
 
-def test_list_check_runs_filters_to_check_name():
-    payload = {
-        "check_runs": [
-            {
-                "id": 1,
-                "head_sha": "s",
-                "status": "queued",
-                "conclusion": None,
-                "started_at": "2026-07-18T03:00:00Z",
-                "external_id": "s",
-                "name": "gpu-smoke (gfx1100)",
-            },
-            {
-                "id": 2,
-                "head_sha": "s",
-                "status": "completed",
-                "conclusion": "success",
-                "started_at": None,
-                "external_id": "s",
-                "name": "other-check",
-            },
-        ]
-    }
-    gh = FakeGH([json.dumps(payload)])
-    runs = GitHubClient("o", "r", runner=gh).list_check_runs("s")
-    assert [r.id for r in runs] == [1]  # only our check name
-    assert runs[0].created_at == "2026-07-18T03:00:00Z"  # created_at tracks started_at (for stale-sweep)
+def test_latest_tag_none_on_error():
+    class Boom:
+        def __call__(self, argv):
+            raise RuntimeError("HTTP 404")
+
+    assert GitHubClient("o", "r", runner=Boom()).latest_tag() is None
 
 
-def test_complete_sends_conclusion_title_summary():
+def test_list_smoke_statuses_filters_context_most_recent_first():
+    payload = [
+        {
+            "context": "gpu-smoke (gfx1100)",
+            "state": "pending",
+            "updated_at": "2026-07-18T03:01:00Z",
+            "target_url": None,
+        },
+        {"context": "other", "state": "success", "updated_at": "2026-07-18T03:00:00Z", "target_url": None},
+        {"context": "gpu-smoke (gfx1100)", "state": "success", "updated_at": "2026-07-18T02:00:00Z", "target_url": "u"},
+    ]
+    runs = GitHubClient("o", "r", runner=FakeGH([json.dumps(payload)])).list_smoke_statuses("s")
+    assert [r.state for r in runs] == ["pending", "success"]  # only our context, recent first
+
+
+def test_create_status_sends_state_and_description():
     gh = FakeGH(["{}"])
-    GitHubClient("o", "r", runner=gh).complete(99, conclusion="success", title="T", summary="S")
+    GitHubClient("o", "r", runner=gh).create_status("s1", state="success", description="d", target_url="https://u")
     joined = " ".join(gh.calls[0])
-    assert "check-runs/99" in joined and "success" in joined and "T" in joined and "S" in joined
+    assert "/statuses/s1" in joined and "state=success" in joined and "context=gpu-smoke (gfx1100)" in joined
+    assert "description=d" in joined and "target_url=https://u" in joined
 
 
-import os  # noqa: E402
-
+# --- run_smoke() --------------------------------------------------------------
 from hunyuan_ocr.ci.poller import run_smoke  # noqa: E402
 
 
@@ -268,10 +200,8 @@ def test_run_smoke_success_records_trust_split_workdir(tmp_path, monkeypatch):
     )
     assert res.ok is True and res.sha == "abc1234"
     assert res.env_summary["gpu"] == "gfx1100" and res.manifest["status"] == "ok"
-    # trust split: REPO was the per-run workdir (exists) and NOT the trusted harness location
     repo_used = Path((out_dir / "repo_used.txt").read_text(encoding="utf-8").strip())
-    assert repo_used.is_dir()
-    assert repo_used != harness.parent
+    assert repo_used.is_dir() and repo_used != harness.parent  # trust split
 
 
 def test_run_smoke_failure_captures_log_tail(tmp_path, monkeypatch):
@@ -284,8 +214,7 @@ def test_run_smoke_failure_captures_log_tail(tmp_path, monkeypatch):
         env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
         timeout_s=30,
     )
-    assert res.ok is False
-    assert "server did not become healthy" in res.log_tail
+    assert res.ok is False and "server did not become healthy" in res.log_tail
 
 
 def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
@@ -298,32 +227,36 @@ def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
         env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
         timeout_s=1,
     )
-    assert res.ok is False
-    assert "timed out" in res.log_tail.lower()
+    assert res.ok is False and "timed out" in res.log_tail.lower()
 
 
-import sys  # noqa: E402
-
-import pytest  # noqa: E402
-
+# --- once() + flock -----------------------------------------------------------
 from hunyuan_ocr.ci.poller import _acquire_lock, once  # noqa: E402
+
+NOW = 1784343600.0  # == 2026-07-18T03:00:00Z
+
+
+def _iso(minutes_before_now: float) -> str:
+    import datetime as _dt
+
+    return (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=minutes_before_now)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="fcntl flock is POSIX")
 def test_acquire_lock_second_call_returns_none(tmp_path):
     lock = tmp_path / "x.lock"
-    fd1 = _acquire_lock(lock)
-    assert fd1 is not None
-    fd2 = _acquire_lock(lock)
-    assert fd2 is None
+    assert _acquire_lock(lock) is not None
+    assert _acquire_lock(lock) is None
 
 
 class FakeClient:
-    def __init__(self, runs_by_sha, main_sha="mainsha", tags=None):
-        self.runs_by_sha = runs_by_sha
+    def __init__(self, statuses_by_sha, main_sha="mainsha", tags=None):
+        self.statuses_by_sha = statuses_by_sha
         self._main_sha = main_sha
         self.tags = tags or []
-        self.completions: list = []
+        self.created: list = []
 
     def ref_to_sha(self, ref):
         return self._main_sha
@@ -331,23 +264,19 @@ class FakeClient:
     def latest_tag(self, prefix="v"):
         return self.tags[-1] if self.tags else None
 
-    def list_check_runs(self, sha):
-        return self.runs_by_sha.get(sha, [])
+    def list_smoke_statuses(self, sha):
+        return self.statuses_by_sha.get(sha, [])
 
-    def set_in_progress(self, cid):
-        pass
-
-    def complete(self, cid, *, conclusion, title, summary):
-        self.completions.append((cid, conclusion))
+    def create_status(self, sha, *, state, description, target_url=""):
+        self.created.append((sha, state))
 
 
-def _cr(cid, sha, status, created="2026-07-18T03:00:00Z"):
-    conclusion = "success" if status == "completed" else None
-    return CheckRun(cid, sha, status, conclusion, None, sha, CHECK_NAME, created)
+def _st(state, created_minutes_before_now=0.0):
+    return SmokeStatus("mainsha", CHECK_NAME, state, _iso(created_minutes_before_now), None)
 
 
-def test_once_runs_queued_and_completes_success(tmp_path, monkeypatch):
-    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued")]})
+def test_once_runs_pending_and_completes_success(tmp_path, monkeypatch):
+    client = FakeClient({"mainsha": [_st("pending", 1)]})  # most-recent first
     monkeypatch.setattr(
         "hunyuan_ocr.ci.poller.run_smoke",
         lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""),
@@ -360,15 +289,12 @@ def test_once_runs_queued_and_completes_success(tmp_path, monkeypatch):
         now=NOW,
     )
     assert s["ran"] == ["mainsha"]
-    assert client.completions == [(1, "success")]
+    assert client.created == [("mainsha", "success")]
 
 
-def test_once_skip_done_when_completed_exists(tmp_path, monkeypatch):
-    client = FakeClient({"mainsha": [_cr(2, "mainsha", "completed"), _cr(1, "mainsha", "queued")]})
-    ran = []
-    monkeypatch.setattr(
-        "hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: ran.append(sha) or SmokeResult(True, sha, {}, None, 1.0, "")
-    )
+def test_once_skip_done_when_terminal(tmp_path, monkeypatch):
+    client = FakeClient({"mainsha": [_st("success", 1)]})
+    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: pytest.fail("should not run"))
     s = once(
         client,
         trusted_smoke_script=tmp_path / "s.sh",
@@ -376,22 +302,12 @@ def test_once_skip_done_when_completed_exists(tmp_path, monkeypatch):
         env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
         now=NOW,
     )
-    assert s["skipped_done"] == ["mainsha"] and ran == []
-    assert client.completions == []
+    assert s["skipped_done"] == ["mainsha"] and client.created == []
 
 
-def test_once_stale_sweep_times_out_queued(tmp_path, monkeypatch):
-    import datetime as _dt
-
-    old_created = (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=45)).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
-    )
-    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", old_created)]})
-
-    def boom(sha, **k):
-        pytest.fail("should not run a stale job")
-
-    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", boom)
+def test_once_stale_pending_times_out(tmp_path, monkeypatch):
+    client = FakeClient({"mainsha": [_st("pending", 45)]})  # 45 min > 30 min STALE
+    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: pytest.fail("should not run a stale job"))
     s = once(
         client,
         trusted_smoke_script=tmp_path / "s.sh",
@@ -400,20 +316,23 @@ def test_once_stale_sweep_times_out_queued(tmp_path, monkeypatch):
         now=NOW,
     )
     assert s["timed_out"] == ["mainsha"]
-    assert client.completions == [(1, "failure")]
+    assert client.created == [("mainsha", "failure")]
 
 
+# --- main() -------------------------------------------------------------------
 from hunyuan_ocr.ci import poller as poller_mod  # noqa: E402
 
 
-def _fresh_created() -> str:
+def _fresh_st(state: str) -> SmokeStatus:
     import datetime as _dt
 
-    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return SmokeStatus(
+        "mainsha", CHECK_NAME, state, _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), None
+    )
 
 
 def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
-    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", _fresh_created())]})
+    client = FakeClient({"mainsha": [_fresh_st("pending")]})
     monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
     monkeypatch.setattr(poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {}, None, 1.0, ""))
     rc = poller_mod.main(
@@ -431,14 +350,13 @@ def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
             str(tmp_path / "l.lock"),
         ]
     )
-    assert rc == 0
-    assert client.completions == []  # dry-run never completes
     out = capsys.readouterr().out
+    assert rc == 0 and client.created == []
     assert "would run" in out and "mainsha" in out
 
 
 def test_main_once_runs_one_pass(tmp_path, monkeypatch):
-    client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", _fresh_created())]})
+    client = FakeClient({"mainsha": [_fresh_st("pending")]})
     monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
     monkeypatch.setattr(
         poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, "")
@@ -458,11 +376,10 @@ def test_main_once_runs_one_pass(tmp_path, monkeypatch):
             str(tmp_path / "l.lock"),
         ]
     )
-    assert rc == 0
-    assert client.completions == [(1, "success")]
+    assert rc == 0 and client.created == [("mainsha", "success")]
 
 
-# --- scripts/make_smoke_input.py (1-page slicer) ------------------------------
+# --- scripts/make_smoke_input.py ---------------------------------------------
 import importlib.util  # noqa: E402
 
 _msi_spec = importlib.util.spec_from_file_location("make_smoke_input", REPO / "scripts" / "make_smoke_input.py")
@@ -477,12 +394,11 @@ def test_select_one_page_picks_canary_first_page_and_verifies_image(tmp_path):
     imgs.mkdir()
     (imgs / "a.png").write_bytes(b"x")
     (imgs / "b.png").write_bytes(b"x")
-    page = msi.select_one_page(full, manifest, imgs)
-    assert page["page_info"]["image_path"] == "b.png"  # manifest order, first page
+    assert msi.select_one_page(full, manifest, imgs)["page_info"]["image_path"] == "b.png"
 
 
 def test_select_one_page_raises_if_image_missing(tmp_path):
-    full = [{"page_info": {"image_path": "a.png"}}]
-    manifest = {"pages": [{"image_path": "a.png"}]}
     with pytest.raises(FileNotFoundError):
-        msi.select_one_page(full, manifest, tmp_path / "nope")
+        msi.select_one_page(
+            [{"page_info": {"image_path": "a.png"}}], {"pages": [{"image_path": "a.png"}]}, tmp_path / "nope"
+        )

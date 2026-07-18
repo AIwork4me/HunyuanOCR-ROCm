@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AIwork4me
-"""GPU-CI bridge poller orchestration (pure logic; I/O via GitHubClient)."""
+"""GPU-CI bridge poller orchestration over commit statuses (pure logic; I/O via
+GitHubClient)."""
 
 from __future__ import annotations
 
@@ -18,60 +19,45 @@ from hunyuan_ocr.ci.models import (
     POLL_INTERVAL_SEC,
     SMOKE_TIMEOUT_SEC,
     STALE_AFTER_SEC,
-    CheckRun,
     SmokeResult,
     _parse_iso,
 )
 
+TERMINAL_STATES = ("success", "failure", "error")
 
-def decide(queued_run: CheckRun, has_completed_for_sha: bool, now: float) -> str:
-    """Decide what to do with a queued gpu-smoke Check Run.
 
-    Returns 'skip_done' if a completed smoke already exists for this SHA
-    (idempotency), 'timeout' if it has waited longer than STALE_AFTER_SEC
-    (no silent hangs), else 'run'.
+def decide(latest_state: str, age_sec: float) -> str:
+    """Decide what to do given the latest smoke status for a SHA.
+
+    'skip_done' if the latest is already terminal (idempotency), 'timeout' if a
+    pending has waited longer than STALE_AFTER_SEC (no silent hangs), else 'run'.
     """
-    if has_completed_for_sha:
+    if latest_state in TERMINAL_STATES:
         return "skip_done"
-    created = _parse_iso(queued_run.created_at)
-    if created and now - created > STALE_AFTER_SEC:
+    if age_sec > STALE_AFTER_SEC:
         return "timeout"
     return "run"
 
 
-def build_output(result: SmokeResult) -> tuple[str, str]:
-    """Render the Check Run output (title, markdown summary) from a smoke result."""
+def build_description(result: SmokeResult) -> str:
+    """Render a <=140-char commit-status description from a smoke result."""
+    if not result.ok:
+        reason = ""
+        tail = result.log_tail.strip()
+        if tail:
+            reason = tail.splitlines()[-1][:80]
+        return f"FAILED gfx1100: {reason}".strip()[:140]
     env = result.env_summary or {}
-    env_line = ", ".join(
-        f"{label} {val}"
-        for label, val in (
-            ("ROCm", env.get("rocm")),
-            ("torch", env.get("torch")),
-            ("llama.cpp", env.get("llama_cpp_commit")),
-            ("gpu", env.get("gpu")),
-        )
-        if val
-    )
+    bits = ["PASSED", "gfx1100"]
+    if env.get("rocm"):
+        bits.append(f"ROCm{env['rocm']}")
+    if env.get("torch"):
+        bits.append(f"torch{env['torch']}")
     if result.manifest:
-        rc = result.manifest.get("run_counts", {})
         fs = result.manifest.get("final_state", {})
-        manifest_line = (
-            f"status={result.manifest.get('status')} "
-            f"attempted={rc.get('attempted')} succeeded={rc.get('succeeded')} "
-            f"failed={rc.get('failed')} complete={fs.get('complete')} pending={fs.get('pending')}"
-        )
-    else:
-        manifest_line = "manifest: (none)"
-    title = "gpu-smoke PASSED" if result.ok else "gpu-smoke FAILED"
-    summary = (
-        f"- sha: `{result.sha}`\n"
-        f"- env: {env_line or '(unrecorded)'}\n"
-        f"- {manifest_line}\n"
-        f"- latency: {result.latency_sec:.1f}s\n"
-    )
-    if not result.ok and result.log_tail:
-        summary += f"\n**log tail:**\n```\n{result.log_tail[-1500:]}\n```"
-    return title, summary
+        bits.append(f"complete={fs.get('complete')}")
+    bits.append(f"{result.latency_sec:.0f}s")
+    return " ".join(bits)[:140]
 
 
 def _checkout_sha(sha: str, dest: Path) -> None:
@@ -167,7 +153,7 @@ def _acquire_lock(path):
 
 
 def once(client, *, trusted_smoke_script, workdir_parent, env, now):
-    """One polling pass. Returns a summary dict {ran, skipped_done, timed_out}."""
+    """One polling pass over commit statuses. Returns {ran, skipped_done, timed_out}."""
     summary = {"ran": [], "skipped_done": [], "timed_out": []}
     watched = [("main", client.ref_to_sha("main"))]
     tag = client.latest_tag()
@@ -179,42 +165,51 @@ def once(client, *, trusted_smoke_script, workdir_parent, env, now):
         if sha in seen:
             continue
         seen.add(sha)
-        runs = client.list_check_runs(sha)
-        has_completed = any(r.status == "completed" for r in runs)
-        for q in [r for r in runs if r.status == "queued"]:
-            action = decide(q, has_completed_for_sha=has_completed, now=now)
-            if action == "skip_done":
-                summary["skipped_done"].append(sha)
-                continue
-            if action == "timeout":
-                client.complete(
-                    q.id,
-                    conclusion="failure",
-                    title="gpu-smoke FAILED",
-                    summary="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?",
-                )
-                summary["timed_out"].append(sha)
-                continue
-            client.set_in_progress(q.id)
-            result = run_smoke(sha, trusted_smoke_script=trusted_smoke_script, workdir_parent=workdir_parent, env=env)
-            title, smry = build_output(result)
-            client.complete(q.id, conclusion="success" if result.ok else "failure", title=title, summary=smry)
-            summary["ran"].append(sha)
+        statuses = client.list_smoke_statuses(sha)
+        if not statuses:
+            continue
+        latest = statuses[0]  # most-recent-first
+        age = now - _parse_iso(latest.created_at)
+        action = decide(latest.state, age)
+        if action == "skip_done":
+            summary["skipped_done"].append(sha)
+            continue
+        if action == "timeout":
+            client.create_status(
+                sha,
+                state="failure",
+                description="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?",
+            )
+            summary["timed_out"].append(sha)
+            continue
+        result = run_smoke(sha, trusted_smoke_script=trusted_smoke_script, workdir_parent=workdir_parent, env=env)
+        client.create_status(
+            sha,
+            state="success" if result.ok else "failure",
+            description=build_description(result),
+        )
+        summary["ran"].append(sha)
     return summary
 
 
 def _driven_once(client, *, trusted_smoke_script, workdir_parent, env, now, dry_run):
     """Dry-run-aware wrapper: prints would-do instead of mutating when dry_run."""
     if not dry_run:
-        return once(client, trusted_smoke_script=trusted_smoke_script, workdir_parent=workdir_parent, env=env, now=now)
+        return once(
+            client,
+            trusted_smoke_script=trusted_smoke_script,
+            workdir_parent=workdir_parent,
+            env=env,
+            now=now,
+        )
     watched = [("main", client.ref_to_sha("main"))]
     tag = client.latest_tag()
     if tag:
         watched.append(tag)
     for _n, sha in watched:
-        for r in client.list_check_runs(sha):
-            if r.status == "queued":
-                print(f"[dry-run] would run smoke for {sha} (check-run {r.id})", flush=True)
+        statuses = client.list_smoke_statuses(sha)
+        if statuses and statuses[0].state == "pending":
+            print(f"[dry-run] would run smoke for {sha} (pending status)", flush=True)
     return {"ran": [], "skipped_done": [], "timed_out": [], "dry_run": True}
 
 
