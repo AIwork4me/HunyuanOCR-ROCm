@@ -37,7 +37,7 @@ jobs:
       HUNYUANOCR_SMOKE_IMAGES: ${{ secrets.HUNYUANOCR_SMOKE_IMAGES }}
       HUNYUANOCR_LLAMA_SERVER: ${{ secrets.HUNYUANOCR_LLAMA_SERVER }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.inputs.ref || github.ref }}
       - uses: actions/setup-python@v5
