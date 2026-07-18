@@ -337,6 +337,33 @@ def test_main_once_runs_one_pass(tmp_path, monkeypatch):
     assert client.completions == [(1, "success")]
 
 
+# --- scripts/make_smoke_input.py (1-page slicer) ------------------------------
+import importlib.util  # noqa: E402
+
+_msi_spec = importlib.util.spec_from_file_location("make_smoke_input", REPO / "scripts" / "make_smoke_input.py")
+msi = importlib.util.module_from_spec(_msi_spec)
+_msi_spec.loader.exec_module(msi)
+
+
+def test_select_one_page_picks_canary_first_page_and_verifies_image(tmp_path):
+    full = [{"page_info": {"image_path": "a.png"}}, {"page_info": {"image_path": "b.png"}}]
+    manifest = {"pages": [{"image_path": "b.png"}, {"image_path": "a.png"}]}
+    imgs = tmp_path / "images"
+    imgs.mkdir()
+    (imgs / "a.png").write_bytes(b"x")
+    (imgs / "b.png").write_bytes(b"x")
+    page = msi.select_one_page(full, manifest, imgs)
+    assert page["page_info"]["image_path"] == "b.png"  # manifest order, first page
+
+
+def test_select_one_page_raises_if_image_missing(tmp_path):
+    full = [{"page_info": {"image_path": "a.png"}}]
+    manifest = {"pages": [{"image_path": "a.png"}]}
+    with pytest.raises(FileNotFoundError):
+        msi.select_one_page(full, manifest, tmp_path / "nope")
+
+
+
 
 
 
