@@ -7,4 +7,4 @@ scores them on OmniDocBench v1.6. Not a precision-aligned port — see
 docs/benchmark-methodology.md.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"

@@ -5,6 +5,29 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-07-18
+
+### Added — GPU-CI bridge (real gfx1100 smoke from GitHub)
+- A box-side poller (`src/hunyuan_ocr/ci/`) that runs the real 1-page gfx1100
+  smoke for `gpu-smoke (gfx1100)` commit statuses created by the new
+  `gpu-smoke.yml` (`workflow_dispatch`), and reports success/failure as a commit
+  status. Uses **commit statuses** (not check-runs) because a user OAuth token
+  can read AND write statuses, whereas check-run writes require a GitHub App.
+  Includes a flock single-run lock, SHA-idempotency, a 30-min stale-sweep (no
+  silent hangs), a resilient loop, and a trusted-harness + explicit-ref security
+  model. CPU-tested (no network/GPU); live-proven on gfx1100 (~61s end-to-end,
+  21s smoke).
+- `scripts/make_smoke_input.py` for a deterministic 1-page smoke input.
+- `docs/ci/gpu-ci-bridge.md` (method, measured data, anruicloud requirements).
+- README hero image.
+
+### Notes
+- The GPU-CI bridge is an **MVP**: the poller is `nohup` (no systemd on the
+  Radeon Cloud Docker box), poll-only (no inbound from GitHub), and status-based
+  (≤140-char description, not rich check-run output). Production hardening
+  (persistence / inbound webhook / GitHub App for check-runs) is documented as
+  the anruicloud-backed next phase. No benchmark changes.
+
 ## [0.1.1] — 2026-07-18
 
 A reliability, first-use, and credibility pass. **No benchmark numbers changed**
