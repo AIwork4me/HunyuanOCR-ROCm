@@ -8,8 +8,8 @@ abstract: >-
 authors:
   - alias: AIwork4me
 type: software
-version: "0.1.0"
-date-released: "2026-07-16"
+version: "0.1.1"
+date-released: "2026-07-18"
 license: Apache-2.0
 keywords:
   - OCR
