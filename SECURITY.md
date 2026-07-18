@@ -29,11 +29,11 @@ Only the latest release on `main` receives fixes. There are no LTS branches.
 - **Model output is untrusted.** HunyuanOCR produces text/markdown from images;
   treat its output like any LLM output (may be wrong, may contain injected
   content from the source image). Do not execute or render it blindly.
-- **Self-hosted ROCm runner.** The `rocm-smoke` workflow runs on a self-hosted
-  GPU runner and is `workflow_dispatch` only — it is **never** triggered by push
-  or pull request, and must not be enabled on fork PRs. It checks out
-  contributor code onto a machine holding weights/data; only a trusted maintainer
-  dispatches it.
+- **Self-hosted ROCm runner.** The `rocm-runner-preflight` workflow runs on a
+  self-hosted GPU runner and is `workflow_dispatch` only — it is **never**
+  triggered by push or pull request, and must not be enabled on fork PRs. It
+  checks out contributor code onto a machine holding weights/data; only a trusted
+  maintainer dispatches it.
 
 ## What not to put in issues / PRs
 

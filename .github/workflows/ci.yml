@@ -14,18 +14,26 @@ concurrency:
 
 jobs:
   lint-test-build:
-    name: lint + test + build (CPU, no torch)
+    name: lint + test + build (CPU, no torch; py${{ matrix.python }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The package tooling is 3.11+ (CI proves 3.11/3.12/3.13). The published
+        # BENCHMARK was validated on 3.12 (see reproducibility.lock.yaml); that
+        # concerns the GPU run, not the CPU-installable package tested here.
+        python: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
           cache: pip
       - name: Install (CPU extras only — never torch or transformers)
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[client,dev]"
+          pip install -e ".[client,download,dev]"
+          pip install reuse
       - name: compileall
         run: python -m compileall -q src scripts
       - name: ruff check
@@ -34,21 +42,26 @@ jobs:
         run: ruff format --check .
       - name: shell syntax
         run: bash -n scripts/*.sh
-      - name: pytest (no-GPU subset)
-        run: pytest -q -m "not gpu"
-      - name: repo integrity (lock, canary manifest, doc links, SPDX)
+      - name: reuse lint (SPDX licensing)
+        run: reuse lint
+      - name: pytest with coverage (no-GPU subset)
+        run: pytest -q -m "not gpu" --cov=hunyuan_ocr --cov-report=term-missing --cov-fail-under=65
+      - name: repo integrity (lock, manifest, links, SPDX, doc/lock consistency)
         run: python scripts/check_repo.py
       - name: build sdist + wheel
         run: python -m build
-      - name: import built wheel in a clean venv
+      - name: import + exercise built wheel in a clean venv
         run: |
           python -m venv /tmp/ve
           WHL="$(ls dist/*.whl | head -n1)"
           /tmp/ve/bin/pip install --no-deps "$WHL"
-          /tmp/ve/bin/pip install pillow pyyaml tqdm requests openai
+          /tmp/ve/bin/pip install pillow pyyaml tqdm requests openai huggingface_hub
           /tmp/ve/bin/python -c "import hunyuan_ocr; print('import ok', hunyuan_ocr.__version__)"
+          /tmp/ve/bin/hunyuan-ocr --help >/dev/null
+          /tmp/ve/bin/hunyuan-ocr doctor --json >/tmp/doctor.json
+          /tmp/ve/bin/python -c "import json,sys; d=json.load(open('/tmp/doctor.json')); sys.exit(0 if d['ok'] is False or d['ok'] is True else 1)"
       - name: upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-py${{ matrix.python }}
           path: dist/

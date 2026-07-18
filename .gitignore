@@ -10,6 +10,13 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Local prediction / smoke outputs (Makefile + rocm_smoke.sh write here)
+artifacts/
+smoke-artifacts/
 
 # Local environment / machine-specific paths (gitignored, never commit)
 .env.local

@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0
+# Keep GitHub Actions and Python dependencies current. Pinning the actions below
+# to full commit SHAs is a tracked follow-up (see docs/release-checklist.md);
+# Dependabot surfaces new versions in the meantime.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["ci", "dependencies"]
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
