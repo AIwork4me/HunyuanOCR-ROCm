@@ -28,13 +28,23 @@ def test_constants_have_spec_values():
 
 def test_checkrun_smoke_dataclasses_hold_fields():
     cr = CheckRun(
-        id=7, head_sha="abc", status="queued", conclusion=None,
-        started_at=None, external_id="abc", name=CHECK_NAME, created_at="2026-07-18T03:00:00Z",
+        id=7,
+        head_sha="abc",
+        status="queued",
+        conclusion=None,
+        started_at=None,
+        external_id="abc",
+        name=CHECK_NAME,
+        created_at="2026-07-18T03:00:00Z",
     )
     assert cr.status == "queued" and cr.external_id == "abc"
     sr = SmokeResult(
-        ok=True, sha="abc", env_summary={"rocm": "7.2"}, manifest={"status": "ok"},
-        latency_sec=12.3, log_tail="",
+        ok=True,
+        sha="abc",
+        env_summary={"rocm": "7.2"},
+        manifest={"status": "ok"},
+        latency_sec=12.3,
+        log_tail="",
     )
     assert sr.ok and sr.manifest["status"] == "ok"
 
@@ -54,7 +64,9 @@ NOW = 1784343600.0  # == 2026-07-18T03:00:00Z
 def _queued(created_minutes_before_now: float, cid: int = 1, sha: str = "abc") -> CheckRun:
     import datetime as _dt
 
-    created = (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=created_minutes_before_now)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    created = (
+        _dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=created_minutes_before_now)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
     return CheckRun(cid, sha, "queued", None, None, sha, CHECK_NAME, created)
 
 
@@ -80,11 +92,16 @@ from hunyuan_ocr.ci.poller import build_output  # noqa: E402
 
 def test_build_output_success_includes_env_manifest_latency():
     sr = SmokeResult(
-        ok=True, sha="abc1234",
+        ok=True,
+        sha="abc1234",
         env_summary={"rocm": "7.2.1", "torch": "2.9.1", "llama_cpp_commit": "a320cbf", "gpu": "gfx1100"},
-        manifest={"status": "ok", "run_counts": {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0, "interrupted": 0},
-                  "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0}},
-        latency_sec=42.5, log_tail="",
+        manifest={
+            "status": "ok",
+            "run_counts": {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0, "interrupted": 0},
+            "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0},
+        },
+        latency_sec=42.5,
+        log_tail="",
     )
     title, summary = build_output(sr)
     assert title == "gpu-smoke PASSED"
@@ -93,7 +110,9 @@ def test_build_output_success_includes_env_manifest_latency():
 
 
 def test_build_output_failure_includes_log_tail():
-    sr = SmokeResult(ok=False, sha="abc", env_summary={}, manifest=None, latency_sec=5.0, log_tail="server did not become healthy")
+    sr = SmokeResult(
+        ok=False, sha="abc", env_summary={}, manifest=None, latency_sec=5.0, log_tail="server did not become healthy"
+    )
     title, summary = build_output(sr)
     assert title == "gpu-smoke FAILED"
     assert "server did not become healthy" in summary
@@ -140,12 +159,28 @@ def test_latest_tag_none_when_no_tags():
 
 
 def test_list_check_runs_filters_to_check_name():
-    payload = {"check_runs": [
-        {"id": 1, "head_sha": "s", "status": "queued", "conclusion": None, "started_at": "2026-07-18T03:00:00Z",
-         "external_id": "s", "name": "gpu-smoke (gfx1100)"},
-        {"id": 2, "head_sha": "s", "status": "completed", "conclusion": "success", "started_at": None,
-         "external_id": "s", "name": "other-check"},
-    ]}
+    payload = {
+        "check_runs": [
+            {
+                "id": 1,
+                "head_sha": "s",
+                "status": "queued",
+                "conclusion": None,
+                "started_at": "2026-07-18T03:00:00Z",
+                "external_id": "s",
+                "name": "gpu-smoke (gfx1100)",
+            },
+            {
+                "id": 2,
+                "head_sha": "s",
+                "status": "completed",
+                "conclusion": "success",
+                "started_at": None,
+                "external_id": "s",
+                "name": "other-check",
+            },
+        ]
+    }
     gh = FakeGH([json.dumps(payload)])
     runs = GitHubClient("o", "r", runner=gh).list_check_runs("s")
     assert [r.id for r in runs] == [1]  # only our check name
@@ -190,8 +225,13 @@ def test_run_smoke_success_records_trust_split_workdir(tmp_path, monkeypatch):
     harness = _fake_harness(tmp_path)
     out_dir = tmp_path / "out"
     monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
-    res = run_smoke("abc1234", trusted_smoke_script=harness, workdir_parent=tmp_path,
-                    env={"HUNYUANOCR_SMOKE_OUT": str(out_dir)}, timeout_s=30)
+    res = run_smoke(
+        "abc1234",
+        trusted_smoke_script=harness,
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(out_dir)},
+        timeout_s=30,
+    )
     assert res.ok is True and res.sha == "abc1234"
     assert res.env_summary["gpu"] == "gfx1100" and res.manifest["status"] == "ok"
     # trust split: REPO was the per-run workdir (exists) and NOT the trusted harness location
@@ -203,8 +243,13 @@ def test_run_smoke_success_records_trust_split_workdir(tmp_path, monkeypatch):
 def test_run_smoke_failure_captures_log_tail(tmp_path, monkeypatch):
     harness = _fake_harness(tmp_path, fail=True)
     monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
-    res = run_smoke("abc", trusted_smoke_script=harness, workdir_parent=tmp_path,
-                    env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, timeout_s=30)
+    res = run_smoke(
+        "abc",
+        trusted_smoke_script=harness,
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        timeout_s=30,
+    )
     assert res.ok is False
     assert "server did not become healthy" in res.log_tail
 
@@ -212,8 +257,13 @@ def test_run_smoke_failure_captures_log_tail(tmp_path, monkeypatch):
 def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
     harness = _fake_harness(tmp_path, slow=True)
     monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
-    res = run_smoke("abc", trusted_smoke_script=harness, workdir_parent=tmp_path,
-                    env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, timeout_s=1)
+    res = run_smoke(
+        "abc",
+        trusted_smoke_script=harness,
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        timeout_s=1,
+    )
     assert res.ok is False
     assert "timed out" in res.log_tail.lower()
 
@@ -264,10 +314,17 @@ def _cr(cid, sha, status, created="2026-07-18T03:00:00Z"):
 
 def test_once_runs_queued_and_completes_success(tmp_path, monkeypatch):
     client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued")]})
-    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke",
-                        lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""))
-    s = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path,
-             env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=NOW)
+    monkeypatch.setattr(
+        "hunyuan_ocr.ci.poller.run_smoke",
+        lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""),
+    )
+    s = once(
+        client,
+        trusted_smoke_script=tmp_path / "s.sh",
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        now=NOW,
+    )
     assert s["ran"] == ["mainsha"]
     assert client.completions == [(1, "success")]
 
@@ -275,10 +332,16 @@ def test_once_runs_queued_and_completes_success(tmp_path, monkeypatch):
 def test_once_skip_done_when_completed_exists(tmp_path, monkeypatch):
     client = FakeClient({"mainsha": [_cr(2, "mainsha", "completed"), _cr(1, "mainsha", "queued")]})
     ran = []
-    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke",
-                        lambda sha, **k: ran.append(sha) or SmokeResult(True, sha, {}, None, 1.0, ""))
-    s = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path,
-             env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=NOW)
+    monkeypatch.setattr(
+        "hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: ran.append(sha) or SmokeResult(True, sha, {}, None, 1.0, "")
+    )
+    s = once(
+        client,
+        trusted_smoke_script=tmp_path / "s.sh",
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        now=NOW,
+    )
     assert s["skipped_done"] == ["mainsha"] and ran == []
     assert client.completions == []
 
@@ -286,15 +349,22 @@ def test_once_skip_done_when_completed_exists(tmp_path, monkeypatch):
 def test_once_stale_sweep_times_out_queued(tmp_path, monkeypatch):
     import datetime as _dt
 
-    old_created = (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=45)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    old_created = (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=45)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
     client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", old_created)]})
 
     def boom(sha, **k):
         pytest.fail("should not run a stale job")
 
     monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", boom)
-    s = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path,
-             env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=NOW)
+    s = once(
+        client,
+        trusted_smoke_script=tmp_path / "s.sh",
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        now=NOW,
+    )
     assert s["timed_out"] == ["mainsha"]
     assert client.completions == [(1, "failure")]
 
@@ -312,11 +382,21 @@ def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
     client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", _fresh_created())]})
     monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
     monkeypatch.setattr(poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {}, None, 1.0, ""))
-    rc = poller_mod.main([
-        "--owner", "o", "--repo", "r", "--dry-run",
-        "--workdir-parent", str(tmp_path), "--smoke-script", str(tmp_path / "s.sh"),
-        "--lock", str(tmp_path / "l.lock"),
-    ])
+    rc = poller_mod.main(
+        [
+            "--owner",
+            "o",
+            "--repo",
+            "r",
+            "--dry-run",
+            "--workdir-parent",
+            str(tmp_path),
+            "--smoke-script",
+            str(tmp_path / "s.sh"),
+            "--lock",
+            str(tmp_path / "l.lock"),
+        ]
+    )
     assert rc == 0
     assert client.completions == []  # dry-run never completes
     out = capsys.readouterr().out
@@ -326,13 +406,24 @@ def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
 def test_main_once_runs_one_pass(tmp_path, monkeypatch):
     client = FakeClient({"mainsha": [_cr(1, "mainsha", "queued", _fresh_created())]})
     monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
-    monkeypatch.setattr(poller_mod, "run_smoke",
-                        lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""))
-    rc = poller_mod.main([
-        "--owner", "o", "--repo", "r", "--once",
-        "--workdir-parent", str(tmp_path), "--smoke-script", str(tmp_path / "s.sh"),
-        "--lock", str(tmp_path / "l.lock"),
-    ])
+    monkeypatch.setattr(
+        poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, "")
+    )
+    rc = poller_mod.main(
+        [
+            "--owner",
+            "o",
+            "--repo",
+            "r",
+            "--once",
+            "--workdir-parent",
+            str(tmp_path),
+            "--smoke-script",
+            str(tmp_path / "s.sh"),
+            "--lock",
+            str(tmp_path / "l.lock"),
+        ]
+    )
     assert rc == 0
     assert client.completions == [(1, "success")]
 
@@ -361,11 +452,3 @@ def test_select_one_page_raises_if_image_missing(tmp_path):
     manifest = {"pages": [{"image_path": "a.png"}]}
     with pytest.raises(FileNotFoundError):
         msi.select_one_page(full, manifest, tmp_path / "nope")
-
-
-
-
-
-
-
-
