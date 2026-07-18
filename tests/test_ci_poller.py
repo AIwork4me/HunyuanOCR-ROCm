@@ -159,4 +159,64 @@ def test_complete_sends_conclusion_title_summary():
     assert "check-runs/99" in joined and "success" in joined and "T" in joined and "S" in joined
 
 
+import os  # noqa: E402
+
+from hunyuan_ocr.ci.poller import run_smoke  # noqa: E402
+
+
+def _fake_harness(tmp_path: Path, *, fail: bool = False, slow: bool = False) -> Path:
+    if fail:
+        body = "#!/usr/bin/env bash\necho 'server did not become healthy' >&2\nexit 1\n"
+    elif slow:
+        body = "#!/usr/bin/env bash\nsleep 30\n"
+    else:
+        body = (
+            "#!/usr/bin/env bash\nset -euo pipefail\n"
+            'mkdir -p "$HUNYUANOCR_SMOKE_OUT"\n'
+            'echo "$REPO" > "$HUNYUANOCR_SMOKE_OUT/repo_used.txt"\n'
+            'echo "ROCm 7.2.1"; echo "torch 2.9.1"; echo "llama.cpp a320cbf"; echo "gpu gfx1100"\n'
+            'mkdir -p "$HUNYUANOCR_SMOKE_OUT/predictions"\n'
+            'echo "# markdown" > "$HUNYUANOCR_SMOKE_OUT/predictions/page.md"\n'
+            'echo \'{"status":"ok","run_counts":{"attempted":1,"succeeded":1,"failed":0,"skipped":0,"interrupted":0},'
+            '"final_state":{"expected":1,"complete":1,"failed":0,"pending":0}}\' > "$HUNYUANOCR_SMOKE_OUT/predictions/run_manifest.json"\n'
+        )
+    script = tmp_path / "rocm_smoke.sh"
+    script.write_text(body, encoding="utf-8")
+    os.chmod(script, 0o755)
+    return script
+
+
+def test_run_smoke_success_records_trust_split_workdir(tmp_path, monkeypatch):
+    harness = _fake_harness(tmp_path)
+    out_dir = tmp_path / "out"
+    monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
+    res = run_smoke("abc1234", trusted_smoke_script=harness, workdir_parent=tmp_path,
+                    env={"HUNYUANOCR_SMOKE_OUT": str(out_dir)}, timeout_s=30)
+    assert res.ok is True and res.sha == "abc1234"
+    assert res.env_summary["gpu"] == "gfx1100" and res.manifest["status"] == "ok"
+    # trust split: REPO was the per-run workdir (exists) and NOT the trusted harness location
+    repo_used = Path((out_dir / "repo_used.txt").read_text(encoding="utf-8").strip())
+    assert repo_used.is_dir()
+    assert repo_used != harness.parent
+
+
+def test_run_smoke_failure_captures_log_tail(tmp_path, monkeypatch):
+    harness = _fake_harness(tmp_path, fail=True)
+    monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
+    res = run_smoke("abc", trusted_smoke_script=harness, workdir_parent=tmp_path,
+                    env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, timeout_s=30)
+    assert res.ok is False
+    assert "server did not become healthy" in res.log_tail
+
+
+def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
+    harness = _fake_harness(tmp_path, slow=True)
+    monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
+    res = run_smoke("abc", trusted_smoke_script=harness, workdir_parent=tmp_path,
+                    env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, timeout_s=1)
+    assert res.ok is False
+    assert "timed out" in res.log_tail.lower()
+
+
+
 
