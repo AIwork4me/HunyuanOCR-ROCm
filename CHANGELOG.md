@@ -5,6 +5,37 @@ All notable changes to this project are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.1.3] — 2026-07-18
+
+### Changed — first-use experience & maintainability
+- **README Quick Start** rewritten as Step 0 (clone+cd) → Step 1 (env vars) →
+  Step 2 (install) → Terminal A (server) / Terminal B (predict→validate→score),
+  fixing the export-then-clone contradiction; new `check_repo` check prevents
+  regression (clone-before-export, the four env vars, canonical command).
+- **`run_phase2_vllm.py` → `run_inference.py`** (canonical OpenAI-compatible
+  driver name); the old file is kept as a back-compat shim so existing
+  `python scripts/run_phase2_vllm.py ...` commands keep working. Public docs no
+  longer use the phase1/phase2 development jargon.
+
+### Added — benchmark infrastructure
+- **Single source of truth for results:** `scripts/render_benchmark_tables.py`
+  emits a README `GENERATED RESULTS` block entirely from
+  `reproducibility.lock.yaml`; CI `--check` fails on drift. The
+  `hunyuan-ocr benchmark` CLI prints the same block, sharing one renderer
+  (`hunyuan_ocr.results`).
+- **`hunyuan-ocr report`** assembles a benchmark release-artifact bundle
+  (run_manifest + environment + commands + lock + checksums) per
+  `docs/release-artifact.md`.
+- **Docs:** `docs/architecture.md` (pipeline + per-module roles),
+  `docs/hardware-matrix.md` (honest verified/community/unknown per-GPU table),
+  `docs/release-artifact.md` (evidence-bundle standard).
+
+### Notes
+- No benchmark changes — the four formal results are untouched (triple-locked:
+  lock → render → check_repo).
+- `reproducibility.lock.yaml`: the official `94.10` is quoted so its trailing
+  zero survives YAML float parsing.
+
 ## [0.1.2] — 2026-07-18
 
 ### Added — GPU-CI bridge (real gfx1100 smoke from GitHub)
