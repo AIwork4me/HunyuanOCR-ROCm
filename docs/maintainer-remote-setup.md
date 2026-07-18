@@ -37,13 +37,13 @@ access, not something CI touches.
 
 ## Self-hosted ROCm runner
 
-- The `rocm-smoke` workflow (`workflow_dispatch` only) runs on a self-hosted
-  `linux,rocm,gfx1100` runner. Register that runner under Settings → Actions →
-  Runners. It must be on an **isolated** machine (it checks out contributor code
-  onto a host with weights + data).
-- Never approve `rocm-smoke` on fork PRs — the workflow file already restricts it
-  to `workflow_dispatch`, but reviewers must still not be socially engineered into
-  dispatching it on untrusted input.
+- The `rocm-runner-preflight` workflow (`workflow_dispatch` only) runs on a
+  self-hosted `linux,rocm,gfx1100` runner. Register that runner under Settings →
+  Actions → Runners. It must be on an **isolated** machine (it checks out
+  contributor code onto a host with weights + data).
+- Never approve `rocm-runner-preflight` on fork PRs — the workflow file already
+  restricts it to `workflow_dispatch`, but reviewers must still not be socially
+  engineered into dispatching it on untrusted input.
 
 ## Social preview + release
 

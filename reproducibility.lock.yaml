@@ -54,7 +54,12 @@ omnidocbench:
   scorer_local_path: /root/ocr-eval/OmniDocBench                    # (observation) machine-local; not a portable repro id
   repo_default_branch: main
   # repo commit (fill, in case the default branch moved): curl -sL https://api.github.com/repos/opendatalab/OmniDocBench/commits/main | jq -r .sha
-  gt_json_canary: OmniDocBench_150.json
+  # Canonical name is OmniDocBench_canary_148.json (materialized from the full GT
+  # via `hunyuan-ocr canary materialize`). This is a rename of the historical
+  # OmniDocBench_150.json — byte-identical, same SHA256 (the canary has always
+  # been 148 pages; the old "_150" filename was a legacy misnomer).
+  gt_json_canary: OmniDocBench_canary_148.json
+  gt_json_canary_legacy_name: OmniDocBench_150.json   # (historical) content-identical to gt_json_canary
   gt_json_canary_sha256: 3e3fbea07702084d9466e231260ad92141848a32631c9895d8e55b24e2c2f7b5   # (verified) sha256sum, 148 pages
   gt_json_full: OmniDocBench.json
   gt_json_full_sha256: a45cd84b04ad8b793e775089640e6b681209abea33ead54c1828ddca35fae496     # (verified) sha256sum, 1651 pages
