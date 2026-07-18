@@ -56,23 +56,44 @@ class GitHubClient:
             # (the request workflow sets started_at at creation; see gpu-smoke.yml).
             runs.append(
                 CheckRun(
-                    id=r["id"], head_sha=r["head_sha"], status=r["status"],
-                    conclusion=r.get("conclusion"), started_at=r.get("started_at"),
-                    external_id=r.get("external_id"), name=r["name"],
+                    id=r["id"],
+                    head_sha=r["head_sha"],
+                    status=r["status"],
+                    conclusion=r.get("conclusion"),
+                    started_at=r.get("started_at"),
+                    external_id=r.get("external_id"),
+                    name=r["name"],
                     created_at=r.get("started_at"),
                 )
             )
         return runs
 
     def set_in_progress(self, check_run_id: int) -> None:
-        self._run([
-            "api", "--method", "PATCH", f"{self._base}/check-runs/{check_run_id}",
-            "-f", "status=in_progress",
-        ])
+        self._run(
+            [
+                "api",
+                "--method",
+                "PATCH",
+                f"{self._base}/check-runs/{check_run_id}",
+                "-f",
+                "status=in_progress",
+            ]
+        )
 
     def complete(self, check_run_id: int, *, conclusion: str, title: str, summary: str) -> None:
-        self._run([
-            "api", "--method", "PATCH", f"{self._base}/check-runs/{check_run_id}",
-            "-f", "status=completed", "-f", f"conclusion={conclusion}",
-            "-f", f"output[title]={title}", "-f", f"output[summary]={summary}",
-        ])
+        self._run(
+            [
+                "api",
+                "--method",
+                "PATCH",
+                f"{self._base}/check-runs/{check_run_id}",
+                "-f",
+                "status=completed",
+                "-f",
+                f"conclusion={conclusion}",
+                "-f",
+                f"output[title]={title}",
+                "-f",
+                f"output[summary]={summary}",
+            ]
+        )

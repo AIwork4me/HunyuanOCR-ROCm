@@ -14,7 +14,14 @@ import time
 from pathlib import Path
 
 from hunyuan_ocr.ci.github import GitHubClient
-from hunyuan_ocr.ci.models import POLL_INTERVAL_SEC, SMOKE_TIMEOUT_SEC, STALE_AFTER_SEC, CheckRun, SmokeResult, _parse_iso
+from hunyuan_ocr.ci.models import (
+    POLL_INTERVAL_SEC,
+    SMOKE_TIMEOUT_SEC,
+    STALE_AFTER_SEC,
+    CheckRun,
+    SmokeResult,
+    _parse_iso,
+)
 
 
 def decide(queued_run: CheckRun, has_completed_for_sha: bool, now: float) -> str:
@@ -36,12 +43,14 @@ def build_output(result: SmokeResult) -> tuple[str, str]:
     """Render the Check Run output (title, markdown summary) from a smoke result."""
     env = result.env_summary or {}
     env_line = ", ".join(
-        f"{label} {val}" for label, val in (
+        f"{label} {val}"
+        for label, val in (
             ("ROCm", env.get("rocm")),
             ("torch", env.get("torch")),
             ("llama.cpp", env.get("llama_cpp_commit")),
             ("gpu", env.get("gpu")),
-        ) if val
+        )
+        if val
     )
     if result.manifest:
         rc = result.manifest.get("run_counts", {})
@@ -101,8 +110,11 @@ def run_smoke(sha, *, trusted_smoke_script, workdir_parent, env, timeout_s=SMOKE
         _checkout_sha(sha, workdir)
         full_env = {**os.environ, **env, "REPO": str(workdir)}
         cp = subprocess.run(
-            ["bash", str(trusted_smoke_script)], env=full_env,
-            capture_output=True, text=True, timeout=timeout_s,
+            ["bash", str(trusted_smoke_script)],
+            env=full_env,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
         )
         combined = (cp.stdout or "") + (cp.stderr or "")
         ok = cp.returncode == 0
@@ -117,15 +129,25 @@ def run_smoke(sha, *, trusted_smoke_script, workdir_parent, env, timeout_s=SMOKE
                 manifest = json.loads(mp.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 manifest = None
-        return SmokeResult(ok=ok, sha=sha, env_summary=env_summary, manifest=manifest,
-                            latency_sec=time.monotonic() - start, log_tail=log_tail)
+        return SmokeResult(
+            ok=ok,
+            sha=sha,
+            env_summary=env_summary,
+            manifest=manifest,
+            latency_sec=time.monotonic() - start,
+            log_tail=log_tail,
+        )
     except subprocess.TimeoutExpired as exc:
-        return SmokeResult(ok=False, sha=sha, env_summary={}, manifest=None,
-                            latency_sec=time.monotonic() - start,
-                            log_tail=f"smoke timed out after {timeout_s}s: {exc}")
+        return SmokeResult(
+            ok=False,
+            sha=sha,
+            env_summary={},
+            manifest=None,
+            latency_sec=time.monotonic() - start,
+            log_tail=f"smoke timed out after {timeout_s}s: {exc}",
+        )
     finally:
-        subprocess.run(["git", "worktree", "remove", "--force", str(workdir)],
-                       check=False, capture_output=True)
+        subprocess.run(["git", "worktree", "remove", "--force", str(workdir)], check=False, capture_output=True)
 
 
 def _acquire_lock(path):
@@ -165,16 +187,18 @@ def once(client, *, trusted_smoke_script, workdir_parent, env, now):
                 summary["skipped_done"].append(sha)
                 continue
             if action == "timeout":
-                client.complete(q.id, conclusion="failure", title="gpu-smoke FAILED",
-                                summary="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?")
+                client.complete(
+                    q.id,
+                    conclusion="failure",
+                    title="gpu-smoke FAILED",
+                    summary="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?",
+                )
                 summary["timed_out"].append(sha)
                 continue
             client.set_in_progress(q.id)
-            result = run_smoke(sha, trusted_smoke_script=trusted_smoke_script,
-                               workdir_parent=workdir_parent, env=env)
+            result = run_smoke(sha, trusted_smoke_script=trusted_smoke_script, workdir_parent=workdir_parent, env=env)
             title, smry = build_output(result)
-            client.complete(q.id, conclusion="success" if result.ok else "failure",
-                            title=title, summary=smry)
+            client.complete(q.id, conclusion="success" if result.ok else "failure", title=title, summary=smry)
             summary["ran"].append(sha)
     return summary
 
@@ -182,8 +206,7 @@ def once(client, *, trusted_smoke_script, workdir_parent, env, now):
 def _driven_once(client, *, trusted_smoke_script, workdir_parent, env, now, dry_run):
     """Dry-run-aware wrapper: prints would-do instead of mutating when dry_run."""
     if not dry_run:
-        return once(client, trusted_smoke_script=trusted_smoke_script,
-                    workdir_parent=workdir_parent, env=env, now=now)
+        return once(client, trusted_smoke_script=trusted_smoke_script, workdir_parent=workdir_parent, env=env, now=now)
     watched = [("main", client.ref_to_sha("main"))]
     tag = client.latest_tag()
     if tag:
@@ -208,7 +231,11 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="hunyuan_ocr.ci.poller", description="GPU-CI bridge poller")
     p.add_argument("--owner", default="AIwork4me")
     p.add_argument("--repo", default="HunyuanOCR-ROCm")
-    p.add_argument("--smoke-script", default=None, help="trusted rocm_smoke.sh (default: $HUNYUANOCR_ROCM_DIR/scripts/rocm_smoke.sh)")
+    p.add_argument(
+        "--smoke-script",
+        default=None,
+        help="trusted rocm_smoke.sh (default: $HUNYUANOCR_ROCM_DIR/scripts/rocm_smoke.sh)",
+    )
     p.add_argument("--workdir-parent", default="/tmp")
     p.add_argument("--lock", default=os.path.expanduser("~/.rocm_ci_poller.lock"))
     p.add_argument("--interval", type=int, default=POLL_INTERVAL_SEC)
@@ -225,9 +252,14 @@ def main(argv=None) -> int:
             print("[poller] another pass holds the lock; skipping", flush=True)
         else:
             try:
-                _driven_once(client, trusted_smoke_script=smoke_script,
-                             workdir_parent=args.workdir_parent, env=env,
-                             now=time.time(), dry_run=args.dry_run)
+                _driven_once(
+                    client,
+                    trusted_smoke_script=smoke_script,
+                    workdir_parent=args.workdir_parent,
+                    env=env,
+                    now=time.time(),
+                    dry_run=args.dry_run,
+                )
             finally:
                 os.close(fd)
         if args.once or args.dry_run:
@@ -237,7 +269,3 @@ def main(argv=None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-
-
