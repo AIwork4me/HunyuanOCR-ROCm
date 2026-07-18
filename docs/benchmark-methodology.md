@@ -90,8 +90,8 @@ compares to a published reference", not as a measured ROCm-vs-CUDA delta.
 
 ## 3. Scoring pipeline (fully reproducible)
 
-1. **Predict** — `run_phase2_vllm.py` (OpenAI-compatible) or
-   `run_phase1_transformers.py`, writing one `<stem>.md` per page atomically.
+1. **Predict** — `run_inference.py` (OpenAI-compatible: llama.cpp / vLLM) or
+   `hunyuan-ocr predict --backend transformers`, writing one `<stem>.md` per page atomically.
 2. **Validate** — `hunyuan-ocr validate` / `scripts/validate_predictions.py`
    blocks scoring on any missing / empty / `ERROR:` / `.partial` / unresolved
    `_errors/<stem>.json` page (strict mode: warnings are also fatal).

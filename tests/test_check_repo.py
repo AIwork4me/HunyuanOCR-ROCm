@@ -85,6 +85,42 @@ def test_check_readme_bash_continuation():
     assert check_repo.check_readme_bash_continuation(good) == []
 
 
+def test_check_readme_quickstart_structure_flags_clone_after_export():
+    # the contradiction: export BEFORE clone
+    bad = (
+        "export HUNYUAN_ROCM_DIR=$PWD\n"
+        "git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git\n"
+        "export LLAMA_DIR=x\nexport GGUF_DIR=x\nexport DATA_DIR=x\n"
+        "python scripts/run_inference.py --x\n"
+    )
+    errs = check_repo.check_readme_quickstart_structure(bad)
+    assert any("clone must come first" in e for e in errs)
+
+
+def test_check_readme_quickstart_structure_flags_missing_envvar_and_legacy_cmd():
+    bad = (
+        "git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git\n"
+        "export HUNYUAN_ROCM_DIR=$PWD\n"
+        "export LLAMA_DIR=x\nexport GGUF_DIR=x\n"  # DATA_DIR missing
+        "python scripts/run_phase2_vllm.py --x\n"  # legacy command
+    )
+    errs = check_repo.check_readme_quickstart_structure(bad)
+    assert any("DATA_DIR" in e for e in errs)
+    assert any("run_inference.py" in e for e in errs)  # canonical missing
+    assert any("run_phase2_vllm.py" in e for e in errs)  # legacy present
+
+
+def test_check_readme_quickstart_structure_happy_path():
+    good = (
+        "git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git\n"
+        "cd HunyuanOCR-ROCm\n"
+        "export HUNYUAN_ROCM_DIR=$PWD\n"
+        "export LLAMA_DIR=x\nexport GGUF_DIR=x\nexport DATA_DIR=x\n"
+        "python scripts/run_inference.py --backend-name llamacpp\n"
+    )
+    assert check_repo.check_readme_quickstart_structure(good) == []
+
+
 def test_check_repo_clean_on_repo():
     """Integration: the real repo (after the README/Makefile/lock fixes) must pass
     every check — this is the gate CI enforces."""

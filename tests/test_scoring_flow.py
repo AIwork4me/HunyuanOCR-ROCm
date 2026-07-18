@@ -59,7 +59,7 @@ def test_llamacpp_backend_recorded_in_manifest(tmp_path, monkeypatch):
     """A --backend-name llamacpp run must write backend=llamacpp, not vllm
     (Phase 2.2 regression)."""
     sys.path.insert(0, SCRIPTS)
-    import run_phase2_vllm as drv
+    import run_inference as drv
 
     gt = tmp_path / "gt.json"
     gt.write_text(json.dumps([{"page_info": {"image_path": "a.png"}}]), encoding="utf-8")

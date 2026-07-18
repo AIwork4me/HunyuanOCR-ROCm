@@ -18,7 +18,7 @@ def _make_gt(tmp_path, stems):
 
 def _import_driver():
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-    import run_phase2_vllm as drv
+    import run_inference as drv
 
     return drv
 

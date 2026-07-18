@@ -101,25 +101,36 @@ weights are under the Tencent Hunyuan Community License.
 
 ## Quick start (llama.cpp, recommended)
 
-The flow is split across **two terminals** so a long-running server and the
-evaluation driver never depend on which directory you happen to be in. Set the
-directory variables **once** in each terminal first — every later command uses
-them explicitly.
+This runs the model on a local gfx1100 and scores it on one OmniDocBench v1.6
+page set. You use **two terminals**: Terminal A runs the inference server;
+Terminal B runs predict → validate → score. Every command uses absolute paths
+derived from the variables below, so neither terminal depends on your current
+directory.
+
+### Step 0 — Clone the repository (once, in either terminal)
 
 ```bash
-# Run this in BOTH terminals, from the repo root after cloning:
-export HUNYUAN_ROCM_DIR="$PWD"                                 # this checkout
+git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git
+cd HunyuanOCR-ROCm
+```
+
+### Step 1 — Define environment variables (run in BOTH terminals)
+
+From the repo root you just entered (`HunyuanOCR-ROCm/`):
+
+```bash
+export HUNYUAN_ROCM_DIR="$PWD"
 export LLAMA_DIR="$HUNYUAN_ROCM_DIR/third_party/llama.cpp"     # llama.cpp build
 export GGUF_DIR="$HUNYUAN_ROCM_DIR/models/HunyuanOCR-GGUF"     # downloaded weights
 export DATA_DIR="/path/to/OmniDocBench_data"                   # GT json + images/
 ```
 
-### 1. Install (CPU-only core; no torch pulled from PyPI)
+Set `DATA_DIR` to your local OmniDocBench v1.6 data directory.
+
+### Step 2 — Install (CPU-only core; no torch pulled from PyPI)
 
 ```bash
-# from $HUNYUAN_ROCM_DIR
-git clone https://github.com/AIwork4me/HunyuanOCR-ROCm.git
-cd "$HUNYUAN_ROCM_DIR"
+# in $HUNYUAN_ROCM_DIR (shared by both terminals)
 pip install -e ".[client,download]"      # core + openai client + hf downloader; NO torch
 # developers: pip install -e ".[client,download,dev]"
 ```
@@ -128,10 +139,10 @@ pip install -e ".[client,download]"      # core + openai client + hf downloader;
 > is only needed for the transformers/vLLM backends. Install it separately from a
 > verified ROCm wheel source for your stack. The llama.cpp backend needs no torch.
 
-### 2. (Terminal A) Build llama.cpp with HIP on gfx1100
+### Terminal A — Build llama.cpp with HIP on gfx1100
 
 ```bash
-# from anywhere — uses $LLAMA_DIR explicitly
+# uses $LLAMA_DIR explicitly — current directory does not matter
 git clone https://github.com/ggml-org/llama.cpp.git "$LLAMA_DIR"
 cd "$LLAMA_DIR"
 git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5
@@ -147,10 +158,10 @@ cmake --build build --config Release -j$(nproc) --target llama-server
 > headers, fall back to a non-rocWMMA build: drop `-DGGML_HIP_ROCWMMA_FATTN=ON`
 > (slower, but functional).
 
-### 3. Download the BF16 GGUF and verify its hash
+### Terminal A — Download the BF16 GGUF and verify its hash
 
 ```bash
-# from anywhere — uses $GGUF_DIR explicitly
+# uses $GGUF_DIR explicitly — current directory does not matter
 hf download ggml-org/HunyuanOCR-GGUF \
   HunyuanOCR-bf16.gguf mmproj-HunyuanOCR-bf16.gguf \
   --local-dir "$GGUF_DIR"
@@ -158,7 +169,7 @@ sha256sum "$GGUF_DIR"/*.gguf
 # compare against reproducibility.lock.yaml -> model.benchmark_artifact
 ```
 
-### 4. (Terminal A) Run the server (bind to localhost by default)
+### Terminal A — Run the server (loopback only)
 
 ```bash
 # one server per GPU for throughput; here, one on port 8081
@@ -175,7 +186,7 @@ sha256sum "$GGUF_DIR"/*.gguf
 > expose the server to the public internet**. The `-c 65536` context is required
 > for large uncapped images (32768 overflows). Leave this running in Terminal A.
 
-### 5. (Terminal B) Predict → validate → score on OmniDocBench v1.6
+### Terminal B — Predict → validate → score on OmniDocBench v1.6
 
 All commands run **from `$HUNYUAN_ROCM_DIR`** (the repo root) — they never depend
 on you being inside `llama.cpp`.
@@ -190,7 +201,7 @@ hunyuan-ocr canary materialize \
   --out "$DATA_DIR/OmniDocBench_canary_148.json"
 
 # predict (note --backend-name llamacpp; --ports must match Terminal A)
-python scripts/run_phase2_vllm.py \
+python scripts/run_inference.py \
   --backend-name llamacpp --server-alias HYVL \
   --gt-json "$DATA_DIR/OmniDocBench_canary_148.json" \
   --images-dir "$DATA_DIR/images" \
@@ -234,8 +245,10 @@ src/hunyuan_ocr/
     └── vllm_client.py    # OpenAI-compatible client (vLLM / llama-server / any OAI)
 
 scripts/
-├── run_phase2_vllm.py / run_openai_compatible.py  # multi-server OAI driver (resumable)
-├── run_phase1_transformers.py                     # multi-GPU transformers driver
+├── run_inference.py            # OpenAI-compatible driver (llama.cpp/vLLM); canonical name
+├── run_openai_compatible.py    # generic alias of run_inference.py
+├── run_phase2_vllm.py          # back-compat shim → run_inference.py
+├── run_phase1_transformers.py  # multi-GPU transformers driver (via `hunyuan-ocr predict --backend transformers`)
 ├── serve_vllm.sh               # start a vLLM server (HIP, compiled, tuned)
 ├── score_predictions.py / validate_predictions.py # score / validate wrappers
 ├── reproduce_llamacpp_{canary,full}.sh            # locked-commit reproduce scripts
