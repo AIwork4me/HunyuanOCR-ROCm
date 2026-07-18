@@ -260,6 +260,8 @@ def main(argv=None) -> int:
                     now=time.time(),
                     dry_run=args.dry_run,
                 )
+            except Exception as exc:  # noqa: BLE001 — a daemon must not die on one bad pass
+                print(f"[poller] pass failed (will retry next interval): {exc}", flush=True)
             finally:
                 os.close(fd)
         if args.once or args.dry_run:
