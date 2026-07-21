@@ -5,6 +5,7 @@
 The engine invokes this as a subprocess. Implements the platform contract:
 per-page .md output + _run_stats.json with conservation guarantees.
 """
+
 from __future__ import annotations
 import argparse
 import json
@@ -22,8 +23,7 @@ IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".tif", ".tiff"}
 PLATFORMS = ("linux-rocm", "windows-hip")
 
 
-def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict,
-                skip_existing: bool = False) -> dict:
+def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict, skip_existing: bool = False) -> dict:
     assert platform in PLATFORMS, f"unknown platform: {platform}"
     out_dir.mkdir(parents=True, exist_ok=True)
     imgs = sorted(p for p in Path(img_dir).iterdir() if p.suffix.lower() in IMG_EXT)
@@ -40,12 +40,26 @@ def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict,
             try:
                 existing = out_md.read_text(encoding="utf-8")
             except (OSError, UnicodeDecodeError) as e:
-                stats.append({"image": img.name, "status": f"failed: unreadable: {e}",
-                              "error": str(e), "seconds": 0.0, "attempts": 0})
+                stats.append(
+                    {
+                        "image": img.name,
+                        "status": f"failed: unreadable: {e}",
+                        "error": str(e),
+                        "seconds": 0.0,
+                        "attempts": 0,
+                    }
+                )
                 continue
             if not existing.strip():
-                stats.append({"image": img.name, "status": "failed: existing prediction is empty",
-                              "error": "existing prediction is empty", "seconds": 0.0, "attempts": 0})
+                stats.append(
+                    {
+                        "image": img.name,
+                        "status": "failed: existing prediction is empty",
+                        "error": "existing prediction is empty",
+                        "seconds": 0.0,
+                        "attempts": 0,
+                    }
+                )
                 continue
             stats.append({"image": img.name, "status": "ok", "seconds": 0.0, "attempts": 0})
             resumed_existing += 1
@@ -56,6 +70,7 @@ def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict,
                 md = f"# {img.stem}\n\n(smoke output — backend=smoke)\n"
             else:
                 from hunyuan_ocr.infer import infer_one
+
                 server_url = config.get("server_url", "http://127.0.0.1:8000/v1")
                 result = infer_one(str(img), server_url=server_url)
                 md = result if isinstance(result, str) else result.get("text", "")
@@ -66,8 +81,15 @@ def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict,
             out_md.write_text(md, encoding="utf-8")
             stats.append({"image": img.name, "status": "ok", "seconds": time.time() - t0, "attempts": 1})
         except Exception as e:
-            stats.append({"image": img.name, "status": f"failed: {e}",
-                          "error": str(e), "seconds": time.time() - t0, "attempts": 0})
+            stats.append(
+                {
+                    "image": img.name,
+                    "status": f"failed: {e}",
+                    "error": str(e),
+                    "seconds": time.time() - t0,
+                    "attempts": 0,
+                }
+            )
             if out_md.exists():
                 try:
                     out_md.unlink()
@@ -81,13 +103,17 @@ def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict,
     if ok + fail + fallback != count:
         raise RuntimeError(
             f"stats conservation violation: ok={ok} fail={fail} fallback={fallback} "
-            f"!= count={count} len(stats)={len(stats)}")
+            f"!= count={count} len(stats)={len(stats)}"
+        )
     if len(stats) != count:
         raise RuntimeError(f"stats length mismatch: len(stats)={len(stats)} != count={count}")
 
     rs = {
         "schema_version": 1,
-        "count": count, "ok": ok, "fail": fail, "fallback": fallback,
+        "count": count,
+        "ok": ok,
+        "fail": fail,
+        "fallback": fallback,
         "limit_pages": config.get("limit_pages"),
         "engine": backend,
         "stats": stats,
@@ -95,8 +121,7 @@ def run_adapter(img_dir: Path, out_dir: Path, *, platform: str, config: dict,
     if resumed_existing > 0:
         rs["_extra"] = {"resumed_existing": resumed_existing}
 
-    (out_dir / "_run_stats.json").write_text(
-        json.dumps(rs, ensure_ascii=False, indent=2), encoding="utf-8")
+    (out_dir / "_run_stats.json").write_text(json.dumps(rs, ensure_ascii=False, indent=2), encoding="utf-8")
     return rs
 
 
@@ -110,10 +135,13 @@ def main(argv=None) -> int:
     p.add_argument("--api-model-name", default="hunyuan-ocr")
     p.add_argument("--skip-existing", action="store_true")
     a = p.parse_args(argv)
-    run_adapter(Path(a.img_dir), Path(a.out_dir), platform=a.platform,
-                config={"backend": a.backend, "server_url": a.server_url,
-                        "api_model_name": a.api_model_name},
-                skip_existing=a.skip_existing)
+    run_adapter(
+        Path(a.img_dir),
+        Path(a.out_dir),
+        platform=a.platform,
+        config={"backend": a.backend, "server_url": a.server_url, "api_model_name": a.api_model_name},
+        skip_existing=a.skip_existing,
+    )
     return 0
 
 
