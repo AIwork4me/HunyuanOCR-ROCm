@@ -117,7 +117,7 @@ See [NOTICE](NOTICE) for the full mixed-license breakdown. Original
 packaging/tooling in this repo is Apache-2.0; code ported from HunyuanOCR and the
 weights are under the Tencent Hunyuan Community License.
 
-## Quick start (llama.cpp, recommended)
+## Quick start (Demo + Install)
 
 This runs the model on a local gfx1100 and scores it on one OmniDocBench v1.6
 page set. You use **two terminals**: Terminal A runs the inference server;
@@ -299,7 +299,7 @@ LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
 - **[ROCm/ROCm#6416](https://github.com/ROCm/ROCm/issues/6416)** — bf16 ViT forward non-determinism + NaN above ~14.3k tokens on gfx1100.
 - **[Tencent-Hunyuan/HunyuanOCR#114](https://github.com/Tencent-Hunyuan/HunyuanOCR/issues/114)** — recommended max resolution / vision-token budget; three-backend comparison data; formula CDM gap analysis.
 
-## Reproducibility
+## Reproducibility & Known Gaps
 
 - **Benchmark release artifacts:** each release ships an evidence bundle
   (`run_manifest.json`, `metrics.json`, `environment.json`, the lock, `commands.txt`,
