@@ -6,7 +6,10 @@ The engine invokes this as a subprocess. Implements the platform contract:
 per-page .md output + _run_stats.json with conservation guarantees.
 """
 from __future__ import annotations
-import argparse, json, sys, time
+import argparse
+import json
+import sys
+import time
 from pathlib import Path
 
 _HERE = Path(__file__).resolve().parent
