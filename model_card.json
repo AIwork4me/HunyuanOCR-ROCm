@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "model_id": "hunyuan-ocr",
+  "model_version": "0.1.0",
+  "platforms": ["linux-rocm"],
+  "badge": {"linux-rocm": "community-wanted", "windows-hip": "community-wanted"},
+  "eval_date": "pending",
+  "omnidocbench_version": "v1.6",
+  "overall": null,
+  "submetrics": {},
+  "hardware": {
+    "gpu": "AMD gfx1100 (Radeon PRO W7900)",
+    "vram": "48 GB",
+    "rocm_driver": "ROCm 7.2"
+  },
+  "note": "Platform-standard score/publish not yet executed. Run omnidocbench-rocm score + publish from full predictions to populate overall and submetrics.",
+  "artifacts": {}
+}

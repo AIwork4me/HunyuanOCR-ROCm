@@ -48,6 +48,8 @@ download = ["huggingface_hub>=0.25"]
 transformers = ["transformers==5.13.0"]
 # Convenience alias; pyyaml is already core. Reserved for future eval-only deps.
 eval = ["pyyaml"]
+# OmniDocBench-ROCm platform integration (conformance, score, publish).
+platform = ["omnidocbench-rocm>=0.2.0"]
 # Development / CI tooling.
 dev = ["pytest>=8", "pytest-mock", "ruff>=0.6", "build", "pytest-cov>=4"]
 
