@@ -3,16 +3,30 @@
   "model_id": "hunyuan-ocr",
   "model_version": "0.1.0",
   "platforms": ["linux-rocm"],
-  "badge": {"linux-rocm": "community-wanted", "windows-hip": "community-wanted"},
-  "eval_date": "pending",
+  "badge": {"linux-rocm": "community", "windows-hip": "community-wanted"},
+  "eval_date": "2026-07-25",
   "omnidocbench_version": "v1.6",
-  "overall": null,
-  "submetrics": {},
+  "overall": 93.64,
+  "submetrics": {
+    "text_edit_dist": 0.0452,
+    "reading_order_edit_dist": 0.1382,
+    "table_teds_percent": 92.97,
+    "formula_cdm_percent": 92.46
+  },
   "hardware": {
     "gpu": "AMD gfx1100 (Radeon PRO W7900)",
     "vram": "48 GB",
     "rocm_driver": "ROCm 7.2"
   },
-  "note": "Platform-standard score/publish not yet executed. Run omnidocbench-rocm score + publish from full predictions to populate overall and submetrics.",
-  "artifacts": {}
+  "backend": "vllm",
+  "license": "Tencent Hunyuan Community License",
+  "commercial_use": "see license (not licensed in EU/UK/KR)",
+  "artifacts": {
+    "provenance": "results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_provenance.json",
+    "run_summary": "results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_run_summary.json",
+    "metric_result": "results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_metric_result.json",
+    "run_stats": "results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_run_stats.json",
+    "prediction_manifest": "results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_prediction_manifest.json",
+    "dataset_identity": "results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_dataset_identity.json"
+  }
 }

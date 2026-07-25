@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "save_name": "hunyuan-ocr_v16_quick_match_cdm",
+  "engine": "vllm",
+  "cdm": true,
+  "created_at_utc": "2026-07-25T10:21:27.852289+00:00",
+  "prediction_count": 1651,
+  "ok_pages": 1651,
+  "failed_pages": 0,
+  "fallback_pages": 0,
+  "metric_result_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_metric_result.json",
+  "run_stats_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_run_stats.json",
+  "readme_metrics": {
+    "text_edit_dist": 0.04522313073637339,
+    "reading_order_edit_dist": 0.13817587529267894,
+    "table_teds_percent": 92.97441053300682,
+    "formula_cdm_percent": 92.45841928029789
+  },
+  "metric_quality": {
+    "formula_cdm": {
+      "valid": true,
+      "reason": "",
+      "sample_count": 2352,
+      "exception_case_count": 0
+    }
+  },
+  "run_stats_summary": {
+    "count": 1651,
+    "ok": 1651,
+    "fail": 0,
+    "fallback": 0,
+    "limit_pages": null,
+    "failure_samples": []
+  },
+  "efficiency": {
+    "latency_s_per_page": 0.0
+  }
+}
