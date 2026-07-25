@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-07-25T10:21:27.854837+00:00",
+  "git_commit": "df0bbdd4c9c5f4bcf34c7c7c56cf6eaf4eb86017",
+  "engine_version": "0.3.1",
+  "model_id": "hunyuan-ocr",
+  "platform": "linux-rocm",
+  "vlm_server_url": "",
+  "api_model_name": "",
+  "adapter_command": "python adapter/run_adapter.py --backend-name vllm --server-alias HYVL-vllm-seq-capped --model tencent/HunyuanOCR --concurrency 1 --max-pixels 3400000",
+  "scoring_config_path": ".",
+  "dataset_manifest_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_dataset_identity.json",
+  "dataset_revision": "2b161d0",
+  "prediction_dir": "/workspace/HunyuanOCR-ROCm/artifacts/predictions_vllm_full_seq",
+  "page_count": 1651,
+  "ok_pages": 1651,
+  "failed_pages": 0,
+  "fallback_pages": 0,
+  "metric_result_paths": [
+    "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_metric_result.json"
+  ],
+  "run_summary_paths": [
+    "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_run_summary.json"
+  ],
+  "run_stats_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_run_stats.json",
+  "backend": "vllm",
+  "packaging_commit": "df0bbdd4c9c5f4bcf34c7c7c56cf6eaf4eb86017",
+  "prediction_source_commit": "0e42b32ea8b7dbd8ac43ff808e22812d387b8bb9",
+  "prediction_source_command": "",
+  "prediction_source_run_manifest": "artifacts/predictions_vllm_full_seq/run_manifest.json",
+  "prediction_manifest_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_prediction_manifest.json",
+  "prediction_manifest_sha256": "995f8fff28d6f2ccc5e285708e2073151518dd38af034f44818e7263158d07d9",
+  "dataset_identity_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/hunyuan-ocr_v16_quick_match_cdm_dataset_identity.json",
+  "source_metric_result_path": "/root/datasets/OmniDocBench/result/predictions_vllm_full_seq_quick_match_metric_result.json",
+  "source_run_stats_path": "/workspace/HunyuanOCR-ROCm/artifacts/predictions_vllm_full_seq/_run_stats.json",
+  "source_prediction_dir": "/workspace/HunyuanOCR-ROCm/artifacts/predictions_vllm_full_seq",
+  "migration_type": "legacy_predictions_to_platform_artifacts"
+}

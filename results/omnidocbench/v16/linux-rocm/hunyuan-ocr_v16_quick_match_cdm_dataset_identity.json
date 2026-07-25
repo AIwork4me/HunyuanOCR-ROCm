@@ -1,0 +1,8 @@
+{
+  "dataset": "OmniDocBench",
+  "ground_truth_file": "OmniDocBench.json",
+  "ground_truth_sha256": "a45cd84b04ad8b793e775089640e6b681209abea33ead54c1828ddca35fae496",
+  "revision": "2b161d0",
+  "schema_version": 1,
+  "version": "v16"
+}
