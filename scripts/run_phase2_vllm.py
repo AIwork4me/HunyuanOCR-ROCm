@@ -11,7 +11,7 @@ commands keep working. New code and docs use ``run_inference.py``.
 
 from __future__ import annotations
 
-from run_inference import main  # noqa: E402 (scripts/ is on sys.path at runtime)
+from run_inference import main
 
 if __name__ == "__main__":
     main()

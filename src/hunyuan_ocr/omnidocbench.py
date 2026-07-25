@@ -9,9 +9,10 @@ share the same format.
 """
 
 from __future__ import annotations
+
 import json
+from collections.abc import Iterator
 from pathlib import Path
-from typing import Iterator
 
 
 def derive_prediction_filename(image_path: str | Path) -> str:

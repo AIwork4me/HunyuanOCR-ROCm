@@ -13,6 +13,7 @@ Usage:
 """
 
 from __future__ import annotations
+
 import argparse
 import multiprocessing as mp
 import os
@@ -22,14 +23,14 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from hunyuan_ocr import preflight, runner  # noqa: E402
+from hunyuan_ocr import preflight, runner
 
 
 def _worker(gpu_id, chunk, args_dict, out_q):
     os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
     try:
-        from hunyuan_ocr.backends.transformers import load_model_and_processor, infer_one
+        from hunyuan_ocr.backends.transformers import infer_one, load_model_and_processor
         from hunyuan_ocr.contract import CONTRACT
     except Exception as e:  # import failure (e.g. missing torch)
         out_q.put({"gpu": gpu_id, "kind": "worker_error", "msg": f"import failed: {e}"})

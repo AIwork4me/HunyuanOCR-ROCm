@@ -59,31 +59,39 @@ import torch
 from PIL import Image
 from transformers import AutoProcessor, HunYuanVLForConditionalGeneration
 
-MODEL = "tencent/HunyuanOCR"   # or local path
+MODEL = "tencent/HunyuanOCR"  # or local path
 proc = AutoProcessor.from_pretrained(MODEL, use_fast=False)
-model = HunYuanVLForConditionalGeneration.from_pretrained(
-    MODEL, attn_implementation="sdpa", dtype=torch.bfloat16
-).to("cuda:0").eval()
+model = (
+    HunYuanVLForConditionalGeneration.from_pretrained(MODEL, attn_implementation="sdpa", dtype=torch.bfloat16)
+    .to("cuda:0")
+    .eval()
+)
 
 # any RGB image; thumbnail controls the ViT sequence length
 img = Image.new("RGB", (3000, 3000))  # or a real page image
 
+
 def vit_run(maxdim):
-    im = img.copy(); im.thumbnail((maxdim, maxdim))
-    inp = proc(images=im, return_tensors="pt").to("cuda:0")   # pixel_values + image_grid_thw
+    im = img.copy()
+    im.thumbnail((maxdim, maxdim))
+    inp = proc(images=im, return_tensors="pt").to("cuda:0")  # pixel_values + image_grid_thw
     feats = []
     with torch.inference_mode():
         for _ in range(3):
-            f = model.model.get_image_features(
-                inp["pixel_values"], inp["image_grid_thw"], return_dict=True
-            )["last_hidden_state"].float().cpu()
+            f = (
+                model.model.get_image_features(inp["pixel_values"], inp["image_grid_thw"], return_dict=True)[
+                    "last_hidden_state"
+                ]
+                .float()
+                .cpu()
+            )
             feats.append(f)
-    d = max(torch.abs(feats[0]-feats[1]).max().item(),
-            torch.abs(feats[0]-feats[2]).max().item())
+    d = max(torch.abs(feats[0] - feats[1]).max().item(), torch.abs(feats[0] - feats[2]).max().item())
     nan = any(torch.isnan(x).any().item() for x in feats)
     return inp["pixel_values"].shape[0], d, nan
 
-for md in (2208, 2304):           # 2208 -> ~13.5k tokens (safe); 2304 -> ~14.7k tokens (triggers)
+
+for md in (2208, 2304):  # 2208 -> ~13.5k tokens (safe); 2304 -> ~14.7k tokens (triggers)
     n, d, nan = vit_run(md)
     print(f"maxdim={md} tokens={n} 3x-max-diff={d} NaN={nan}")
 # Expected:

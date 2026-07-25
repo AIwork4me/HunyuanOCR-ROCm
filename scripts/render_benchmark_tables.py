@@ -20,7 +20,7 @@ from pathlib import Path
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from hunyuan_ocr.results import render_results_block  # noqa: E402
+from hunyuan_ocr.results import render_results_block
 
 REPO = Path(__file__).resolve().parents[1]
 LOCK_PATH = REPO / "reproducibility.lock.yaml"

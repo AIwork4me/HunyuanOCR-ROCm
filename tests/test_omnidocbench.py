@@ -1,5 +1,6 @@
 from pathlib import Path
-from hunyuan_ocr.omnidocbench import iter_page_images, derive_prediction_filename
+
+from hunyuan_ocr.omnidocbench import derive_prediction_filename, iter_page_images
 
 FIX = Path(__file__).parent / "fixtures"
 

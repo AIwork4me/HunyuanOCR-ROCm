@@ -10,7 +10,6 @@ from pathlib import Path
 
 from hunyuan_ocr import cli
 
-
 # --- benchmark ---------------------------------------------------------------
 
 

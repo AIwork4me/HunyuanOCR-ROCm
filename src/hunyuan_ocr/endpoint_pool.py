@@ -119,9 +119,8 @@ class EndpointPool:
 
     def _maybe_half_open(self, st: EndpointStats) -> None:
         """Promote an open circuit to half_open once its cooldown has elapsed."""
-        if st.state == "open" and st.opened_at is not None:
-            if self._now() - st.opened_at >= self.cooldown:
-                st.state = "half_open"
+        if st.state == "open" and st.opened_at is not None and self._now() - st.opened_at >= self.cooldown:
+            st.state = "half_open"
 
     def acquire(self) -> EndpointStats:
         """Return a usable endpoint, round-robin among them.
