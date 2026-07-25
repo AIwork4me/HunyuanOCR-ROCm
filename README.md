@@ -4,9 +4,8 @@
 
 > Evaluation-backed AMD ROCm port of [HunyuanOCR-1.5](https://github.com/Tencent-Hunyuan/HunyuanOCR)
 > — runs the model on AMD gfx1100 (RDNA3) across three inference backends and
-> reports OmniDocBench v1.6 results. **Not** a precision-aligned port: no
-> same-page-set CUDA control exists, and the official headline is measured with a
-> different engine (TensorRT). See [Benchmark methodology](docs/benchmark-methodology.md).
+> reports OmniDocBench v1.6 results. **Not** a precision-aligned port: the
+> official headline is measured with a different engine (TensorRT). See [Benchmark methodology](docs/benchmark-methodology.md).
 
 [![OmniDocBench v1.6](https://img.shields.io/badge/OmniDocBench-v1.6-blue)](https://github.com/opendatalab/OmniDocBench)
 [![vLLM canary](https://img.shields.io/badge/vLLM%20canary%20148-94.81-green)](reports/canary-baseline.md)
@@ -22,8 +21,8 @@
 - **Where verified.** AMD **gfx1100 (RDNA3, 48 GB ×4), ROCm 7.2**, bf16.
 - **Most reliable formal result.** **llama.cpp full 1651 pages = 92.09 Overall**
   (1651/1651 complete, scored twice).
-- **Most important limitation.** **Not precision-aligned.** No CUDA control on
-  the same page set exists, and the official 94.10 headline is measured with
+- **Most important limitation.** **Not precision-aligned:** the official 94.10
+  headline is measured with
   **TensorRT** (a different engine) on an unlabeled OmniDocBench version. The
   vLLM full-set run was previously **invalid** (server crashes) but is **now
   validated at 91.31 Overall** (2026-07-25) — see
@@ -59,11 +58,9 @@ definition of "precision-aligned" are in [Benchmark methodology](docs/benchmark-
 | **vLLM** 0.16.1 (Flash-Attn ViT) | **94.81** | 0.0514 | 0.9648 | 0.9308 | 0.1135 | capped 3.4M | 148/148 complete |
 | transformers 5.13.0 (SDPA ViT) | 94.11 | 0.0437 | 0.9425 | 0.9246 | 0.1184 | capped 3.4M | 148/148 complete |
 | **llama.cpp** (C++ GGML, BF16 GGUF) | 93.33 | 0.0512 | 0.9083 | 0.9429 | 0.1270 | uncapped | 148/148 complete |
-| upstream CUDA | _Not evaluated on this canary_ | — | — | — | — | — | — |
 
 Overall = `((1−text)·100 + CDM·100 + TEDS·100)/3`; order EditDist is reported
-separately and is **not** part of Overall. The upstream CUDA backend was not run
-on these 148 pages, so there is **no canary-vs-CUDA comparison** here.
+separately and is **not** part of Overall.
 
 ### Table B — full 1651-page set (OmniDocBench v1.6)
 
@@ -73,7 +70,7 @@ on these 148 pages, so there is **no canary-vs-CUDA comparison** here.
 | Official HunyuanOCR (OmniDocBench) | **94.10** | 0.042 | 0.9473 | 0.9181 | **TensorRT** | [official table](https://github.com/Tencent-Hunyuan/HunyuanOCR) |
 | Δ (ours − official) | −2.01 | +0.0047 | −0.0509 | −0.0051 | different engine | not a precision comparison |
 
-> The **−2.01 gap is not a measured ROCm-vs-CUDA delta.** The official number uses
+> The **−2.01 gap is not a measured engine-level delta.** The official number uses
 > a third inference engine (TensorRT) and an unlabeled dataset version; ours uses
 > llama.cpp on v1.6. A **94.74** figure quoted in some third-party summaries is
 > **not** in the official benchmark table and is treated as `not_verified`.
