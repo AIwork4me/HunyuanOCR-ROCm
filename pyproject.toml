@@ -76,6 +76,7 @@ target-version = "py311"
 # run continues (never raises — see the adapter contract). Broad blind-except
 # (BLE001) and silent try/except/pass (S110) are intentional, not bugs.
 ignore = ["BLE001", "S110"]
+extend-exclude = ["REPRO.yaml", "reproduce.md"]
 
 [tool.ruff.lint.per-file-ignores]
 # Vendored / verbatim upstream-derived algorithm files: lint only, never reformat,
