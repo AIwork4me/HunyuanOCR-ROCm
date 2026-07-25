@@ -63,7 +63,7 @@ jobs:
           /tmp/ve/bin/hunyuan-ocr doctor --json >/tmp/doctor.json
           /tmp/ve/bin/python -c "import json,sys; d=json.load(open('/tmp/doctor.json')); sys.exit(0 if d['ok'] is False or d['ok'] is True else 1)"
       - name: upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist-py${{ matrix.python }}
           path: dist/
