@@ -395,7 +395,11 @@ def _benchmark(args) -> int:
 
     from hunyuan_ocr.results import render_results_block
 
-    lock_path = Path(args.lock) if getattr(args, "lock", None) else Path.cwd() / "reproducibility.lock.yaml"
+    lock_path = Path(args.lock) if getattr(args, "lock", None) else Path.cwd() / "REPRO.yaml"
+    if not lock_path.exists():
+        legacy = Path.cwd() / "reproducibility.lock.yaml"
+        if legacy.exists():
+            lock_path = legacy
     if not lock_path.is_file():
         print(f"[error] lock not found: {lock_path}", file=sys.stderr)
         return 2
@@ -470,7 +474,7 @@ def build_parser() -> argparse.ArgumentParser:
     sc.add_argument("--skip-validation", action="store_true", help="DANGEROUS: bypass pre-score validation")
 
     bm = sub.add_parser("benchmark", help="print the verified results from the lock (read-only)")
-    bm.add_argument("--lock", help="path to reproducibility.lock.yaml (default: ./reproducibility.lock.yaml)")
+    bm.add_argument("--lock", help="path to REPRO.yaml (default: ./REPRO.yaml or ./reproducibility.lock.yaml)")
 
     rep = sub.add_parser("report", help="assemble a benchmark release-artifact bundle")
     rep.add_argument("--pred-dir", required=True, help="prediction dir containing run_manifest.json")

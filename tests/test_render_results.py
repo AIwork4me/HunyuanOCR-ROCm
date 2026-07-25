@@ -34,7 +34,7 @@ def test_render_block_contains_all_lock_rows_in_order():
     assert "| canary 148 | transformers | 94.11 |" in block
     assert "| canary 148 | vLLM | 94.81 |" in block
     assert "| full 1651 | llama.cpp | 92.09 |" in block
-    assert "| full 1651 | vLLM | invalid (excluded; see reproducibility.lock.yaml) |" in block
+    assert "| full 1651 | vLLM | invalid (excluded; see REPRO.yaml) |" in block
     assert "| official | TensorRT | 94.10 | official HunyuanOCR table |" in block
     # the trailing-zero official figure is preserved (not 94.1)
     assert "94.1 |" not in block and "94.10 |" in block

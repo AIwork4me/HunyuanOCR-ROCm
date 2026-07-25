@@ -24,7 +24,7 @@ def render_results_block(lock: dict) -> str:
     bench = (lock or {}).get("benchmark", {}) or {}
     lines = [
         "<!-- BEGIN GENERATED RESULTS -->",
-        "<!-- Auto-generated from reproducibility.lock.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->",
+        "<!-- Auto-generated from REPRO.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->",
         "",
         "| Page set | Backend | Overall | Source |",
         "|---|---|---|---|",
