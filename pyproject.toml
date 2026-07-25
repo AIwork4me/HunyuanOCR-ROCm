@@ -51,7 +51,7 @@ eval = ["pyyaml"]
 # OmniDocBench-ROCm platform integration (conformance, score, publish).
 platform = ["omnidocbench-rocm>=0.2.0"]
 # Development / CI tooling.
-dev = ["pytest>=8", "pytest-mock", "ruff>=0.6", "build", "pytest-cov>=4"]
+dev = ["pytest>=8", "pytest-mock", "ruff>=0.16,<0.17", "build", "pytest-cov>=4"]
 
 [project.urls]
 Homepage = "https://github.com/AIwork4me/HunyuanOCR-ROCm"
@@ -70,6 +70,12 @@ hunyuan_ocr = ["data/*.yaml"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+
+[tool.ruff.lint]
+# The eval pipeline is defensive by design: per-page failures are caught and the
+# run continues (never raises — see the adapter contract). Broad blind-except
+# (BLE001) and silent try/except/pass (S110) are intentional, not bugs.
+ignore = ["BLE001", "S110"]
 
 [tool.ruff.lint.per-file-ignores]
 # Vendored / verbatim upstream-derived algorithm files: lint only, never reformat,

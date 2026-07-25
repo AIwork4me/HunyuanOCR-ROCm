@@ -72,13 +72,23 @@ def test_constants_have_spec_values():
 
 def test_checkrun_smoke_dataclasses_hold_fields():
     cr = CheckRun(
-        id=7, head_sha="abc", status="queued", conclusion=None,
-        started_at=None, external_id="abc", name=CHECK_NAME, created_at="2026-07-18T03:00:00Z",
+        id=7,
+        head_sha="abc",
+        status="queued",
+        conclusion=None,
+        started_at=None,
+        external_id="abc",
+        name=CHECK_NAME,
+        created_at="2026-07-18T03:00:00Z",
     )
     assert cr.status == "queued" and cr.external_id == "abc"
     sr = SmokeResult(
-        ok=True, sha="abc", env_summary={"rocm": "7.2"}, manifest={"status": "ok"},
-        latency_sec=12.3, log_tail="",
+        ok=True,
+        sha="abc",
+        env_summary={"rocm": "7.2"},
+        manifest={"status": "ok"},
+        latency_sec=12.3,
+        log_tail="",
     )
     assert sr.ok and sr.manifest["status"] == "ok"
 
@@ -188,7 +198,11 @@ NOW = 1782692400.0  # == 2026-07-18T03:00:00Z
 
 
 def _queued(created_minutes_ago: float) -> CheckRun:
-    created = "2026-07-18T02:%02d:00Z" % int(60 - created_minutes_ago) if created_minutes_ago <= 60 else "2026-07-18T01:00:00Z"
+    created = (
+        "2026-07-18T02:%02d:00Z" % int(60 - created_minutes_ago)
+        if created_minutes_ago <= 60
+        else "2026-07-18T01:00:00Z"
+    )
     return CheckRun(1, "abc", "queued", None, None, "abc", CHECK_NAME, created)
 
 
@@ -277,10 +291,16 @@ from hunyuan_ocr.ci.poller import build_output
 
 def test_build_output_success_includes_env_manifest_latency():
     sr = SmokeResult(
-        ok=True, sha="abc1234", env_summary={"rocm": "7.2.1", "torch": "2.9.1", "llama_cpp_commit": "a320cbf", "gpu": "gfx1100"},
-        manifest={"status": "ok", "run_counts": {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0, "interrupted": 0},
-                  "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0}},
-        latency_sec=42.5, log_tail="",
+        ok=True,
+        sha="abc1234",
+        env_summary={"rocm": "7.2.1", "torch": "2.9.1", "llama_cpp_commit": "a320cbf", "gpu": "gfx1100"},
+        manifest={
+            "status": "ok",
+            "run_counts": {"attempted": 1, "succeeded": 1, "failed": 0, "skipped": 0, "interrupted": 0},
+            "final_state": {"expected": 1, "complete": 1, "failed": 0, "pending": 0},
+        },
+        latency_sec=42.5,
+        log_tail="",
     )
     title, summary = build_output(sr)
     assert title == "gpu-smoke PASSED"
@@ -289,7 +309,9 @@ def test_build_output_success_includes_env_manifest_latency():
 
 
 def test_build_output_failure_includes_log_tail():
-    sr = SmokeResult(ok=False, sha="abc", env_summary={}, manifest=None, latency_sec=5.0, log_tail="server did not become healthy")
+    sr = SmokeResult(
+        ok=False, sha="abc", env_summary={}, manifest=None, latency_sec=5.0, log_tail="server did not become healthy"
+    )
     title, summary = build_output(sr)
     assert title == "gpu-smoke FAILED"
     assert "server did not become healthy" in summary
@@ -311,10 +333,14 @@ def build_output(result: SmokeResult) -> tuple[str, str]:
     """Render the Check Run output (title, markdown summary) from a smoke result."""
     env = result.env_summary or {}
     env_line = ", ".join(
-        f"{k}={v}" for k, v in (
-            ("ROCm", env.get("rocm")), ("torch", env.get("torch")),
-            ("llama.cpp", env.get("llama_cpp_commit")), ("gpu", env.get("gpu")),
-        ) if v
+        f"{k}={v}"
+        for k, v in (
+            ("ROCm", env.get("rocm")),
+            ("torch", env.get("torch")),
+            ("llama.cpp", env.get("llama_cpp_commit")),
+            ("gpu", env.get("gpu")),
+        )
+        if v
     )
     if result.manifest:
         rc = result.manifest.get("run_counts", {})
@@ -402,12 +428,30 @@ def test_latest_tag_none_when_no_tags():
 
 
 def test_list_check_runs_filters_to_check_name():
-    payload = {"check_runs": [
-        {"id": 1, "head_sha": "s", "status": "queued", "conclusion": None, "started_at": None,
-         "external_id": "s", "name": "gpu-smoke (gfx1100)", "created_at": "2026-07-18T03:00:00Z"},
-        {"id": 2, "head_sha": "s", "status": "completed", "conclusion": "success", "started_at": None,
-         "external_id": "s", "name": "other-check", "created_at": "2026-07-18T03:00:00Z"},
-    ]}
+    payload = {
+        "check_runs": [
+            {
+                "id": 1,
+                "head_sha": "s",
+                "status": "queued",
+                "conclusion": None,
+                "started_at": None,
+                "external_id": "s",
+                "name": "gpu-smoke (gfx1100)",
+                "created_at": "2026-07-18T03:00:00Z",
+            },
+            {
+                "id": 2,
+                "head_sha": "s",
+                "status": "completed",
+                "conclusion": "success",
+                "started_at": None,
+                "external_id": "s",
+                "name": "other-check",
+                "created_at": "2026-07-18T03:00:00Z",
+            },
+        ]
+    }
     gh = FakeGH([json.dumps(payload)])
     runs = GitHubClient("o", "r", runner=gh).list_check_runs("s")
     assert [r.id for r in runs] == [1]  # only our check name, both statuses returned by client
@@ -484,9 +528,13 @@ class GitHubClient:
                 continue
             runs.append(
                 CheckRun(
-                    id=r["id"], head_sha=r["head_sha"], status=r["status"],
-                    conclusion=r.get("conclusion"), started_at=r.get("started_at"),
-                    external_id=r.get("external_id"), name=r["name"],
+                    id=r["id"],
+                    head_sha=r["head_sha"],
+                    status=r["status"],
+                    conclusion=r.get("conclusion"),
+                    started_at=r.get("started_at"),
+                    external_id=r.get("external_id"),
+                    name=r["name"],
                     created_at=r.get("started_at") or r.get("head_sha"),  # see note
                 )
             )
@@ -500,17 +548,34 @@ class GitHubClient:
         return runs
 
     def set_in_progress(self, check_run_id: int) -> None:
-        self._run([
-            "api", "--method", "PATCH", f"{self._base}/check-runs/{check_run_id}",
-            "-f", "status=in_progress",
-        ])
+        self._run(
+            [
+                "api",
+                "--method",
+                "PATCH",
+                f"{self._base}/check-runs/{check_run_id}",
+                "-f",
+                "status=in_progress",
+            ]
+        )
 
     def complete(self, check_run_id: int, *, conclusion: str, title: str, summary: str) -> None:
-        self._run([
-            "api", "--method", "PATCH", f"{self._base}/check-runs/{check_run_id}",
-            "-f", f"status=completed", "-f", f"conclusion={conclusion}",
-            "-f", f"output[title]={title}", "-f", f"output[summary]={summary}",
-        ])
+        self._run(
+            [
+                "api",
+                "--method",
+                "PATCH",
+                f"{self._base}/check-runs/{check_run_id}",
+                "-f",
+                f"status=completed",
+                "-f",
+                f"conclusion={conclusion}",
+                "-f",
+                f"output[title]={title}",
+                "-f",
+                f"output[summary]={summary}",
+            ]
+        )
 ```
 
 > **Implementation note for the implementer:** the `created_at` fallback comment is a deliberate MVP simplification. Age-based stale-sweep relies on `started_at`; a freshly-created `queued` run has `started_at=None`, so `decide()` treats it as age 0 (runs immediately, never falsely stale). The request workflow (Task 9) additionally encodes the dispatch epoch into `external_id` so a future hardening can compute true age; for the MVP, `external_id=<SHA>` is kept simple. Do not change this without updating `decide()` tests.
@@ -592,7 +657,13 @@ def test_run_smoke_failure_captures_log_tail(tmp_path, monkeypatch):
     harness.write_text("#!/usr/bin/env bash\necho 'server did not become healthy' >&2\nexit 1\n", encoding="utf-8")
     os.chmod(harness, 0o755)
     monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
-    res = run_smoke("abc", trusted_smoke_script=harness, workdir_parent=tmp_path, env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, timeout_s=30)
+    res = run_smoke(
+        "abc",
+        trusted_smoke_script=harness,
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        timeout_s=30,
+    )
     assert res.ok is False
     assert "server did not become healthy" in res.log_tail
 
@@ -602,7 +673,13 @@ def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
     harness.write_text("#!/usr/bin/env bash\nsleep 30\n", encoding="utf-8")
     os.chmod(harness, 0o755)
     monkeypatch.setattr("hunyuan_ocr.ci.poller._checkout_sha", lambda sha, dest: None)
-    res = run_smoke("abc", trusted_smoke_script=harness, workdir_parent=tmp_path, env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, timeout_s=1)
+    res = run_smoke(
+        "abc",
+        trusted_smoke_script=harness,
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        timeout_s=1,
+    )
     assert res.ok is False
     assert "timeout" in res.log_tail.lower()
 ```
@@ -656,8 +733,11 @@ def run_smoke(sha, *, trusted_smoke_script, workdir_parent, env, timeout_s=SMOKE
         _checkout_sha(sha, workdir)
         full_env = {**os.environ, **env, "REPO": str(workdir)}
         cp = subprocess.run(
-            ["bash", str(trusted_smoke_script)], env=full_env,
-            capture_output=True, text=True, timeout=timeout_s,
+            ["bash", str(trusted_smoke_script)],
+            env=full_env,
+            capture_output=True,
+            text=True,
+            timeout=timeout_s,
         )
         combined = (cp.stdout or "") + (cp.stderr or "")
         ok = cp.returncode == 0
@@ -672,16 +752,28 @@ def run_smoke(sha, *, trusted_smoke_script, workdir_parent, env, timeout_s=SMOKE
                 manifest = json.loads(mp.read_text(encoding="utf-8"))
             except json.JSONDecodeError:
                 manifest = None
-        return SmokeResult(ok=ok, sha=sha, env_summary=env_summary, manifest=manifest,
-                            latency_sec=time.monotonic() - start, log_tail=log_tail)
+        return SmokeResult(
+            ok=ok,
+            sha=sha,
+            env_summary=env_summary,
+            manifest=manifest,
+            latency_sec=time.monotonic() - start,
+            log_tail=log_tail,
+        )
     except subprocess.TimeoutExpired as exc:
-        return SmokeResult(ok=False, sha=sha, env_summary={}, manifest=None,
-                            latency_sec=time.monotonic() - start,
-                            log_tail=f"smoke timed out after {timeout_s}s: {exc}")
+        return SmokeResult(
+            ok=False,
+            sha=sha,
+            env_summary={},
+            manifest=None,
+            latency_sec=time.monotonic() - start,
+            log_tail=f"smoke timed out after {timeout_s}s: {exc}",
+        )
     finally:
         # best-effort cleanup of the worktree
-        subprocess.run(["git", "-C", str(workdir), "worktree", "remove", "--force", str(workdir)],
-                       check=False, capture_output=True)
+        subprocess.run(
+            ["git", "-C", str(workdir), "worktree", "remove", "--force", str(workdir)], check=False, capture_output=True
+        )
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
@@ -758,8 +850,17 @@ def test_once_runs_queued_and_completes_success(tmp_path, monkeypatch):
     client = FakeClient({_q(1, sha, "queued") and "main": [_q(1, sha, "queued")]}.get("main") or [])
     # simpler construction:
     client = FakeClient({"main": [_q(1, sha, "queued")]})
-    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""))
-    summary = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path, env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=1782692400.0)
+    monkeypatch.setattr(
+        "hunyuan_ocr.ci.poller.run_smoke",
+        lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""),
+    )
+    summary = once(
+        client,
+        trusted_smoke_script=tmp_path / "s.sh",
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        now=1782692400.0,
+    )
     assert summary["ran"] == ["mainsha"]
     assert client.completions == [(1, "success")]
 
@@ -769,8 +870,16 @@ def test_once_skip_done_when_completed_exists(tmp_path, monkeypatch):
     queued = _q(1, "s", "queued")
     client = FakeClient({"main": [done, queued]})
     ran = []
-    monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: ran.append(sha) or SmokeResult(True, sha, {}, None, 1.0, ""))
-    summary = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path, env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=1782692400.0)
+    monkeypatch.setattr(
+        "hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: ran.append(sha) or SmokeResult(True, sha, {}, None, 1.0, "")
+    )
+    summary = once(
+        client,
+        trusted_smoke_script=tmp_path / "s.sh",
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        now=1782692400.0,
+    )
     assert summary["skipped_done"] == ["s"] and ran == []
     assert client.completions == []  # nothing re-run
 
@@ -779,7 +888,13 @@ def test_once_stale_sweep_times_out_queued(tmp_path, monkeypatch):
     old = CheckRun(1, "s", "queued", None, None, "s", CHECK_NAME, "2026-07-18T02:00:00Z")  # 1h before now
     client = FakeClient({"main": [old]})
     monkeypatch.setattr("hunyuan_ocr.ci.poller.run_smoke", lambda sha, **k: pytest.fail("should not run a stale job"))
-    summary = once(client, trusted_smoke_script=tmp_path / "s.sh", workdir_parent=tmp_path, env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)}, now=1782693000.0)
+    summary = once(
+        client,
+        trusted_smoke_script=tmp_path / "s.sh",
+        workdir_parent=tmp_path,
+        env={"HUNYUANOCR_SMOKE_OUT": str(tmp_path)},
+        now=1782693000.0,
+    )
     assert summary["timed_out"] == ["s"]
     assert client.completions == [(1, "failure")]
 ```
@@ -833,8 +948,12 @@ def once(client, *, trusted_smoke_script, workdir_parent, env, now, run_smoke_fn
                 summary["skipped_done"].append(sha)
                 continue
             if action == "timeout":
-                client.complete(q.id, conclusion="failure", title="gpu-smoke FAILED",
-                                summary="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?")
+                client.complete(
+                    q.id,
+                    conclusion="failure",
+                    title="gpu-smoke FAILED",
+                    summary="timed out waiting for the gfx1100 runner — is the Radeon Cloud box online?",
+                )
                 summary["timed_out"].append(sha)
                 continue
             client.set_in_progress(q.id)
@@ -880,11 +999,21 @@ def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
     client = FakeClient({"main": [_q(1, "mainsha", "queued")]})
     monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
     monkeypatch.setattr(poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {}, None, 1.0, ""))
-    rc = poller_mod.main([
-        "--owner", "o", "--repo", "r", "--dry-run",
-        "--workdir-parent", str(tmp_path), "--smoke-script", str(tmp_path / "s.sh"),
-        "--lock", str(tmp_path / "l.lock"),
-    ])
+    rc = poller_mod.main(
+        [
+            "--owner",
+            "o",
+            "--repo",
+            "r",
+            "--dry-run",
+            "--workdir-parent",
+            str(tmp_path),
+            "--smoke-script",
+            str(tmp_path / "s.sh"),
+            "--lock",
+            str(tmp_path / "l.lock"),
+        ]
+    )
     assert rc == 0
     assert client.completions == []  # dry-run never completes
     out = capsys.readouterr().out
@@ -894,12 +1023,24 @@ def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
 def test_main_once_runs_one_pass(tmp_path, monkeypatch):
     client = FakeClient({"main": [_q(1, "mainsha", "queued")]})
     monkeypatch.setattr(poller_mod, "GitHubClient", lambda *a, **k: client)
-    monkeypatch.setattr(poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, ""))
-    rc = poller_mod.main([
-        "--owner", "o", "--repo", "r", "--once",
-        "--workdir-parent", str(tmp_path), "--smoke-script", str(tmp_path / "s.sh"),
-        "--lock", str(tmp_path / "l.lock"),
-    ])
+    monkeypatch.setattr(
+        poller_mod, "run_smoke", lambda sha, **k: SmokeResult(True, sha, {"gpu": "gfx1100"}, {"status": "ok"}, 1.0, "")
+    )
+    rc = poller_mod.main(
+        [
+            "--owner",
+            "o",
+            "--repo",
+            "r",
+            "--once",
+            "--workdir-parent",
+            str(tmp_path),
+            "--smoke-script",
+            str(tmp_path / "s.sh"),
+            "--lock",
+            str(tmp_path / "l.lock"),
+        ]
+    )
     assert rc == 0
     assert client.completions == [(1, "success")]
 ```
@@ -921,8 +1062,7 @@ from hunyuan_ocr.ci.models import POLL_INTERVAL_SEC
 def _driven_once(client, *, trusted_smoke_script, workdir_parent, env, now, dry_run):
     """Dry-run aware wrapper: prints would-do instead of mutating."""
     if not dry_run:
-        return once(client, trusted_smoke_script=trusted_smoke_script,
-                   workdir_parent=workdir_parent, env=env, now=now)
+        return once(client, trusted_smoke_script=trusted_smoke_script, workdir_parent=workdir_parent, env=env, now=now)
     # dry run: inspect without side effects
     watched = [("main", client.ref_to_sha("main"))]
     tag = client.latest_tag()
@@ -959,9 +1099,14 @@ def main(argv=None) -> int:
             print("[poller] another pass holds the lock; skipping", flush=True)
         else:
             try:
-                _driven_once(client, trusted_smoke_script=args.smoke_script,
-                             workdir_parent=args.workdir_parent, env=env,
-                             now=time.time(), dry_run=args.dry_run)
+                _driven_once(
+                    client,
+                    trusted_smoke_script=args.smoke_script,
+                    workdir_parent=args.workdir_parent,
+                    env=env,
+                    now=time.time(),
+                    dry_run=args.dry_run,
+                )
             finally:
                 os.close(fd)
         if args.once or args.dry_run:

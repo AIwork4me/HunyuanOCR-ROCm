@@ -19,6 +19,7 @@ The server is started separately with ``scripts/serve_vllm.sh`` (the box's
 """
 
 from __future__ import annotations
+
 import base64
 import mimetypes
 
@@ -71,7 +72,8 @@ def _maybe_cap_image(path: str, max_pixels: int | None) -> str:
         w, h = im.size
         if w * h <= max_pixels:
             return path
-        digest = hashlib.sha256(open(path, "rb").read()).hexdigest()[:16]
+        with open(path, "rb") as _f:
+            digest = hashlib.sha256(_f.read()).hexdigest()[:16]
         cached = os.path.join(_cap_cache_dir(), f"{digest}_cap{max_pixels}.png")
         if os.path.isfile(cached) and os.path.getsize(cached) > 0:
             return cached
@@ -116,14 +118,14 @@ def infer_one(
             ],
         },
     ]
-    common = dict(
-        model=model,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=0.0,
-        top_p=1.0,
-        extra_body={"top_k": -1, "repetition_penalty": repetition_penalty, "skip_special_tokens": True},
-    )
+    common = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "extra_body": {"top_k": -1, "repetition_penalty": repetition_penalty, "skip_special_tokens": True},
+    }
     text, _early = infer_stream(client, common, repeat_min_repeats)
     text = clean_repeated_substrings(text)
     try:

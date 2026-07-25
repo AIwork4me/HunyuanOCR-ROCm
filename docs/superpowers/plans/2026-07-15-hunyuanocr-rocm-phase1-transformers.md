@@ -89,6 +89,7 @@ where = ["src"]
 
 ```python
 """HunyuanOCR-ROCm: precision-aligned AMD ROCm port of HunyuanOCR-1.5."""
+
 __version__ = "0.1.0"
 ```
 
@@ -103,6 +104,7 @@ __version__ = "0.1.0"
 ```python
 def test_package_imports_and_version():
     import hunyuan_ocr
+
     assert hunyuan_ocr.__version__ == "0.1.0"
 ```
 
@@ -163,7 +165,7 @@ from hunyuan_ocr.contract import CONTRACT, SAMPLING
 
 
 def test_sampling_is_frozen_and_greedy():
-    assert SAMPLING["do_sample"] is False          # temp=0 -> greedy
+    assert SAMPLING["do_sample"] is False  # temp=0 -> greedy
     assert SAMPLING["repetition_penalty"] == 1.08
     assert SAMPLING["max_new_tokens"] == 32768
     assert SAMPLING["use_cache"] is True
@@ -204,13 +206,14 @@ and 3 (llama.cpp) MUST match it. Changing any value here re-baselines everything
 All values are copied verbatim from the upstream HunyuanOCR-1.5 inference recipe
 (inference/transformers/infer_hf_8gpu_hyocr15.py, aligned with infer_vllm_client.py).
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 
 
 # Sampling kwargs passed straight to model.generate() / mapped onto each backend.
 SAMPLING: dict = {
-    "do_sample": False,            # temperature=0.0 -> greedy
+    "do_sample": False,  # temperature=0.0 -> greedy
     "repetition_penalty": 1.08,
     "max_new_tokens": 32768,
     "use_cache": True,
@@ -292,9 +295,18 @@ def test_get_prompt_unknown_raises():
 
 def test_all_twelve_tasks_present():
     expected = {
-        "doc_parse", "structured_parse", "spotting_json", "spotting_hunyuan",
-        "layout", "layout_parse", "chart_parse", "formula", "table",
-        "doc_trans_en2zh", "trans_other2en", "trans_other2zh",
+        "doc_parse",
+        "structured_parse",
+        "spotting_json",
+        "spotting_hunyuan",
+        "layout",
+        "layout_parse",
+        "chart_parse",
+        "formula",
+        "table",
+        "doc_trans_en2zh",
+        "trans_other2en",
+        "trans_other2zh",
     }
     assert expected == set(TASK_PROMPTS.keys())
 ```
@@ -361,7 +373,9 @@ These pin the ported behavior so a future accidental edit is caught.
 
 ```python
 from hunyuan_ocr.postprocess import (
-    has_tail_repetition, clean_repeated_substrings, process_one,
+    has_tail_repetition,
+    clean_repeated_substrings,
+    process_one,
 )
 
 
@@ -375,11 +389,11 @@ def test_has_tail_repetition_clean_text():
 
 def test_clean_repeated_substrings_trims_long_loop():
     body = "正文内容。" * 5
-    loop = "ABCD" * 3000           # >> 2000 chars, repeats > 10x
+    loop = "ABCD" * 3000  # >> 2000 chars, repeats > 10x
     out = clean_repeated_substrings(body + loop)
     # upstream keeps ONE surviving copy of the unit: text[: n - length*(count-1)]
     assert out == body + "ABCD"
-    assert "ABCDABCD" not in out   # the degenerate loop is collapsed to one copy
+    assert "ABCDABCD" not in out  # the degenerate loop is collapsed to one copy
 
 
 def test_clean_repeated_substrings_short_text_untouched():
@@ -388,7 +402,7 @@ def test_clean_repeated_substrings_short_text_untouched():
 
 def test_process_one_splits_table_caption():
     # Pattern T: <table><caption>X</caption>... -> X\n\n<table>...
-    md = '<table><caption>表1 标题</caption><tr><td>a</td></tr></table>'
+    md = "<table><caption>表1 标题</caption><tr><td>a</td></tr></table>"
     out, stats = process_one(md)
     assert out.startswith("表1 标题\n\n<table>")
     assert stats["T_captions"] == 1
@@ -477,6 +491,7 @@ of page dicts; each page_info.image_path is a BARE basename resolved under the
 dataset's images/ directory. Subsets OmniDocBench_150.json / OmniDocBench_30.json
 share the same format.
 """
+
 from __future__ import annotations
 import json
 from pathlib import Path
@@ -634,6 +649,7 @@ own 3.11 venv, and parses the resulting metric_result.json / run_summary.json.
 Overall = ((1 - text_EditDist)*100 + formula_CDM*100 + table_TEDS*100) / 3
 (reading-order EditDist is reported separately, NOT part of Overall).
 """
+
 from __future__ import annotations
 import json
 import subprocess
@@ -665,7 +681,9 @@ def write_eval_config(*, gt_json: str, pred_dir: str, out_yaml: Path) -> None:
     out_yaml.write_text(yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False), encoding="utf-8")
 
 
-def run_scorer(*, omnidocbench_repo: str, config_yaml: str, venv_python: str | None = None) -> subprocess.CompletedProcess:
+def run_scorer(
+    *, omnidocbench_repo: str, config_yaml: str, venv_python: str | None = None
+) -> subprocess.CompletedProcess:
     """Run pdf_validation.py --config <cfg> inside the OmniDocBench repo."""
     py = venv_python or DEFAULT_VENV_PYTHON
     cmd = [py, "pdf_validation.py", "--config", str(config_yaml)]
@@ -743,6 +761,7 @@ SAMPLE_IMG = os.environ.get("HUNYUANOCR_SAMPLE_IMG", "")
 def test_infer_one_returns_markdown():
     from hunyuan_ocr.backends.transformers import load_model_and_processor, infer_one
     from hunyuan_ocr.contract import CONTRACT
+
     model, processor = load_model_and_processor(MODEL_PATH)
     md = infer_one(model, processor, SAMPLE_IMG, CONTRACT.prompt)
     assert isinstance(md, str) and len(md) > 0
@@ -764,6 +783,7 @@ Ported from upstream inference/transformers/infer_hf_8gpu_hyocr15.py:
   tail-repetition StoppingCriteria, clean_repeated_substrings + process_one.
 Torch/transformers imported lazily so importing this module needs no GPU.
 """
+
 from __future__ import annotations
 import importlib
 import sys
@@ -796,6 +816,7 @@ def _patch_hunyuan_tokenizer_special_tokens(tokenizer) -> None:
 
 def _load_processor_with_patch(model_path: str):
     from transformers import AutoImageProcessor, AutoTokenizer
+
     proc_mod = importlib.import_module("transformers.models.hunyuan_vl.processing_hunyuan_vl")
     HunYuanVLProcessor = proc_mod.HunYuanVLProcessor
     tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
@@ -804,6 +825,7 @@ def _load_processor_with_patch(model_path: str):
     video_processor = None
     try:
         from transformers import AutoVideoProcessor
+
         video_processor = AutoVideoProcessor.from_pretrained(model_path)
     except Exception:
         video_processor = None
@@ -816,6 +838,7 @@ def _load_processor_with_patch(model_path: str):
 def load_model_and_processor(model_path: str, device: str = "cuda:0"):
     import torch
     from transformers import AutoProcessor, HunYuanVLForConditionalGeneration
+
     dtype = getattr(torch, CONTRACT.dtype)
     try:
         processor = AutoProcessor.from_pretrained(model_path, use_fast=False)
@@ -825,7 +848,9 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
         print("[warn] AutoProcessor tokenizer lacks video_token; retrying with patched tokenizer.", file=sys.stderr)
         processor = _load_processor_with_patch(model_path)
     model = HunYuanVLForConditionalGeneration.from_pretrained(
-        model_path, attn_implementation=CONTRACT.attn_implementation, dtype=dtype,
+        model_path,
+        attn_implementation=CONTRACT.attn_implementation,
+        dtype=dtype,
     )
     model = model.to(device)
     model.eval()
@@ -836,10 +861,13 @@ def build_messages(image_path: str, prompt: str) -> List[dict]:
     """Upstream message shape: empty system + user[image, text]."""
     return [
         {"role": "system", "content": ""},
-        {"role": "user", "content": [
-            {"type": "image", "image": image_path},
-            {"type": "text", "text": prompt},
-        ]},
+        {
+            "role": "user",
+            "content": [
+                {"type": "image", "image": image_path},
+                {"type": "text", "text": prompt},
+            ],
+        },
     ]
 
 
@@ -847,6 +875,7 @@ def _build_tail_repetition_stop(processor, prompt_len: int):
     """StoppingCriteria mirroring the vLLM streaming early-stop (per upstream)."""
     from transformers import StoppingCriteria, StoppingCriteriaList
     from ..postprocess import has_tail_repetition
+
     tokenizer = processor.tokenizer
     min_repeats = CONTRACT.repeat_min_repeats
     check_start_chars, check_step_chars, token_probe_step = 4000, 1000, 64
@@ -885,6 +914,7 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
     """Run one image through the model with the frozen contract; return markdown."""
     import torch
     from PIL import Image
+
     tokenizer = processor.tokenizer
     eos_token_id = getattr(tokenizer, "eos_token_id", None)
     pad_token_id = getattr(tokenizer, "pad_token_id", None) or eos_token_id
@@ -899,7 +929,10 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
 
     stopping_criteria = _build_tail_repetition_stop(processor, prompt_len=prompt_len)
     gen_kwargs = dict(
-        max_new_tokens=32768, do_sample=False, repetition_penalty=1.08, use_cache=True,
+        max_new_tokens=32768,
+        do_sample=False,
+        repetition_penalty=1.08,
+        use_cache=True,
         stopping_criteria=stopping_criteria,
     )
     if eos_token_id is not None:
@@ -909,12 +942,12 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
 
     with torch.inference_mode():
         generated_ids = model.generate(**inputs, **gen_kwargs)
-    trimmed = [out_ids[len(in_ids):] for in_ids, out_ids in zip(input_ids, generated_ids)]
+    trimmed = [out_ids[len(in_ids) :] for in_ids, out_ids in zip(input_ids, generated_ids)]
     decoded = processor.batch_decode(trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False)
     out_text = decoded[0] if decoded else ""
     out_text = clean_repeated_substrings(out_text)
     try:
-        out_text, _ = process_one(out_text)      # doc_parse normalization (frozen postproc)
+        out_text, _ = process_one(out_text)  # doc_parse normalization (frozen postproc)
     except Exception:
         pass
     return out_text
@@ -962,6 +995,7 @@ Usage:
       --gpu-ids 0,1,2 \
       [--limit N]   # quick smoke run on first N pages (single GPU recommended)
 """
+
 from __future__ import annotations
 import argparse
 import json
@@ -976,13 +1010,14 @@ def load_page_list(gt_json: str, images_dir: str, limit: int | None = None):
     pages = json.load(open(gt_json, encoding="utf-8"))
     if limit:
         pages = pages[:limit]
-    return [(Path(p["page_info"]["image_path"]).stem,
-             os.path.join(images_dir, p["page_info"]["image_path"])) for p in pages]
+    return [
+        (Path(p["page_info"]["image_path"]).stem, os.path.join(images_dir, p["page_info"]["image_path"])) for p in pages
+    ]
 
 
 def shard(items, n):
     k = -(-len(items) // n)
-    return [items[i:i + k] for i in range(0, len(items), k)]
+    return [items[i : i + k] for i in range(0, len(items), k)]
 
 
 def worker(gpu_id: int, chunk, args_dict: dict):
@@ -1035,8 +1070,9 @@ def main():
     print(f"[info] {len(pages)} pages across GPUs {gpu_ids}: {[len(c) for c in chunks]}", flush=True)
 
     ctx = mp.get_context("spawn")
-    procs = [ctx.Process(target=worker, args=(gid, chunks[i], vars(args)), daemon=False)
-             for i, gid in enumerate(gpu_ids)]
+    procs = [
+        ctx.Process(target=worker, args=(gid, chunks[i], vars(args)), daemon=False) for i, gid in enumerate(gpu_ids)
+    ]
     for pr in procs:
         pr.start()
     for pr in procs:
@@ -1085,6 +1121,7 @@ Usage:
       --gt-json /workspace/OmniDocBench_data/OmniDocBench.json \
       [--label transformers] [--no-cdm]
 """
+
 from __future__ import annotations
 import argparse
 import sys
@@ -1105,20 +1142,25 @@ def main():
 
     cfg_path = Path(args.pred_dir) / "_eval_config.yaml"
     scoring.write_eval_config(gt_json=args.gt_json, pred_dir=args.pred_dir, out_yaml=cfg_path)
-    res = scoring.run_scorer(omnidocbench_repo=args.omnidocbench_repo, config_yaml=str(cfg_path), venv_python=args.venv_python)
+    res = scoring.run_scorer(
+        omnidocbench_repo=args.omnidocbench_repo, config_yaml=str(cfg_path), venv_python=args.venv_python
+    )
     if res.returncode != 0:
-        print(res.stdout[-4000:]); print(res.stderr[-4000:], file=sys.stderr)
+        print(res.stdout[-4000:])
+        print(res.stderr[-4000:], file=sys.stderr)
         sys.exit(f"[error] scorer failed (rc={res.returncode})")
 
     save_name = f"{Path(args.pred_dir).name}_quick_match"
     s = scoring.parse_run_summary(Path(args.omnidocbench_repo) / "result", save_name)
     print(f"\n=== {args.label} — OmniDocBench v1.6 ===")
     print(f"  Overall          : {s['overall']:.2f}")
-    print(f"  text  EditDist   : {s['text_edit_dist']:.4f}   -> {(1-s['text_edit_dist'])*100:.2f}")
-    print(f"  formula CDM      : {s['formula_cdm']:.4f}   -> {s['formula_cdm']*100:.2f}")
-    print(f"  table  TEDS      : {s['table_teds']:.4f}   -> {s['table_teds']*100:.2f}")
+    print(f"  text  EditDist   : {s['text_edit_dist']:.4f}   -> {(1 - s['text_edit_dist']) * 100:.2f}")
+    print(f"  formula CDM      : {s['formula_cdm']:.4f}   -> {s['formula_cdm'] * 100:.2f}")
+    print(f"  table  TEDS      : {s['table_teds']:.4f}   -> {s['table_teds'] * 100:.2f}")
     print(f"  order  EditDist  : {s['reading_order_edit']:.4f}")
-    recomputed = scoring.overall_score({"text_edit_dist": s["text_edit_dist"], "formula_cdm": s["formula_cdm"], "table_teds": s["table_teds"]})
+    recomputed = scoring.overall_score(
+        {"text_edit_dist": s["text_edit_dist"], "formula_cdm": s["formula_cdm"], "table_teds": s["table_teds"]}
+    )
     print(f"  (overall recomputed: {recomputed:.2f})")
 
 
@@ -1137,6 +1179,7 @@ later phases compare their canary score against this Phase-1 canary score.
 Usage:
   python scripts/regression_canary.py --model /root/models/HunyuanOCR --gpu-ids 0,1,2
 """
+
 from __future__ import annotations
 import argparse
 import subprocess
@@ -1155,16 +1198,37 @@ def main():
     p.add_argument("--gpu-ids", default="0,1,2")
     args = p.parse_args()
 
-    subprocess.run([
-        sys.executable, str(ROOT / "scripts" / "run_phase1_transformers.py"),
-        "--gt-json", str(CANARY_GT), "--images-dir", str(DATA / "images"),
-        "--pred-dir", str(PRED), "--model", args.model, "--gpu-ids", args.gpu_ids,
-    ], check=True)
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "run_phase1_transformers.py"),
+            "--gt-json",
+            str(CANARY_GT),
+            "--images-dir",
+            str(DATA / "images"),
+            "--pred-dir",
+            str(PRED),
+            "--model",
+            args.model,
+            "--gpu-ids",
+            args.gpu_ids,
+        ],
+        check=True,
+    )
 
-    subprocess.run([
-        sys.executable, str(ROOT / "scripts" / "score_predictions.py"),
-        "--pred-dir", str(PRED), "--gt-json", str(CANARY_GT), "--label", "transformers-canary-150",
-    ], check=True)
+    subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "score_predictions.py"),
+            "--pred-dir",
+            str(PRED),
+            "--gt-json",
+            str(CANARY_GT),
+            "--label",
+            "transformers-canary-150",
+        ],
+        check=True,
+    )
 
 
 if __name__ == "__main__":

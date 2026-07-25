@@ -29,10 +29,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from openai import OpenAI  # noqa: E402
+from openai import OpenAI
 
-from hunyuan_ocr import driver  # noqa: E402
-from hunyuan_ocr.backends.vllm_client import infer_one  # noqa: E402
+from hunyuan_ocr import driver
+from hunyuan_ocr.backends.vllm_client import infer_one
 
 # Re-exported so tests/users that patch these on this module keep working.
 health_check = driver.health_check

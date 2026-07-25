@@ -45,7 +45,7 @@ def health_check(base_url: str) -> bool:
 
     try:
         return requests.get(f"{base_url}/models", timeout=10).status_code == 200
-    except Exception:  # noqa: BLE001
+    except Exception:
         return False
 
 
@@ -140,7 +140,7 @@ def run_workers(todo, concurrency: int, work) -> tuple[list[dict], dict | None]:
                     print(f"[info] {len(results)}/{len(todo)}", flush=True)
     except KeyboardInterrupt as exc:
         crash = _crash_record(exc, "interrupted")
-    except Exception as exc:  # noqa: BLE001 — endpoint-pool fatal / executor / worker-bug
+    except Exception as exc:
         crash = _crash_record(exc, "crashed")
     return results, crash
 

@@ -101,6 +101,7 @@ def run_smoke(sha, *, trusted_smoke_script, workdir_parent, env, timeout_s=SMOKE
             capture_output=True,
             text=True,
             timeout=timeout_s,
+            check=False,
         )
         combined = (cp.stdout or "") + (cp.stderr or "")
         ok = cp.returncode == 0
@@ -255,7 +256,7 @@ def main(argv=None) -> int:
                     now=time.time(),
                     dry_run=args.dry_run,
                 )
-            except Exception as exc:  # noqa: BLE001 — a daemon must not die on one bad pass
+            except Exception as exc:
                 print(f"[poller] pass failed (will retry next interval): {exc}", flush=True)
             finally:
                 os.close(fd)

@@ -33,7 +33,7 @@ def test_run_workers_captures_unexpected_exception():
     assert crash["kind"] == "crashed"
     assert crash["exception_type"] == "RuntimeError"
     assert "boom unexpected" in crash["exception_message"]
-    assert "traceback_tail" in crash and crash["traceback_tail"]
+    assert crash.get("traceback_tail")
     # the two pages before the crash were collected
     assert len(results) == 2 and all(r["status"] == "complete" for r in results)
 
@@ -42,7 +42,7 @@ def test_run_workers_captures_keyboard_interrupt():
     def work(item):
         raise KeyboardInterrupt("ctrl-c")
 
-    results, crash = driver.run_workers([("a", "a.png")], concurrency=1, work=work)
+    _results, crash = driver.run_workers([("a", "a.png")], concurrency=1, work=work)
     assert crash is not None
     assert crash["kind"] == "interrupted"
 
