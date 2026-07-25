@@ -70,6 +70,7 @@ The package is NOT installed editable in CI/dev; this adds `src` to sys.path so
 `pytest -q` (the documented acceptance command) collects tests that import
 `hunyuan_ocr`.
 """
+
 import sys
 from pathlib import Path
 
@@ -163,6 +164,7 @@ Centralizes the rules that prevent "false completion":
 
 No GPU, no model deps. Pure filesystem + stdlib.
 """
+
 from __future__ import annotations
 
 import json
@@ -239,9 +241,16 @@ def test_record_error_writes_structured_record(tmp_path):
     try:
         raise ValueError("boom")
     except ValueError as e:
-        runner.record_error(tmp_path, "stem1",
-                            image_path="/x/y.png", backend="vllm",
-                            endpoint="127.0.0.1:8080", exc=e, attempt=2, ts=1.5)
+        runner.record_error(
+            tmp_path,
+            "stem1",
+            image_path="/x/y.png",
+            backend="vllm",
+            endpoint="127.0.0.1:8080",
+            exc=e,
+            attempt=2,
+            ts=1.5,
+        )
     rec = json.loads((tmp_path / "_errors" / "stem1.json").read_text("utf-8"))
     assert rec["exception_type"] == "ValueError"
     assert rec["exception_message"] == "boom"
@@ -254,8 +263,7 @@ def test_commit_success_writes_md_and_clears_stale_error(tmp_path):
     try:
         raise RuntimeError("first try failed")
     except RuntimeError as e:
-        runner.record_error(tmp_path, "s", image_path="i", backend="b",
-                            endpoint="e", exc=e, attempt=1)
+        runner.record_error(tmp_path, "s", image_path="i", backend="b", endpoint="e", exc=e, attempt=1)
     assert not runner.is_complete(tmp_path, "s")  # has error record
     runner.commit_success(tmp_path, "s", "# real output")
     assert runner.is_complete(tmp_path, "s")
@@ -284,8 +292,7 @@ def test_page_status_states(tmp_path):
     try:
         raise ValueError("z")
     except ValueError as e:
-        runner.record_error(tmp_path, "bad", image_path="i", backend="b",
-                            endpoint="e", exc=e, attempt=2)
+        runner.record_error(tmp_path, "bad", image_path="i", backend="b", endpoint="e", exc=e, attempt=2)
     assert runner.page_status(tmp_path, "bad") == "failed"
 ```
 
@@ -303,8 +310,9 @@ def _error_path(pred_dir, stem: str, ext: str = ".md") -> Path:
     return Path(pred_dir) / "_errors" / f"{stem}.json"
 
 
-def record_error(pred_dir, stem: str, *, image_path, backend, endpoint,
-                 exc, attempt: int, ts: float | None = None) -> None:
+def record_error(
+    pred_dir, stem: str, *, image_path, backend, endpoint, exc, attempt: int, ts: float | None = None
+) -> None:
     """Write ``_errors/<stem>.json`` (one file per page -> no concurrent-write race).
 
     The presence of this file means the page is FAILED. ``write_atomic`` is used
@@ -398,12 +406,13 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ```python
 def test_select_todo_default_resumes_and_retries_failed(tmp_path):
     items = [("a", "a.png"), ("b", "b.png"), ("c", "c.png"), ("d", "d.png")]
-    runner.commit_success(tmp_path, "a", "ok")          # complete -> skip
+    runner.commit_success(tmp_path, "a", "ok")  # complete -> skip
     try:
         raise ValueError("x")
     except ValueError as e:
-        runner.record_error(tmp_path, "b", image_path="b.png", backend="b",
-                            endpoint="e", exc=e, attempt=1)  # failed -> retry
+        runner.record_error(
+            tmp_path, "b", image_path="b.png", backend="b", endpoint="e", exc=e, attempt=1
+        )  # failed -> retry
     # c pending, d pending
     todo, skipped = runner.select_todo(items, tmp_path)
     assert {s for s, _ in todo} == {"b", "c", "d"}
@@ -416,8 +425,7 @@ def test_select_todo_retry_failed_only(tmp_path):
     try:
         raise ValueError("x")
     except ValueError as e:
-        runner.record_error(tmp_path, "b", image_path="b.png", backend="b",
-                            endpoint="e", exc=e, attempt=1)
+        runner.record_error(tmp_path, "b", image_path="b.png", backend="b", endpoint="e", exc=e, attempt=1)
     todo, skipped = runner.select_todo(items, tmp_path, retry_failed=True)
     assert {s for s, _ in todo} == {"b"}
     assert skipped == 2
@@ -452,8 +460,7 @@ Run: `python -m pytest tests/test_runner.py -v` → FAIL (functions undefined).
 - [ ] **Step 3: Append to `runner.py`**
 
 ```python
-def select_todo(items, pred_dir, *, overwrite: bool = False,
-                retry_failed: bool = False, ext: str = ".md"):
+def select_todo(items, pred_dir, *, overwrite: bool = False, retry_failed: bool = False, ext: str = ".md"):
     """Build the run's todo list per the resume policy.
 
     items: iterable of (stem, image_path). Returns (todo, n_skipped).
@@ -489,8 +496,7 @@ def detect_stem_conflicts(image_paths) -> list:
     return [(stem, srcs) for stem, srcs in seen.items() if len(srcs) > 1]
 
 
-def decide_run_status(final_failed: int, final_pending: int,
-                      worker_errors: int = 0, crashed: int = 0) -> str:
+def decide_run_status(final_failed: int, final_pending: int, worker_errors: int = 0, crashed: int = 0) -> str:
     """Pure exit decision shared by both drivers."""
     if final_failed or final_pending or worker_errors or crashed:
         return "failed"
@@ -529,16 +535,14 @@ def test_aggregate_errors_concatenates_records(tmp_path):
         try:
             raise ValueError(msg)
         except ValueError as e:
-            runner.record_error(tmp_path, stem, image_path=stem + ".png",
-                                backend="b", endpoint="e", exc=e, attempt=1)
+            runner.record_error(tmp_path, stem, image_path=stem + ".png", backend="b", endpoint="e", exc=e, attempt=1)
     out = runner.aggregate_errors(tmp_path)
     lines = [json.loads(l) for l in out.read_text("utf-8").splitlines() if l.strip()]
     assert {l["exception_message"] for l in lines} == {"e1", "e2"}
 
 
 def test_safe_argv_redacts_secrets():
-    argv = ["--gt-json", "x.json", "--hf-token", "SECRET123",
-            "--api-key=TOPSECRET", "--ports", "8000"]
+    argv = ["--gt-json", "x.json", "--hf-token", "SECRET123", "--api-key=TOPSECRET", "--ports", "8000"]
     redacted = runner.safe_argv(argv)
     assert "SECRET123" not in redacted
     assert "TOPSECRET" not in redacted
@@ -553,9 +557,15 @@ def test_safe_argv_no_false_positive_on_monkey():
 
 def test_write_run_manifest_structure_and_no_secret(tmp_path):
     p = runner.write_run_manifest(
-        tmp_path, backend="vllm", model="HYVL",
+        tmp_path,
+        backend="vllm",
+        model="HYVL",
         counts={"expected": 3, "succeeded": 2, "failed": 1, "skipped": 0},
-        ports=[8000, 8001], max_pixels=0, max_tokens=32768, status="failed")
+        ports=[8000, 8001],
+        max_pixels=0,
+        max_tokens=32768,
+        status="failed",
+    )
     m = json.loads(p.read_text("utf-8"))
     assert m["backend"] == "vllm" and m["status"] == "failed"
     assert m["counts"] == {"expected": 3, "succeeded": 2, "failed": 1, "skipped": 0}
@@ -586,8 +596,15 @@ def aggregate_errors(pred_dir, out_name: str = "_errors.jsonl") -> Path:
 
 
 _SECRET_FLAGS = {
-    "--token", "--api-key", "--apikey", "--key", "--password",
-    "--secret", "--hf-token", "--hugging-face-token", "--venv-python",
+    "--token",
+    "--api-key",
+    "--apikey",
+    "--key",
+    "--password",
+    "--secret",
+    "--hf-token",
+    "--hugging-face-token",
+    "--venv-python",
 }
 
 
@@ -601,7 +618,9 @@ def safe_argv(argv=None) -> list[str]:
         if "=" in tok and tok.split("=", 1)[0] in _SECRET_FLAGS:
             out.append(f"{tok.split('=', 1)[0]}=<redacted>")
         elif tok in _SECRET_FLAGS and i + 1 < len(argv):
-            out.append(tok); out.append("<redacted>"); i += 1
+            out.append(tok)
+            out.append("<redacted>")
+            i += 1
         else:
             out.append(tok)
         i += 1
@@ -610,8 +629,7 @@ def safe_argv(argv=None) -> list[str]:
 
 def _git_head(repo: str = ".") -> str | None:
     try:
-        cp = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"],
-                            capture_output=True, text=True, timeout=10)
+        cp = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
         if cp.returncode == 0:
             return cp.stdout.strip() or None
     except (OSError, subprocess.SubprocessError):
@@ -623,6 +641,7 @@ def _env_versions() -> dict:
     v: dict[str, str] = {}
     try:
         import torch  # type: ignore
+
         v["torch"] = getattr(torch, "__version__", None)
         hip = getattr(getattr(torch, "version", None), "hip", None)
         if hip:
@@ -631,23 +650,34 @@ def _env_versions() -> dict:
         pass
     try:
         import transformers  # type: ignore
+
         v["transformers"] = getattr(transformers, "__version__", None)
     except Exception:
         pass
     try:
         import vllm  # type: ignore
+
         v["vllm"] = getattr(vllm, "__version__", None)
     except Exception:
         pass
     return {k: val for k, val in v.items() if val}
 
 
-def write_run_manifest(pred_dir, *, backend: str, model: str,
-                       model_revision: str | None = None,
-                       command: list[str] | None = None,
-                       counts: dict | None = None, ports=None, gpu_ids=None,
-                       max_pixels=None, max_tokens=None, status: str = "ok",
-                       extra: dict | None = None) -> Path:
+def write_run_manifest(
+    pred_dir,
+    *,
+    backend: str,
+    model: str,
+    model_revision: str | None = None,
+    command: list[str] | None = None,
+    counts: dict | None = None,
+    ports=None,
+    gpu_ids=None,
+    max_pixels=None,
+    max_tokens=None,
+    status: str = "ok",
+    extra: dict | None = None,
+) -> Path:
     """Write ``run_manifest.json`` (atomic). No secrets (command via safe_argv)."""
     counts = counts or {}
     manifest = {
@@ -722,15 +752,18 @@ def _gt(tmp_path, stems):
 
 def test_clean_dir_passes(tmp_path):
     gt = _gt(tmp_path, ["a", "b"])
-    pred = tmp_path / "pred"; pred.mkdir()
-    (pred / "a.md").write_text("ok a"); (pred / "b.md").write_text("ok b")
+    pred = tmp_path / "pred"
+    pred.mkdir()
+    (pred / "a.md").write_text("ok a")
+    (pred / "b.md").write_text("ok b")
     r = validation.validate_predictions(gt, pred)
     assert r.ok and r.ok_strict and r.expected == 2 and r.valid == 2
 
 
 def test_missing_pages(tmp_path):
     gt = _gt(tmp_path, ["a", "b", "c"])
-    pred = tmp_path / "pred"; pred.mkdir()
+    pred = tmp_path / "pred"
+    pred.mkdir()
     (pred / "a.md").write_text("ok")
     r = validation.validate_predictions(gt, pred)
     assert not r.ok
@@ -740,11 +773,12 @@ def test_missing_pages(tmp_path):
 
 def test_empty_error_partial_markers(tmp_path):
     gt = _gt(tmp_path, ["a", "b", "c", "d"])
-    pred = tmp_path / "pred"; pred.mkdir()
-    (pred / "a.md").write_text("")                       # empty
-    (pred / "b.md").write_text("ERROR: ValueError: x")   # error marker
+    pred = tmp_path / "pred"
+    pred.mkdir()
+    (pred / "a.md").write_text("")  # empty
+    (pred / "b.md").write_text("ERROR: ValueError: x")  # error marker
     (pred / "c.md").write_text("ok")
-    (pred / "d.md.partial").write_text("half")           # leftover partial
+    (pred / "d.md.partial").write_text("half")  # leftover partial
     r = validation.validate_predictions(gt, pred)
     assert not r.ok
     codes = {p.code for p in r.errors()}
@@ -753,7 +787,8 @@ def test_empty_error_partial_markers(tmp_path):
 
 def test_unresolved_error_record(tmp_path):
     gt = _gt(tmp_path, ["a"])
-    pred = tmp_path / "pred"; pred.mkdir()
+    pred = tmp_path / "pred"
+    pred.mkdir()
     (pred / "_errors").mkdir()
     (pred / "_errors" / "a.json").write_text(json.dumps({"stem": "a"}))
     r = validation.validate_predictions(gt, pred)
@@ -762,18 +797,20 @@ def test_unresolved_error_record(tmp_path):
 
 def test_unexpected_file_warning(tmp_path):
     gt = _gt(tmp_path, ["a"])
-    pred = tmp_path / "pred"; pred.mkdir()
+    pred = tmp_path / "pred"
+    pred.mkdir()
     (pred / "a.md").write_text("ok")
     (pred / "junk.txt").write_text("??")
     r = validation.validate_predictions(gt, pred)
-    assert r.ok is True            # no hard error
-    assert r.ok_strict is False    # warning present under strict
+    assert r.ok is True  # no hard error
+    assert r.ok_strict is False  # warning present under strict
     assert "unexpected_file" in {p.code for p in r.warnings()}
 
 
 def test_duplicate_stem_in_gt(tmp_path):
     gt = _gt(tmp_path, ["dup", "dup"])
-    pred = tmp_path / "pred"; pred.mkdir()
+    pred = tmp_path / "pred"
+    pred.mkdir()
     r = validation.validate_predictions(gt, pred)
     assert not r.ok and "duplicate_stem" in {p.code for p in r.errors()}
 ```
@@ -791,6 +828,7 @@ Pure function: read GT json + pred dir -> structured Report. No GPU, no model.
 A non-clean report blocks scoring (see scripts/validate_predictions.py and the
 gate in scripts/score_predictions.py).
 """
+
 from __future__ import annotations
 
 import json
@@ -805,7 +843,7 @@ _OWN_ARTIFACTS = {"_errors", "_errors.jsonl", "run_manifest.json"}
 
 @dataclass
 class Problem:
-    severity: str   # "error" | "warning"
+    severity: str  # "error" | "warning"
     code: str
     message: str
     detail: object = None
@@ -845,9 +883,9 @@ def _gt_stems(gt_json) -> tuple[list[str], list[Problem]]:
         stems.append(stem)
     for stem, n in seen.items():
         if n > 1:
-            problems.append(Problem("error", "duplicate_stem",
-                                    f"GT maps {n} pages to stem '{stem}'",
-                                    {"stem": stem, "count": n}))
+            problems.append(
+                Problem("error", "duplicate_stem", f"GT maps {n} pages to stem '{stem}'", {"stem": stem, "count": n})
+            )
     return stems, problems
 
 
@@ -881,33 +919,33 @@ def validate_predictions(gt_json, pred_dir, *, strict: bool = True) -> Report:
     for stem in missing:
         problems.append(Problem("error", "missing", f"'{stem}.md' missing", {"stem": stem}))
     for stem in error_markers:
-        problems.append(Problem("error", "error_marker",
-                                f"'{stem}.md' starts with 'ERROR:'", {"stem": stem}))
+        problems.append(Problem("error", "error_marker", f"'{stem}.md' starts with 'ERROR:'", {"stem": stem}))
 
     for p in sorted(pred_dir.glob("*.partial")):
-        problems.append(Problem("error", "partial",
-                                f"leftover partial '{p.name}'", {"file": p.name}))
+        problems.append(Problem("error", "partial", f"leftover partial '{p.name}'", {"file": p.name}))
 
     edir = pred_dir / "_errors"
     if edir.is_dir():
         for ef in sorted(edir.glob("*.json")):
-            problems.append(Problem("error", "unresolved_error",
-                                    f"unresolved error record '_errors/{ef.name}'",
-                                    {"stem": ef.stem}))
+            problems.append(
+                Problem("error", "unresolved_error", f"unresolved error record '_errors/{ef.name}'", {"stem": ef.stem})
+            )
 
     if pred_dir.is_dir():
         for entry in sorted(pred_dir.iterdir()):
             if entry.is_dir():
                 if entry.name not in _OWN_ARTIFACTS:
-                    problems.append(Problem("warning", "unexpected_dir",
-                                            f"unexpected dir '{entry.name}/'", {"name": entry.name}))
+                    problems.append(
+                        Problem("warning", "unexpected_dir", f"unexpected dir '{entry.name}/'", {"name": entry.name})
+                    )
                 continue
             if entry.name in _OWN_ARTIFACTS:
                 continue
             if entry.name.endswith(".md") or entry.name.endswith(".partial"):
                 continue
-            problems.append(Problem("warning", "unexpected_file",
-                                    f"unexpected file '{entry.name}'", {"name": entry.name}))
+            problems.append(
+                Problem("warning", "unexpected_file", f"unexpected file '{entry.name}'", {"name": entry.name})
+            )
 
     return Report(expected=expected, valid=valid, problems=problems)
 ```
@@ -946,6 +984,7 @@ Exit 0 iff no hard errors (and, under --strict [default], no warnings).
 Usage:
   python scripts/validate_predictions.py --gt-json GT.json --pred-dir ./predictions
 """
+
 from __future__ import annotations
 import argparse
 import sys
@@ -959,16 +998,13 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--gt-json", required=True)
     p.add_argument("--pred-dir", required=True)
-    p.add_argument("--strict", action="store_true", default=True,
-                   help="warnings are fatal (default)")
-    p.add_argument("--lenient", action="store_true",
-                   help="warnings are non-fatal")
+    p.add_argument("--strict", action="store_true", default=True, help="warnings are fatal (default)")
+    p.add_argument("--lenient", action="store_true", help="warnings are non-fatal")
     args = p.parse_args()
     strict = args.strict and not args.lenient
 
     r = validate_predictions(args.gt_json, args.pred_dir, strict=strict)
-    print(f"expected={r.expected} valid={r.valid} "
-          f"errors={len(r.errors())} warnings={len(r.warnings())}")
+    print(f"expected={r.expected} valid={r.valid} errors={len(r.errors())} warnings={len(r.warnings())}")
     for prob in r.problems:
         tag = "ERROR" if prob.severity == "error" else "WARN "
         print(f"  [{tag}] {prob.code}: {prob.message}")
@@ -1028,22 +1064,25 @@ from pathlib import Path
 def test_scorer_refuses_invalid_dir(tmp_path, monkeypatch):
     # invalid pred dir: a page missing
     gt = tmp_path / "gt.json"
-    gt.write_text(json.dumps([{"page_info": {"image_path": "a.png"}},
-                              {"page_info": {"image_path": "b.png"}}]), "utf-8")
-    pred = tmp_path / "pred"; pred.mkdir()
-    (pred / "a.md").write_text("ok")   # b.md missing
+    gt.write_text(json.dumps([{"page_info": {"image_path": "a.png"}}, {"page_info": {"image_path": "b.png"}}]), "utf-8")
+    pred = tmp_path / "pred"
+    pred.mkdir()
+    (pred / "a.md").write_text("ok")  # b.md missing
 
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import score_predictions as sp
 
     called = {"n": 0}
+
     def must_not_run(*a, **k):
         called["n"] += 1
         raise AssertionError("scorer must not run on invalid dir")
+
     monkeypatch.setattr(sp.scoring, "run_scorer", must_not_run)
     monkeypatch.setattr(sp.scoring, "parse_run_summary", lambda *a, **k: {})
 
     import pytest
+
     with pytest.raises(SystemExit):
         sp.main_with_args(["--pred-dir", str(pred), "--gt-json", str(gt)])
     assert called["n"] == 0
@@ -1068,6 +1107,7 @@ Usage:
   python scripts/score_predictions.py \
       --pred-dir ./predictions --gt-json /path/to/OmniDocBench.json [--label x]
 """
+
 from __future__ import annotations
 import argparse
 import sys
@@ -1085,8 +1125,7 @@ def main_with_args(argv):
     p.add_argument("--label", default="backend")
     p.add_argument("--omnidocbench-repo", default=scoring.DEFAULT_OMNIDOCBENCH_REPO)
     p.add_argument("--venv-python", default=scoring.DEFAULT_VENV_PYTHON)
-    p.add_argument("--skip-validation", action="store_true",
-                   help="DANGEROUS: bypass pre-score validation")
+    p.add_argument("--skip-validation", action="store_true", help="DANGEROUS: bypass pre-score validation")
     args = p.parse_args(argv)
 
     if args.skip_validation:
@@ -1094,22 +1133,26 @@ def main_with_args(argv):
     else:
         rep = validate_predictions(args.gt_json, args.pred_dir, strict=True)
         if not rep.ok_strict:
-            print(f"[validation] {len(rep.errors())} error(s), "
-                  f"{len(rep.warnings())} warning(s); refusing to score:",
-                  file=sys.stderr)
+            print(
+                f"[validation] {len(rep.errors())} error(s), {len(rep.warnings())} warning(s); refusing to score:",
+                file=sys.stderr,
+            )
             for prob in rep.problems:
                 tag = "ERROR" if prob.severity == "error" else "WARN"
                 print(f"  [{tag}] {prob.code}: {prob.message}", file=sys.stderr)
             sys.exit(
                 "[error] predictions invalid; fix them or re-run the driver "
-                "(use --skip-validation to override at your own risk)")
+                "(use --skip-validation to override at your own risk)"
+            )
 
     cfg_path = Path(args.pred_dir) / "_eval_config.yaml"
     scoring.write_eval_config(gt_json=args.gt_json, pred_dir=args.pred_dir, out_yaml=cfg_path)
-    res = scoring.run_scorer(omnidocbench_repo=args.omnidocbench_repo,
-                             config_yaml=str(cfg_path), venv_python=args.venv_python)
+    res = scoring.run_scorer(
+        omnidocbench_repo=args.omnidocbench_repo, config_yaml=str(cfg_path), venv_python=args.venv_python
+    )
     if res.returncode != 0:
-        print(res.stdout[-4000:]); print(res.stderr[-4000:], file=sys.stderr)
+        print(res.stdout[-4000:])
+        print(res.stderr[-4000:], file=sys.stderr)
         sys.exit(f"[error] scorer failed (rc={res.returncode})")
 
     save_name = f"{Path(args.pred_dir).name}_quick_match"
@@ -1127,9 +1170,9 @@ def main_with_args(argv):
     print(f"  formula CDM      : {fmt(s['formula_cdm'])}   -> {fmt(s['formula_cdm'], pct=True)}")
     print(f"  table  TEDS      : {fmt(s['table_teds'])}   -> {fmt(s['table_teds'], pct=True)}")
     print(f"  order  EditDist  : {fmt(s['reading_order_edit'])}")
-    recomputed = scoring.overall_score({"text_edit_dist": s["text_edit_dist"],
-                                        "formula_cdm": s["formula_cdm"],
-                                        "table_teds": s["table_teds"]})
+    recomputed = scoring.overall_score(
+        {"text_edit_dist": s["text_edit_dist"], "formula_cdm": s["formula_cdm"], "table_teds": s["table_teds"]}
+    )
     print(f"  (overall recomputed: {'n/a' if recomputed is None else f'{recomputed:.2f}'})")
 
 
@@ -1182,9 +1225,9 @@ import pytest
 
 def _make_gt(tmp_path, stems):
     gt = tmp_path / "gt.json"
-    gt.write_text(json.dumps([{"page_info": {"image_path": f"{s}.png"}} for s in stems]),
-                  encoding="utf-8")
-    img = tmp_path / "images"; img.mkdir()
+    gt.write_text(json.dumps([{"page_info": {"image_path": f"{s}.png"}} for s in stems]), encoding="utf-8")
+    img = tmp_path / "images"
+    img.mkdir()
     for s in stems:
         (img / f"{s}.png").write_bytes(b"x")
     return gt, img
@@ -1193,6 +1236,7 @@ def _make_gt(tmp_path, stems):
 def _import_driver():
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import run_phase2_vllm as drv
+
     return drv
 
 
@@ -1219,9 +1263,22 @@ def test_phase2_two_ok_one_failed_then_rerun(tmp_path, monkeypatch):
 
     # run 1: c fails (max-retries=1 -> one attempt) -> non-zero exit
     with pytest.raises(SystemExit) as ei:
-        drv.main_with_args(["--gt-json", str(gt), "--images-dir", str(img),
-                            "--pred-dir", str(pred), "--ports", "9999",
-                            "--concurrency", "2", "--max-retries", "1"])
+        drv.main_with_args(
+            [
+                "--gt-json",
+                str(gt),
+                "--images-dir",
+                str(img),
+                "--pred-dir",
+                str(pred),
+                "--ports",
+                "9999",
+                "--concurrency",
+                "2",
+                "--max-retries",
+                "1",
+            ]
+        )
     assert ei.value.code != 0
     assert (pred / "a.md").exists() and (pred / "b.md").exists()
     assert not (pred / "c.md").exists()
@@ -1229,9 +1286,22 @@ def test_phase2_two_ok_one_failed_then_rerun(tmp_path, monkeypatch):
     assert (pred / "run_manifest.json").exists()
 
     # run 2: default resume skips a,b; retries c (now succeeds) -> exit 0
-    drv.main_with_args(["--gt-json", str(gt), "--images-dir", str(img),
-                        "--pred-dir", str(pred), "--ports", "9999",
-                        "--concurrency", "2", "--max-retries", "1"])
+    drv.main_with_args(
+        [
+            "--gt-json",
+            str(gt),
+            "--images-dir",
+            str(img),
+            "--pred-dir",
+            str(pred),
+            "--ports",
+            "9999",
+            "--concurrency",
+            "2",
+            "--max-retries",
+            "1",
+        ]
+    )
     assert (pred / "c.md").read_text("utf-8") == "# output for c"
     # stale error record must be cleared on success
     assert not (pred / "_errors" / "c.json").exists()
@@ -1241,16 +1311,34 @@ def test_phase2_conflict_aborts(tmp_path, monkeypatch):
     drv = _import_driver()
     # two distinct image paths with same stem
     gt = tmp_path / "gt.json"
-    gt.write_text(json.dumps([
-        {"page_info": {"image_path": "dir1/x.png"}},
-        {"page_info": {"image_path": "dir2/x.png"}},
-    ]), encoding="utf-8")
-    (tmp_path / "dir1").mkdir(); (tmp_path / "dir1" / "x.png").write_bytes(b"")
-    (tmp_path / "dir2").mkdir(); (tmp_path / "dir2" / "x.png").write_bytes(b"")
+    gt.write_text(
+        json.dumps(
+            [
+                {"page_info": {"image_path": "dir1/x.png"}},
+                {"page_info": {"image_path": "dir2/x.png"}},
+            ]
+        ),
+        encoding="utf-8",
+    )
+    (tmp_path / "dir1").mkdir()
+    (tmp_path / "dir1" / "x.png").write_bytes(b"")
+    (tmp_path / "dir2").mkdir()
+    (tmp_path / "dir2" / "x.png").write_bytes(b"")
     with pytest.raises(SystemExit):
-        drv.main_with_args(["--gt-json", str(gt), "--images-dir", str(tmp_path),
-                            "--pred-dir", str(tmp_path / "pred"),
-                            "--ports", "9999", "--max-retries", "1"])
+        drv.main_with_args(
+            [
+                "--gt-json",
+                str(gt),
+                "--images-dir",
+                str(tmp_path),
+                "--pred-dir",
+                str(tmp_path / "pred"),
+                "--ports",
+                "9999",
+                "--max-retries",
+                "1",
+            ]
+        )
 ```
 
 - [ ] **Step 2: Run test to verify it fails** → FAIL (`main_with_args` absent).
@@ -1270,6 +1358,7 @@ Usage:
   python scripts/run_phase2_vllm.py --gt-json GT.json --images-dir images \
       --pred-dir ./predictions --ports 8081,8082,8083,8084 --model HYVL --concurrency 16
 """
+
 from __future__ import annotations
 import argparse
 import json
@@ -1308,13 +1397,11 @@ def main_with_args(argv):
     p.add_argument("--model", default="tencent/HunyuanOCR")
     p.add_argument("--limit", type=int, default=0)
     p.add_argument("--concurrency", type=int, default=24)
-    p.add_argument("--max-pixels", type=int, default=0,
-                   help="client-side ViT cap (0 = uncapped)")
+    p.add_argument("--max-pixels", type=int, default=0, help="client-side ViT cap (0 = uncapped)")
     p.add_argument("--max-retries", type=int, default=2)
     p.add_argument("--retry-backoff", type=float, default=2.0)
     p.add_argument("--overwrite", action="store_true")
-    p.add_argument("--retry-failed", action="store_true",
-                   help="scope this run to FAILED pages only")
+    p.add_argument("--retry-failed", action="store_true", help="scope this run to FAILED pages only")
     args = p.parse_args(argv)
 
     pages = _load_pages(args.gt_json, args.images_dir, args.limit)
@@ -1327,13 +1414,10 @@ def main_with_args(argv):
         sys.exit("[fatal] output filename conflict(s); refusing to overwrite")
 
     ports = [int(x) for x in args.ports.split(",") if x.strip()]
-    clients = [OpenAI(api_key="EMPTY", base_url=f"http://{args.host}:{pt}/v1", timeout=3600.0)
-               for pt in ports]
+    clients = [OpenAI(api_key="EMPTY", base_url=f"http://{args.host}:{pt}/v1", timeout=3600.0) for pt in ports]
     max_pixels = args.max_pixels or None
 
-    todo, skipped = runner.select_todo(pages, args.pred_dir,
-                                       overwrite=args.overwrite,
-                                       retry_failed=args.retry_failed)
+    todo, skipped = runner.select_todo(pages, args.pred_dir, overwrite=args.overwrite, retry_failed=args.retry_failed)
     print(f"[info] {len(todo)} to do ({skipped} skipped) across ports {ports}", flush=True)
 
     def work(item):
@@ -1344,16 +1428,16 @@ def main_with_args(argv):
             client = clients[(idx + attempt - 1) % len(clients)]
             ep = f"{args.host}:{ports[(idx + attempt - 1) % len(ports)]}"
             try:
-                md = infer_one(client, img, CONTRACT.prompt,
-                               model=args.model, max_pixels=max_pixels)
+                md = infer_one(client, img, CONTRACT.prompt, model=args.model, max_pixels=max_pixels)
                 runner.commit_success(args.pred_dir, stem, md)
                 return {"stem": stem, "status": "complete"}
             except Exception as e:  # bounded retry; recorded if exhausted
                 last_exc = e
                 if attempt < args.max_retries:
                     time.sleep(args.retry_backoff * (2 ** (attempt - 1)))
-        runner.record_error(args.pred_dir, stem, image_path=img, backend="vllm",
-                            endpoint=ep, exc=last_exc, attempt=attempt)
+        runner.record_error(
+            args.pred_dir, stem, image_path=img, backend="vllm", endpoint=ep, exc=last_exc, attempt=attempt
+        )
         return {"stem": stem, "status": "failed", "error": str(last_exc)}
 
     results = []
@@ -1372,13 +1456,21 @@ def main_with_args(argv):
     final_pending = len(pages) - final_complete - final_failed
     status = runner.decide_run_status(final_failed, final_pending)
 
-    runner.write_run_manifest(args.pred_dir, backend="vllm", model=args.model,
-                              counts={"expected": len(pages), "succeeded": final_complete,
-                                      "failed": final_failed, "skipped": skipped},
-                              ports=ports, max_pixels=args.max_pixels,
-                              max_tokens=32768, status=status)
-    print(f"[summary] expected={len(pages)} complete={final_complete} failed={final_failed} "
-          f"pending={final_pending} skipped={skipped} -> {args.pred_dir}", flush=True)
+    runner.write_run_manifest(
+        args.pred_dir,
+        backend="vllm",
+        model=args.model,
+        counts={"expected": len(pages), "succeeded": final_complete, "failed": final_failed, "skipped": skipped},
+        ports=ports,
+        max_pixels=args.max_pixels,
+        max_tokens=32768,
+        status=status,
+    )
+    print(
+        f"[summary] expected={len(pages)} complete={final_complete} failed={final_failed} "
+        f"pending={final_pending} skipped={skipped} -> {args.pred_dir}",
+        flush=True,
+    )
     if status != "ok":
         sys.exit(f"[error] {final_failed} page(s) failed, {final_pending} pending; see _errors/")
     print("[done] all pages complete", flush=True)
@@ -1429,6 +1521,7 @@ Usage:
   python scripts/run_phase1_transformers.py --gt-json GT.json --images-dir images \
       --pred-dir ./predictions --model /path/to/HunyuanOCR --gpu-ids 0,1,2 [--limit N]
 """
+
 from __future__ import annotations
 import argparse
 import json
@@ -1447,13 +1540,14 @@ def _load_page_list(gt_json, images_dir, limit=None):
     pages = json.load(open(gt_json, encoding="utf-8"))
     if limit:
         pages = pages[:limit]
-    return [(Path(p["page_info"]["image_path"]).stem,
-             os.path.join(images_dir, p["page_info"]["image_path"])) for p in pages]
+    return [
+        (Path(p["page_info"]["image_path"]).stem, os.path.join(images_dir, p["page_info"]["image_path"])) for p in pages
+    ]
 
 
 def _shard(items, n):
     k = -(-len(items) // n)
-    return [items[i:i + k] for i in range(0, len(items), k)]
+    return [items[i : i + k] for i in range(0, len(items), k)]
 
 
 def _worker(gpu_id, chunk, args_dict, out_q):
@@ -1470,15 +1564,13 @@ def _worker(gpu_id, chunk, args_dict, out_q):
         print(f"[GPU {gpu_id}] loading model ...", flush=True)
         t0 = time.time()
         model, processor = load_model_and_processor(a.model, device="cuda:0")
-        print(f"[GPU {gpu_id}] model ready in {time.time()-t0:.1f}s", flush=True)
+        print(f"[GPU {gpu_id}] model ready in {time.time() - t0:.1f}s", flush=True)
     except Exception as e:
-        out_q.put({"gpu": gpu_id, "kind": "worker_error",
-                   "msg": f"model load failed: {type(e).__name__}: {e}"})
+        out_q.put({"gpu": gpu_id, "kind": "worker_error", "msg": f"model load failed: {type(e).__name__}: {e}"})
         return
 
     os.makedirs(a.pred_dir, exist_ok=True)
-    todo, skipped = runner.select_todo(chunk, a.pred_dir,
-                                       overwrite=a.overwrite, retry_failed=a.retry_failed)
+    todo, skipped = runner.select_todo(chunk, a.pred_dir, overwrite=a.overwrite, retry_failed=a.retry_failed)
     for _ in range(skipped):
         out_q.put({"gpu": gpu_id, "kind": "skip"})
 
@@ -1495,8 +1587,15 @@ def _worker(gpu_id, chunk, args_dict, out_q):
                 if attempt < a.max_retries:
                     time.sleep(a.retry_backoff * (2 ** (attempt - 1)))
         else:
-            runner.record_error(a.pred_dir, stem, image_path=img, backend="transformers",
-                                endpoint=f"gpu{gpu_id}", exc=last_exc, attempt=attempt)
+            runner.record_error(
+                a.pred_dir,
+                stem,
+                image_path=img,
+                backend="transformers",
+                endpoint=f"gpu{gpu_id}",
+                exc=last_exc,
+                attempt=attempt,
+            )
             out_q.put({"gpu": gpu_id, "kind": "failed", "stem": stem})
     out_q.put({"gpu": gpu_id, "kind": "worker_done"})
 
@@ -1529,8 +1628,10 @@ def main():
 
     ctx = mp.get_context("spawn")
     out_q = ctx.Queue()
-    procs = [ctx.Process(target=_worker, args=(gid, chunks[i], vars(args), out_q), daemon=False)
-             for i, gid in enumerate(gpu_ids)]
+    procs = [
+        ctx.Process(target=_worker, args=(gid, chunks[i], vars(args), out_q), daemon=False)
+        for i, gid in enumerate(gpu_ids)
+    ]
     for pr in procs:
         pr.start()
 
@@ -1569,20 +1670,29 @@ def main():
     final_complete = sum(1 for s, _ in pages if runner.page_status(args.pred_dir, s) == "complete")
     final_failed = sum(1 for s, _ in pages if runner.page_status(args.pred_dir, s) == "failed")
     final_pending = len(pages) - final_complete - final_failed
-    status = runner.decide_run_status(final_failed, final_pending,
-                                      worker_errors=len(worker_errors), crashed=len(crashed))
-    runner.write_run_manifest(args.pred_dir, backend="transformers", model=args.model,
-                              counts={"expected": len(pages), "succeeded": final_complete,
-                                      "failed": final_failed, "skipped": counts["skip"]},
-                              gpu_ids=gpu_ids, status=status)
-    print(f"[summary] expected={len(pages)} complete={final_complete} failed={final_failed} "
-          f"pending={final_pending} worker_errors={len(worker_errors)} crashed={len(crashed)}",
-          flush=True)
+    status = runner.decide_run_status(
+        final_failed, final_pending, worker_errors=len(worker_errors), crashed=len(crashed)
+    )
+    runner.write_run_manifest(
+        args.pred_dir,
+        backend="transformers",
+        model=args.model,
+        counts={"expected": len(pages), "succeeded": final_complete, "failed": final_failed, "skipped": counts["skip"]},
+        gpu_ids=gpu_ids,
+        status=status,
+    )
+    print(
+        f"[summary] expected={len(pages)} complete={final_complete} failed={final_failed} "
+        f"pending={final_pending} worker_errors={len(worker_errors)} crashed={len(crashed)}",
+        flush=True,
+    )
     for e in worker_errors:
         print(f"[worker_error] GPU {e['gpu']}: {e['msg']}", file=sys.stderr)
     if status != "ok":
-        sys.exit(f"[error] run failed: {final_failed} failed, {final_pending} pending, "
-                 f"{len(worker_errors)} worker errors, {len(crashed)} crashed")
+        sys.exit(
+            f"[error] run failed: {final_failed} failed, {final_pending} pending, "
+            f"{len(worker_errors)} worker errors, {len(crashed)} crashed"
+        )
     print("[done] all pages complete", flush=True)
 
 
@@ -2096,6 +2206,7 @@ from pathlib import Path
 def _import():
     sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
     import create_canary_manifest as m
+
     return m
 
 
@@ -2111,7 +2222,8 @@ def test_build_manifest_structure_and_sha(tmp_path):
     assert "source_json_sha256" in d and len(d["source_json_sha256"]) == 64
     # manifest_sha recomputes from the dict WITHOUT manifest_sha256
     sha = m.manifest_sha256(d)
-    d2 = dict(d); d2["manifest_sha256"] = sha
+    d2 = dict(d)
+    d2["manifest_sha256"] = sha
     assert m.manifest_sha256(d) == sha
 ```
 
@@ -2135,6 +2247,7 @@ Usage:
       --name canary-148 --dataset OmniDocBench --dataset-version v1.6 \
       --out eval/canary_148.manifest.json
 """
+
 from __future__ import annotations
 import argparse
 import hashlib
@@ -2152,8 +2265,7 @@ def sha256_file(p) -> str:
 
 def build_manifest(gt_json, *, name, dataset, dataset_version) -> dict:
     pages = json.load(open(gt_json, encoding="utf-8"))
-    entries = sorted((Path(p["page_info"]["image_path"]).stem,
-                      p["page_info"]["image_path"]) for p in pages)
+    entries = sorted((Path(p["page_info"]["image_path"]).stem, p["page_info"]["image_path"]) for p in pages)
     return {
         "subset_name": name,
         "source_dataset": dataset,
@@ -2179,16 +2291,16 @@ def main():
     p.add_argument("--out", required=True)
     args = p.parse_args()
 
-    m = build_manifest(args.gt_json, name=args.name, dataset=args.dataset,
-                       dataset_version=args.dataset_version)
+    m = build_manifest(args.gt_json, name=args.name, dataset=args.dataset, dataset_version=args.dataset_version)
     m["manifest_sha256"] = manifest_sha256(m)
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(m, ensure_ascii=False, sort_keys=True, indent=2) + "\n",
-                   encoding="utf-8")
-    print(f"wrote {out}: {m['expected_count']} pages, "
-          f"source_sha256={m['source_json_sha256'][:12]}..., "
-          f"manifest_sha256={m['manifest_sha256'][:12]}...")
+    out.write_text(json.dumps(m, ensure_ascii=False, sort_keys=True, indent=2) + "\n", encoding="utf-8")
+    print(
+        f"wrote {out}: {m['expected_count']} pages, "
+        f"source_sha256={m['source_json_sha256'][:12]}..., "
+        f"manifest_sha256={m['manifest_sha256'][:12]}..."
+    )
 
 
 if __name__ == "__main__":

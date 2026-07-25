@@ -17,6 +17,7 @@ Usage:
 """
 
 from __future__ import annotations
+
 import argparse
 import hashlib
 import json
@@ -32,7 +33,8 @@ def sha256_file(p) -> str:
 
 
 def build_manifest(gt_json, *, name, dataset, dataset_version) -> dict:
-    pages = json.load(open(gt_json, encoding="utf-8"))
+    with open(gt_json, encoding="utf-8") as _f:
+        pages = json.load(_f)
     # Preserve the SOURCE FILE ORDER (not sorted): the order is load-bearing —
     # `hunyuan_ocr.canary.materialize` rebuilds the subset byte-identically from
     # the full GT by selecting pages in this exact order.

@@ -1,5 +1,6 @@
 # tests/test_runner.py
 import json
+
 import pytest
 
 from hunyuan_ocr import runner

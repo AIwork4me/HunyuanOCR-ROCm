@@ -13,7 +13,7 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 
-from hunyuan_ocr.ci.models import (  # noqa: E402
+from hunyuan_ocr.ci.models import (
     CHECK_NAME,
     POLL_INTERVAL_SEC,
     SMOKE_TIMEOUT_SEC,
@@ -47,7 +47,7 @@ def test_parse_iso_handles_z_suffix():
 
 
 # --- decide() -----------------------------------------------------------------
-from hunyuan_ocr.ci.poller import decide  # noqa: E402
+from hunyuan_ocr.ci.poller import decide
 
 
 def test_decide_runs_for_fresh_pending():
@@ -64,7 +64,7 @@ def test_decide_timeout_when_stale_pending():
 
 
 # --- build_description() ------------------------------------------------------
-from hunyuan_ocr.ci.poller import build_description  # noqa: E402
+from hunyuan_ocr.ci.poller import build_description
 
 
 def test_build_description_success_under_140_with_env():
@@ -96,7 +96,7 @@ def test_build_description_failure_includes_reason():
 
 
 # --- GitHubClient (statuses) --------------------------------------------------
-from hunyuan_ocr.ci.github import GitHubClient  # noqa: E402
+from hunyuan_ocr.ci.github import GitHubClient
 
 
 class FakeGH:
@@ -162,7 +162,7 @@ def test_create_status_sends_state_and_description():
 
 
 # --- run_smoke() --------------------------------------------------------------
-from hunyuan_ocr.ci.poller import run_smoke  # noqa: E402
+from hunyuan_ocr.ci.poller import run_smoke
 
 
 def _fake_harness(tmp_path: Path, *, fail: bool = False, slow: bool = False) -> Path:
@@ -231,7 +231,7 @@ def test_run_smoke_timeout_is_failure(tmp_path, monkeypatch):
 
 
 # --- once() + flock -----------------------------------------------------------
-from hunyuan_ocr.ci.poller import _acquire_lock, once  # noqa: E402
+from hunyuan_ocr.ci.poller import _acquire_lock, once
 
 NOW = 1784343600.0  # == 2026-07-18T03:00:00Z
 
@@ -239,7 +239,7 @@ NOW = 1784343600.0  # == 2026-07-18T03:00:00Z
 def _iso(minutes_before_now: float) -> str:
     import datetime as _dt
 
-    return (_dt.datetime.fromtimestamp(NOW, tz=_dt.timezone.utc) - _dt.timedelta(minutes=minutes_before_now)).strftime(
+    return (_dt.datetime.fromtimestamp(NOW, tz=_dt.UTC) - _dt.timedelta(minutes=minutes_before_now)).strftime(
         "%Y-%m-%dT%H:%M:%SZ"
     )
 
@@ -320,15 +320,13 @@ def test_once_stale_pending_times_out(tmp_path, monkeypatch):
 
 
 # --- main() -------------------------------------------------------------------
-from hunyuan_ocr.ci import poller as poller_mod  # noqa: E402
+from hunyuan_ocr.ci import poller as poller_mod
 
 
 def _fresh_st(state: str) -> SmokeStatus:
     import datetime as _dt
 
-    return SmokeStatus(
-        "mainsha", CHECK_NAME, state, _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"), None
-    )
+    return SmokeStatus("mainsha", CHECK_NAME, state, _dt.datetime.now(_dt.UTC).strftime("%Y-%m-%dT%H:%M:%SZ"), None)
 
 
 def test_main_dry_run_does_not_mutate(tmp_path, monkeypatch, capsys):
@@ -380,7 +378,7 @@ def test_main_once_runs_one_pass(tmp_path, monkeypatch):
 
 
 # --- scripts/make_smoke_input.py ---------------------------------------------
-import importlib.util  # noqa: E402
+import importlib.util
 
 _msi_spec = importlib.util.spec_from_file_location("make_smoke_input", REPO / "scripts" / "make_smoke_input.py")
 msi = importlib.util.module_from_spec(_msi_spec)

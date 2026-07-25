@@ -16,14 +16,13 @@ Torch/transformers imported lazily so importing this module needs no GPU.
 """
 
 from __future__ import annotations
+
 import importlib
 import os
 import sys
-from typing import List
 
 from ..contract import CONTRACT
 from ..postprocess import clean_repeated_substrings, process_one
-
 
 # --- gfx1100 / ROCm ViT resolution cap (workaround) -------------------------
 # On AMD gfx1100 + torch 2.9.1 ROCm, the Hunyuan-ViT bf16 forward becomes
@@ -115,7 +114,7 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
     return model, processor
 
 
-def build_messages(image_path: str, prompt: str) -> List[dict]:
+def build_messages(image_path: str, prompt: str) -> list[dict]:
     """Upstream message shape: empty system + user[image, text]."""
     return [
         {"role": "system", "content": ""},
@@ -132,6 +131,7 @@ def build_messages(image_path: str, prompt: str) -> List[dict]:
 def _build_tail_repetition_stop(processor, prompt_len: int):
     """StoppingCriteria mirroring the vLLM streaming early-stop (per upstream)."""
     from transformers import StoppingCriteria, StoppingCriteriaList
+
     from ..postprocess import has_tail_repetition
 
     tokenizer = processor.tokenizer
@@ -186,13 +186,13 @@ def infer_one(model, processor, image_path: str, prompt: str, device: str = "cud
     prompt_len = int(input_ids.shape[1])
 
     stopping_criteria = _build_tail_repetition_stop(processor, prompt_len=prompt_len)
-    gen_kwargs = dict(
-        max_new_tokens=32768,
-        do_sample=False,
-        repetition_penalty=1.08,
-        use_cache=True,
-        stopping_criteria=stopping_criteria,
-    )
+    gen_kwargs = {
+        "max_new_tokens": 32768,
+        "do_sample": False,
+        "repetition_penalty": 1.08,
+        "use_cache": True,
+        "stopping_criteria": stopping_criteria,
+    }
     if eos_token_id is not None:
         gen_kwargs["eos_token_id"] = eos_token_id
     if pad_token_id is not None:

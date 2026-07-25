@@ -1,6 +1,6 @@
 from hunyuan_ocr.postprocess import (
-    has_tail_repetition,
     clean_repeated_substrings,
+    has_tail_repetition,
     process_one,
 )
 

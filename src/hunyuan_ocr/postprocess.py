@@ -29,10 +29,14 @@ Can also be run as a CLI to normalize a directory of .md files (group 2 only):
 
 # Attribution note: Group 2 (process_one) patterns are original normalization work; Group 1 mirrors upstream. See NOTICE.
 """
-from typing import List, Tuple
-import os, re, sys, shutil, json, base64, argparse
+import argparse
+import base64
+import json
+import os
+import re
+import shutil
+import sys
 from collections import defaultdict
-
 
 # ==========================================================================
 # Group 1 — streaming / tail-repetition control + image encoding
@@ -87,10 +91,10 @@ def encode_image_as_data_url(path: str) -> str:
 
 
 # ---------- inference (streaming + early-stop) ----------
-def infer_stream(client, common_kwargs, repeat_min_repeats: int = 8) -> Tuple[str, bool]:
+def infer_stream(client, common_kwargs, repeat_min_repeats: int = 8) -> tuple[str, bool]:
     """Streaming generation with tail-repetition early-stop. Returns (text, early_stopped)."""
     stream = client.chat.completions.create(stream=True, **common_kwargs)
-    parts: List[str] = []
+    parts: list[str] = []
     acc_len = 0
     next_check_at = 4000       # start checking after 4k chars
     check_step = 1000
@@ -348,8 +352,7 @@ RICH_TOKEN = re.compile(r'\\(?:frac|sum|int|prod|therefore|because|forall|exists
 def looks_like_real_formula(s):
     s = s.strip()
     if len(s) >= 15: return True
-    if RICH_TOKEN.search(s): return True
-    return False
+    return bool(RICH_TOKEN.search(s))
 
 def apply_pattern_A(text, stats):
     def repl(m):

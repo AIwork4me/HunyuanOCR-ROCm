@@ -65,7 +65,7 @@ def _try_version(modname):
     try:
         m = importlib.import_module(modname)
         return getattr(m, "__version__", None)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 
@@ -77,7 +77,7 @@ def _torch_hip():
     """Return the torch version + hip string if a ROCm torch is importable, else None."""
     try:
         import torch  # type: ignore
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
     hip = getattr(getattr(torch, "version", None), "hip", None)
     if not hip:  # a CUDA/stock torch is NOT a ROCm torch
@@ -197,7 +197,7 @@ def _collect_doctor_checks(backend: str | None) -> list[dict]:
         try:
             pages = json.loads(Path(gt).read_text(encoding="utf-8"))
             checks.append(_check("GT json", "ok", f"{len(pages)} pages ({gt})"))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             checks.append(_check("GT json", "miss", f"unparseable: {exc}", advice="check the file"))
     else:
         checks.append(_check("GT json", "info", gt or "HUNYUANOCR_GT env not set"))
@@ -215,7 +215,7 @@ def _collect_doctor_checks(backend: str | None) -> list[dict]:
                 advice="install the OmniDocBench scorer (see reproducibility.lock.yaml) or set OMNIDOCBENCH_VENV",
             )
         )
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
 
     return checks
@@ -459,7 +459,7 @@ def build_parser() -> argparse.ArgumentParser:
         "extra", nargs=argparse.REMAINDER, help="driver flags (--gt-json, --images-dir, --pred-dir, --ports, ...)"
     )
 
-    from hunyuan_ocr import scoring  # noqa: PLC0415 — only for the score defaults below
+    from hunyuan_ocr import scoring
 
     sc = sub.add_parser("score", help="OmniDocBench scoring (scorer venv required)")
     sc.add_argument("--pred-dir", required=True)
