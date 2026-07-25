@@ -14,7 +14,7 @@ GPU_MEM_UTIL=${GPU_MEM_UTIL:-0.9}
 MAX_MODEL_LEN=${MAX_MODEL_LEN:-65536}   # must exceed input(~13k) + max_tokens(32768); 65536 is safe + ~2x KV-efficient vs 131072
 SERVED_NAME=${SERVED_NAME:-tencent/HunyuanOCR}
 ENFORCE_EAGER=${ENFORCE_EAGER:-0}   # 0 = torch.compile (compiles in ~140s, ~28x faster decode than eager); 1 = eager fallback
-LOG=${LOG:-/root/hunyuanocr-results/vllm_${PORT}.log}
+LOG=${LOG:-${OCR_LOGS_DIR:-/workspace/logs}/hunyuanocr/vllm_${PORT}.log}
 mkdir -p "$(dirname "$LOG")"
 
 EAGER_FLAG=""
@@ -23,7 +23,7 @@ EAGER_FLAG=""
 echo "[serve] model=${MODEL_PATH} served-as=${SERVED_NAME} gpu=${GPU} port=${PORT} mem=${GPU_MEM_UTIL} maxlen=${MAX_MODEL_LEN} eager=${ENFORCE_EAGER} log=${LOG}"
 export HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1
 
-CUDA_VISIBLE_DEVICES=${GPU} /opt/venv/bin/vllm serve "${MODEL_PATH}" \
+CUDA_VISIBLE_DEVICES=${GPU} ${HUNYUAN_VENV:-/opt/venv}/bin/vllm serve "${MODEL_PATH}" \
     --served-model-name "${SERVED_NAME}" -tp 1 \
     --limit-mm-per-prompt '{"image":4,"video":0}' \
     --trust-remote-code \
