@@ -70,13 +70,13 @@ hunyuan_ocr = ["data/*.yaml"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+extend-exclude = ["REPRO.yaml", "reproduce.md"]
 
 [tool.ruff.lint]
 # The eval pipeline is defensive by design: per-page failures are caught and the
 # run continues (never raises — see the adapter contract). Broad blind-except
 # (BLE001) and silent try/except/pass (S110) are intentional, not bugs.
 ignore = ["BLE001", "S110"]
-extend-exclude = ["REPRO.yaml", "reproduce.md"]
 
 [tool.ruff.lint.per-file-ignores]
 # Vendored / verbatim upstream-derived algorithm files: lint only, never reformat,
