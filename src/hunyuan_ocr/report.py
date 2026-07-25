@@ -48,10 +48,13 @@ def assemble_release_artifact(pred_dir, out_dir, repo_root) -> Path:
     cmd_text = " ".join(cmd) + "\n" if isinstance(cmd, list) else str(cmd) + "\n"
     (out_dir / "commands.txt").write_text(cmd_text, encoding="utf-8")
 
-    # reproducibility.lock.yaml (copy from the repo)
-    lock_src = Path(repo_root) / "reproducibility.lock.yaml"
+    # REPRO.yaml (or legacy reproducibility.lock.yaml) — copy from the repo
+    lock_src = Path(repo_root) / "REPRO.yaml"
+    legacy_src = Path(repo_root) / "reproducibility.lock.yaml"
+    if not lock_src.is_file() and legacy_src.is_file():
+        lock_src = legacy_src
     if lock_src.is_file():
-        (out_dir / "reproducibility.lock.yaml").write_text(lock_src.read_text(encoding="utf-8"), encoding="utf-8")
+        (out_dir / lock_src.name).write_text(lock_src.read_text(encoding="utf-8"), encoding="utf-8")
 
     # README.md describing the bundle
     backend = manifest.get("backend", "?")
@@ -61,7 +64,7 @@ def assemble_release_artifact(pred_dir, out_dir, repo_root) -> Path:
         "# Benchmark release artifact\n\n"
         f"- backend: `{backend}`\n- status: `{status}`\n- repo commit: `{sha}`\n\n"
         "Reproduce by checking out the pinned commits + weights in "
-        "`reproducibility.lock.yaml`, then running the commands in `commands.txt`.\n"
+        "`REPRO.yaml`, then running the commands in `commands.txt`.\n"
         "Verify integrity with `sha256sum -c checksums.sha256`.\n",
         encoding="utf-8",
     )

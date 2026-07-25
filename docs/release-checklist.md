@@ -20,7 +20,7 @@ verifiable — not "theoretically passing".
 ## 2. Numbers did not drift
 
 - [ ] `python scripts/check_repo.py` passes (this cross-checks the four formal
-      results in README against `reproducibility.lock.yaml`, plus the metric
+      results in README against `REPRO.yaml`, plus the metric
       formula across README / methodology / lock).
 - [ ] No new prediction directory / manifest / scorer evidence was invented.
       If you actually re-ran a benchmark, attach the new `run_manifest.json` and

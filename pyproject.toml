@@ -70,6 +70,7 @@ hunyuan_ocr = ["data/*.yaml"]
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+extend-exclude = ["REPRO.yaml", "reproduce.md"]
 
 [tool.ruff.lint]
 # The eval pipeline is defensive by design: per-page failures are caught and the

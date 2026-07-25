@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AIwork4me
-"""Render the verified benchmark results from ``reproducibility.lock.yaml``.
+"""Render the verified benchmark results from ``REPRO.yaml``.
 
 Single source of truth for the headline numbers: the lock. Both the README
 generator (``scripts/render_benchmark_tables.py``) and the ``hunyuan-ocr
@@ -15,7 +15,7 @@ BACKEND_DISPLAY = {"llamacpp": "llama.cpp", "transformers": "transformers", "vll
 
 def _fmt_value(v) -> str:
     if isinstance(v, str) and v.strip().lower() == "invalid":
-        return "invalid (excluded; see reproducibility.lock.yaml)"
+        return "invalid (excluded; see REPRO.yaml)"
     return str(v)
 
 
@@ -24,7 +24,7 @@ def render_results_block(lock: dict) -> str:
     bench = (lock or {}).get("benchmark", {}) or {}
     lines = [
         "<!-- BEGIN GENERATED RESULTS -->",
-        "<!-- Auto-generated from reproducibility.lock.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->",
+        "<!-- Auto-generated from REPRO.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->",
         "",
         "| Page set | Backend | Overall | Source |",
         "|---|---|---|---|",
@@ -38,7 +38,7 @@ def render_results_block(lock: dict) -> str:
             backend = k[: -len("_overall")]
             rows.append((BACKEND_DISPLAY.get(backend, backend), _fmt_value(v)))
         for display, value in sorted(rows):
-            lines.append(f"| {label} | {display} | {value} | reproducibility.lock.yaml |")
+            lines.append(f"| {label} | {display} | {value} | REPRO.yaml |")
     official = bench.get("official_reference", {}) or {}
     if official:
         engine = official.get("inference_engine", "official")

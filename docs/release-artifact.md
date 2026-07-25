@@ -12,7 +12,7 @@ benchmark-artifacts/
 ├── run_manifest.json          # the run's terminal state (from the prediction dir)
 ├── metrics.json               # parsed OmniDocBench metrics for the run
 ├── environment.json           # ROCm / torch / transformers / vLLM / gpu versions
-├── reproducibility.lock.yaml  # the pinned inputs (copied from the repo at release time)
+├── REPRO.yaml  # the pinned inputs (copied from the repo at release time)
 ├── commands.txt               # the exact predict / validate / score commands used
 └── checksums.sha256           # sha256 of the above files
 ```
@@ -24,7 +24,7 @@ benchmark-artifacts/
 - **`environment.json`** — the `env`/`platform` block written by
   `hunyuan_ocr.runner.write_run_manifest` (best-effort ROCm/torch/transformers/vLLM
   versions).
-- **`reproducibility.lock.yaml`** — the repo's lock **at the release commit**
+- **`REPRO.yaml`** — the repo's lock **at the release commit**
   (copied verbatim). It pins: the repo + llama.cpp + OmniDocBench commits, the
   GT/model SHA256 + LFS oids, the eval-config + canary-manifest hashes, and the
   Overall metric formula. This is the single source of truth for "which inputs
@@ -38,7 +38,7 @@ benchmark-artifacts/
 
 | Field | Ties down | Source |
 |---|---|---|
-| `reproducibility.lock.yaml` → `hunyuanocr_rocm.commit` | the benchmark-harness code | repo |
+| `REPRO.yaml` → `hunyuanocr_rocm.commit` | the benchmark-harness code | repo |
 | `→ llama_cpp.commit` | the inference engine | ggml-org/llama.cpp |
 | `→ omnidocbench.scorer_commit` | the scorer | opendatalab/OmniDocBench |
 | `→ model.benchmark_artifact` / `current_remote_artifact` | the model weights (GGUF + safetensors + config) | tencent/HunyuanOCR, ggml-org/HunyuanOCR-GGUF |

@@ -15,7 +15,7 @@ works — file a ROCm-compatibility issue with your `rocm-smi` / `rocminfo` outp
 | Radeon RX 7900 series (gfx1100) | gfx1100 | 7.2 | transformers (SDPA ViT) | **verified (canary only)** | canary 148 = 94.11; full-set not run (~40 h) |
 
 Stack details (torch/hip/transformers/vLLM) are pinned in
-[`reproducibility.lock.yaml`](../reproducibility.lock.yaml).
+[`REPRO.yaml`](../REPRO.yaml).
 
 ## Community / unknown
 

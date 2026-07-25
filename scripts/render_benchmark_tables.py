@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
 # Copyright 2026 AIwork4me
-"""Render the README "GENERATED RESULTS" block from reproducibility.lock.yaml.
+"""Render the README "GENERATED RESULTS" block from REPRO.yaml.
 
 The lock is the single source of truth for the formal results. This script emits
 the lock-sourced block between the BEGIN/END GENERATED RESULTS markers in
@@ -23,7 +23,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from hunyuan_ocr.results import render_results_block
 
 REPO = Path(__file__).resolve().parents[1]
-LOCK_PATH = REPO / "reproducibility.lock.yaml"
+LOCK_PATH = REPO / "REPRO.yaml"
+LEGACY_LOCK_PATH = REPO / "reproducibility.lock.yaml"
+if not LOCK_PATH.exists() and LEGACY_LOCK_PATH.exists():
+    LOCK_PATH = LEGACY_LOCK_PATH
 README_PATH = REPO / "README.md"
 REGION_RE = re.compile(r"<!-- BEGIN GENERATED RESULTS -->.*?<!-- END GENERATED RESULTS -->", re.DOTALL)
 
@@ -55,7 +58,7 @@ def main(argv=None) -> int:
             print("FAIL: README GENERATED RESULTS region differs from the lock. Run:", file=sys.stderr)
             print("  python scripts/render_benchmark_tables.py", file=sys.stderr)
             return 1
-        print("OK: README GENERATED RESULTS matches reproducibility.lock.yaml")
+        print("OK: README GENERATED RESULTS matches REPRO.yaml")
         return 0
     # write: replace the region (or insert it after the Results intro if absent)
     if region is not None:

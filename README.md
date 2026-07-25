@@ -38,15 +38,15 @@ column, because their numbers are not comparable. Full provenance and the
 definition of "precision-aligned" are in [Benchmark methodology](docs/benchmark-methodology.md).
 
 <!-- BEGIN GENERATED RESULTS -->
-<!-- Auto-generated from reproducibility.lock.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->
+<!-- Auto-generated from REPRO.yaml by scripts/render_benchmark_tables.py (do not edit by hand). -->
 
 | Page set | Backend | Overall | Source |
 |---|---|---|---|
-| canary 148 | llama.cpp | 93.33 | reproducibility.lock.yaml |
-| canary 148 | transformers | 94.11 | reproducibility.lock.yaml |
-| canary 148 | vLLM | 94.81 | reproducibility.lock.yaml |
-| full 1651 | llama.cpp | 92.09 | reproducibility.lock.yaml |
-| full 1651 | vLLM | 91.31 | reproducibility.lock.yaml |
+| canary 148 | llama.cpp | 93.33 | REPRO.yaml |
+| canary 148 | transformers | 94.11 | REPRO.yaml |
+| canary 148 | vLLM | 94.81 | REPRO.yaml |
+| full 1651 | llama.cpp | 92.09 | REPRO.yaml |
+| full 1651 | vLLM | 91.31 | REPRO.yaml |
 | official | TensorRT | 94.10 | official HunyuanOCR table |
 
 <!-- END GENERATED RESULTS -->
@@ -209,7 +209,7 @@ pip install -e ".[client,download]"      # core + openai client + hf downloader;
 git clone https://github.com/ggml-org/llama.cpp.git "$LLAMA_DIR"
 cd "$LLAMA_DIR"
 git checkout a320cbfcb7056b7b81fb854d97fe01d0ea77c4b5
-# locked commit for the published results (see reproducibility.lock.yaml)
+# locked commit for the published results (see REPRO.yaml)
 HIPCXX=/opt/rocm/llvm/bin/clang HIP_PATH=/opt/rocm \
 cmake -S . -B build -DGGML_HIP=ON -DGPU_TARGETS=gfx1100 \
   -DGGML_HIP_ROCWMMA_FATTN=ON -DCMAKE_BUILD_TYPE=Release -DLLAMA_CURL=ON
@@ -229,7 +229,7 @@ hf download ggml-org/HunyuanOCR-GGUF \
   HunyuanOCR-bf16.gguf mmproj-HunyuanOCR-bf16.gguf \
   --local-dir "$GGUF_DIR"
 sha256sum "$GGUF_DIR"/*.gguf
-# compare against reproducibility.lock.yaml -> model.benchmark_artifact
+# compare against REPRO.yaml -> model.benchmark_artifact
 ```
 
 ### Terminal A — Run the server (loopback only)
@@ -276,7 +276,7 @@ python scripts/validate_predictions.py \
   --gt-json "$DATA_DIR/OmniDocBench_canary_148.json" \
   --pred-dir "$HUNYUAN_ROCM_DIR/artifacts/predictions"
 
-# score (requires the OmniDocBench scorer venv; see reproducibility.lock.yaml)
+# score (requires the OmniDocBench scorer venv; see REPRO.yaml)
 python scripts/score_predictions.py \
   --pred-dir "$HUNYUAN_ROCM_DIR/artifacts/predictions" \
   --gt-json "$DATA_DIR/OmniDocBench_canary_148.json"
@@ -322,7 +322,7 @@ scripts/
 └── check_repo.py               # CI integrity checks (lock, manifest, links, SPDX)
 
 eval/canary_148.manifest.json   # the 148 canary pages (file order) + source-GT SHA256
-reproducibility.lock.yaml       # pinned inputs: commits, GT/model SHA256, env, metrics
+REPRO.yaml       # pinned inputs: commits, GT/model SHA256, env, metrics
 reports/                        # canary BASELINE + stage summary (Historical)
 LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
 ```
@@ -350,7 +350,7 @@ LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
   (`run_manifest.json`, `metrics.json`, `environment.json`, the lock, `commands.txt`,
   `checksums.sha256`) so a number is reproducible from recorded inputs — see
   [docs/release-artifact.md](docs/release-artifact.md).
-- **Lock file (single source of truth):** [`reproducibility.lock.yaml`](reproducibility.lock.yaml)
+- **Lock file (single source of truth):** [`REPRO.yaml`](REPRO.yaml)
   pins every verified input for the published results — the repo + llama.cpp +
   OmniDocBench commits, the GT/model SHA256s, **and** the HF model/GGUF revisions
   and LFS OIDs (cross-checked byte-for-byte against the official repos), the env

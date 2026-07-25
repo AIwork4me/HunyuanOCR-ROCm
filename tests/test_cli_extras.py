@@ -57,7 +57,7 @@ def test_report_assembles_bundle_with_checksums(tmp_path):
     _write_manifest(pred)
     repo_root = tmp_path / "repo"
     repo_root.mkdir()
-    (repo_root / "reproducibility.lock.yaml").write_text("hunyuanocr_rocm:\n  commit: x\n", encoding="utf-8")
+    (repo_root / "REPRO.yaml").write_text("hunyuanocr_rocm:\n  commit: x\n", encoding="utf-8")
     out = tmp_path / "artifact"
 
     rc = cli.main(["report", "--pred-dir", str(pred), "--out", str(out), "--repo-root", str(repo_root)])
@@ -66,7 +66,7 @@ def test_report_assembles_bundle_with_checksums(tmp_path):
     assert (out / "run_manifest.json").is_file()
     assert (out / "environment.json").is_file()
     assert (out / "commands.txt").is_file()
-    assert (out / "reproducibility.lock.yaml").is_file()
+    assert (out / "REPRO.yaml").is_file()
     assert (out / "README.md").is_file()
     # checksums cover every other file and verify
     sums = (out / "checksums.sha256").read_text(encoding="utf-8").strip().splitlines()

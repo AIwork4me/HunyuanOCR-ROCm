@@ -4,14 +4,14 @@
 """Repo integrity checks for CI (and local pre-commit). No GPU, no torch.
 
 Verifies, with one exit code:
-  1. reproducibility.lock.yaml has the required top-level sections.
+  1. REPRO.yaml (or reproducibility.lock.yaml) has the required top-level sections.
   2. eval/canary_148.manifest.json is self-consistent (recomputed manifest_sha256).
   3. every relative link in README.md + docs/**/*.md resolves to an existing file.
   4. every src/**/*.py and scripts/**/*.py carries an SPDX-License-Identifier line.
   5. README + Makefile + user docs do not drift from the lock / canonical naming:
        - no stale "not_recorded" reproducibility claims in README;
        - no forbidden legacy canary tokens (canary-150 / Canary 150 / oracle-150);
-       - the four formal results in README match reproducibility.lock.yaml;
+       - the four formal results in README match REPRO.yaml;
        - no positive "precision-aligned AMD ROCm port" claim;
        - the Overall metric formula is consistent across README / methodology / lock.
 """
@@ -63,10 +63,14 @@ def _user_docs() -> list[Path]:
 
 
 def _load_lock():
-    try:
-        return yaml.safe_load((REPO / "reproducibility.lock.yaml").read_text(encoding="utf-8")), None
-    except Exception as exc:
-        return None, f"reproducibility.lock.yaml not parseable: {exc}"
+    for name in ("REPRO.yaml", "reproducibility.lock.yaml"):
+        lock_path = REPO / name
+        if lock_path.exists():
+            try:
+                return yaml.safe_load(lock_path.read_text(encoding="utf-8")), None
+            except Exception as exc:
+                return None, f"{name} not parseable: {exc}"
+    return None, "neither REPRO.yaml nor reproducibility.lock.yaml found"
 
 
 def _normalize_formula(expr: str) -> str:
@@ -92,7 +96,7 @@ def _normalize_formula(expr: str) -> str:
 def check_lock_sections(lock) -> list[str]:
     if lock is None:
         return []  # parse error already reported by the loader
-    return [f"reproducibility.lock.yaml missing section: {k}" for k in REQUIRED_LOCK_SECTIONS if k not in lock]
+    return [f"REPRO.yaml missing section: {k}" for k in REQUIRED_LOCK_SECTIONS if k not in lock]
 
 
 def check_canary_manifest() -> list[str]:
@@ -148,7 +152,7 @@ def check_no_stale_not_recorded(readme: str) -> list[str]:
         return [
             (
                 "README.md still references 'not_recorded' for reproducibility fields, but "
-                "reproducibility.lock.yaml now records all model/GGUF revisions + LFS oids "
+                "REPRO.yaml now records all model/GGUF revisions + LFS oids "
                 "(current_remote_artifact). Remove the stale claim."
             )
         ]
@@ -278,7 +282,7 @@ def check_metric_formula_consistency(lock) -> list[str]:
     formula_docs = [REPO / "README.md", REPO / "docs" / "benchmark-methodology.md"]
     norms: dict[str, str | None] = {}
     if lock_formula:
-        norms["reproducibility.lock.yaml"] = _normalize_formula(lock_formula)
+        norms["REPRO.yaml"] = _normalize_formula(lock_formula)
     for md in formula_docs:
         if not md.exists():
             continue

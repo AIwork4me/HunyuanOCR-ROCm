@@ -17,7 +17,7 @@ Such a claim would require, on a **single identical page set**, all of:
    frozen `src/hunyuan_ocr/contract.py`).
 4. The **same resolution policy** (uncapped, or the same pixel cap).
 5. The **same scorer** at the **same commit** (OmniDocBench, pinned in
-   `reproducibility.lock.yaml`).
+   `REPRO.yaml`).
 6. The **same metric config** (OmniDocBench eval YAML).
 7. A **pre-declared tolerance**, e.g. Overall ±0.3.
 
