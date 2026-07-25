@@ -1,5 +1,6 @@
 import pytest
-from hunyuan_ocr.tasks import TASK_PROMPTS, get_prompt, DEFAULT_TASK
+
+from hunyuan_ocr.tasks import DEFAULT_TASK, TASK_PROMPTS, get_prompt
 
 
 def test_doc_parse_prompt_matches_upstream():

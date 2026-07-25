@@ -44,6 +44,6 @@ def _parse_iso(iso) -> float:
     if not isinstance(iso, str) or not iso:
         return 0.0
     try:
-        return datetime.datetime.fromisoformat(iso.replace("Z", "+00:00")).timestamp()
+        return datetime.datetime.fromisoformat(iso).timestamp()
     except ValueError:
         return 0.0

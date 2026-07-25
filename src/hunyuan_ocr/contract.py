@@ -14,8 +14,8 @@ All values are copied verbatim from the upstream HunyuanOCR-1.5 inference recipe
 (inference/transformers/infer_hf_8gpu_hyocr15.py, aligned with infer_vllm_client.py).
 """
 from __future__ import annotations
-from dataclasses import dataclass
 
+from dataclasses import dataclass
 
 # Sampling kwargs passed straight to model.generate() / mapped onto each backend.
 SAMPLING: dict = {

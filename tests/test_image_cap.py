@@ -12,7 +12,7 @@ import pytest
 
 pytest.importorskip("PIL")  # pillow is a core dep; skip if absent in minimal envs
 
-from hunyuan_ocr.backends.vllm_client import _maybe_cap_image  # noqa: E402
+from hunyuan_ocr.backends.vllm_client import _maybe_cap_image
 
 
 def _make_png(path: Path, w: int, h: int):
