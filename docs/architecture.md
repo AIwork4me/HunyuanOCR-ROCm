@@ -33,7 +33,7 @@
                               |
                               v
                 Reproducibility Manifest (run_manifest.json +
-                     reproducibility.lock.yaml — single source of truth)
+                     REPRO.yaml — single source of truth)
 ```
 
 Three backends produce predictions for the **same** page set; the downstream
@@ -69,7 +69,7 @@ a wheel install.
    CI poller never import torch.
 2. **Atomic + resumable.** One `<stem>.md` per page written atomically; resumability
    skips only genuinely-complete pages. An exclusive `.run.lock` prevents two writers.
-3. **One source of truth.** `reproducibility.lock.yaml` pins every input (commits,
+3. **One source of truth.** `REPRO.yaml` pins every input (commits,
    SHA256, env, metric formula); README results are cross-checked against it by
    `scripts/check_repo.py` (CI fails on drift).
 4. **Evaluation-backed, not precision-aligned.** No same-page-set CUDA control
