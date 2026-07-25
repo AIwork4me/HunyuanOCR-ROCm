@@ -90,10 +90,10 @@ benchmark:
     vllm_overall: 94.81
     transformers_overall: 94.11
     llamacpp_overall: 93.33
-  # Full 1651-page set; only llama.cpp completed a valid run.
+  # Full 1651-page set; llama.cpp (92.09) and vLLM (91.31, validated 2026-07-25) both valid.
   full_1651:
     llamacpp_overall: 92.09
-    vllm_overall: invalid                             # ~780 ERROR pages; 46.31 is not a valid benchmark
+    vllm_overall: 91.31                                # validated 2026-07-25 (capped 3.4M, sequential): text 95.48 / CDM 92.46 / TEDS 86.00; 0 errors
   # Official reference, taken from the HunyuanOCR GitHub benchmark table. NOTE:
   # measured with TensorRT (a different engine) on an unlabeled OmniDocBench
   # version — not a same-engine, same-page-set comparison. See docs/benchmark-methodology.md.
