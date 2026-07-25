@@ -31,7 +31,7 @@ The processor default `size.longest_edge = 16,777,216` (≈ 4096² pixel area, i
 Capping the image-processor pixel area so patches stay under the threshold restores determinism and correctness:
 
 ```python
-processor.image_processor.size.longest_edge = 3_400_000   # -> ~13k patches, under the threshold
+processor.image_processor.size.longest_edge = 3_400_000  # -> ~13k patches, under the threshold
 ```
 
 On a 30-page smoke subset, the capped configuration achieves **text EditDist 0.0029 (99.7%)** and **table TEDS 0.985**. (A 150-page run is in progress; we can share full numbers.) This suggests the model behaves correctly when kept under the threshold — we'd like to confirm whether such a cap reflects the intended usage or whether full resolution is expected to be safe end-to-end.
@@ -62,13 +62,17 @@ Minimal check (any ROCm box with the model downloaded):
 ```python
 import torch
 from transformers import AutoProcessor, HunYuanVLForConditionalGeneration
+
 MODEL = "tencent/HunyuanOCR"
 proc = AutoProcessor.from_pretrained(MODEL, use_fast=False)
-model = HunYuanVLForConditionalGeneration.from_pretrained(
-    MODEL, attn_implementation="sdpa", dtype=torch.bfloat16
-).to("cuda:0").eval()   # ROCm PyTorch also uses the "cuda" device naming
+model = (
+    HunYuanVLForConditionalGeneration.from_pretrained(MODEL, attn_implementation="sdpa", dtype=torch.bfloat16)
+    .to("cuda:0")
+    .eval()
+)  # ROCm PyTorch also uses the "cuda" device naming
 from PIL import Image
-img = Image.new("RGB", (2400, 2400))   # any image; ~2400px longest side -> ~14.7k patches (over threshold)
+
+img = Image.new("RGB", (2400, 2400))  # any image; ~2400px longest side -> ~14.7k patches (over threshold)
 inp = proc(images=img, return_tensors="pt").to("cuda:0")
 feats = [
     model.model.get_image_features(inp["pixel_values"], inp["image_grid_thw"], return_dict=True)["last_hidden_state"]
@@ -77,7 +81,8 @@ feats = [
 print(
     "max|Δ| across 3 runs:",
     max(torch.abs(feats[0] - feats[1]).max().item(), torch.abs(feats[0] - feats[2]).max().item()),
-    "NaN:", any(torch.isnan(f).any().item() for f in feats),
+    "NaN:",
+    any(torch.isnan(f).any().item() for f in feats),
 )
 # Under threshold (cap): proc.image_processor.size.longest_edge = 3_400_000  ->  max|Δ| == 0, no NaN
 ```

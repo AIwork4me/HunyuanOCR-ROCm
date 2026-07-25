@@ -65,7 +65,7 @@ def _user_docs() -> list[Path]:
 def _load_lock():
     try:
         return yaml.safe_load((REPO / "reproducibility.lock.yaml").read_text(encoding="utf-8")), None
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return None, f"reproducibility.lock.yaml not parseable: {exc}"
 
 
@@ -99,7 +99,7 @@ def check_canary_manifest() -> list[str]:
     mp = REPO / "eval" / "canary_148.manifest.json"
     try:
         m = json.loads(mp.read_text(encoding="utf-8"))
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         return [f"canary manifest not parseable: {exc}"]
     body = {k: v for k, v in m.items() if k != "manifest_sha256"}
     recomputed = hashlib.sha256(
@@ -107,8 +107,10 @@ def check_canary_manifest() -> list[str]:
     ).hexdigest()
     if recomputed != m.get("manifest_sha256"):
         return [
-            "eval/canary_148.manifest.json: manifest_sha256 does not match "
-            "the recomputed hash (manifest is not self-consistent)"
+            (
+                "eval/canary_148.manifest.json: manifest_sha256 does not match "
+                "the recomputed hash (manifest is not self-consistent)"
+            )
         ]
     return []
 
@@ -144,9 +146,11 @@ def check_no_stale_not_recorded(readme: str) -> list[str]:
     lock now records them (current_remote_artifact)."""
     if "not_recorded" in readme.lower():
         return [
-            "README.md still references 'not_recorded' for reproducibility fields, but "
-            "reproducibility.lock.yaml now records all model/GGUF revisions + LFS oids "
-            "(current_remote_artifact). Remove the stale claim."
+            (
+                "README.md still references 'not_recorded' for reproducibility fields, but "
+                "reproducibility.lock.yaml now records all model/GGUF revisions + LFS oids "
+                "(current_remote_artifact). Remove the stale claim."
+            )
         ]
     return []
 
@@ -196,8 +200,10 @@ def check_formal_results_match_lock(readme: str, lock) -> list[str]:
 def check_no_positive_precision_claim(readme: str) -> list[str]:
     if FORBIDDEN_POSITIVE_CLAIM in readme:
         return [
-            f"README.md contains the positive claim {FORBIDDEN_POSITIVE_CLAIM!r}; this project is "
-            "'evaluation-backed', never 'precision-aligned' (no same-page-set CUDA control)."
+            (
+                f"README.md contains the positive claim {FORBIDDEN_POSITIVE_CLAIM!r}; this project is "
+                "'evaluation-backed', never 'precision-aligned' (no same-page-set CUDA control)."
+            )
         ]
     return []
 

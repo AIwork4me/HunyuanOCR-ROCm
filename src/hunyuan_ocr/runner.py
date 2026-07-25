@@ -21,6 +21,7 @@ import sys
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Self
 
 ERROR_PREFIX = "ERROR:"
 # Files/dirs this project itself may write into a prediction directory. The
@@ -142,9 +143,7 @@ def is_complete(pred_dir, stem: str, ext: str = ".md") -> bool:
         return False
     if head.lstrip().startswith(ERROR_PREFIX):
         return False
-    if _error_path(pred_dir, stem, ext).exists():
-        return False
-    return True
+    return not _error_path(pred_dir, stem, ext).exists()
 
 
 def page_status(pred_dir, stem: str, ext: str = ".md") -> str:
@@ -324,7 +323,9 @@ def _git_head(repo=None) -> str | None:
     """Current HEAD of the repo containing this package (None if not a git repo)."""
     repo = Path(repo) if repo else _repo_root()
     try:
-        cp = subprocess.run(["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10)
+        cp = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"], capture_output=True, text=True, timeout=10, check=False
+        )
         if cp.returncode == 0:
             return cp.stdout.strip() or None
     except (OSError, subprocess.SubprocessError):
@@ -337,7 +338,7 @@ def iso_utc(epoch=None) -> str:
     import datetime
 
     epoch = time.time() if epoch is None else epoch
-    return datetime.datetime.fromtimestamp(epoch, tz=datetime.timezone.utc).isoformat()
+    return datetime.datetime.fromtimestamp(epoch, tz=datetime.UTC).isoformat()
 
 
 def _platform_info() -> dict:
@@ -601,7 +602,7 @@ class RunLock:
         except (OSError, ValueError, TypeError, json.JSONDecodeError):
             return None
 
-    def acquire(self) -> "RunLock":
+    def acquire(self) -> RunLock:
         import fcntl  # POSIX only
 
         self.pred_dir.mkdir(parents=True, exist_ok=True)
@@ -658,7 +659,7 @@ class RunLock:
             except FileNotFoundError:
                 pass
 
-    def __enter__(self) -> "RunLock":
+    def __enter__(self) -> Self:
         return self.acquire()
 
     def __exit__(self, *exc) -> None:

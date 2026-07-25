@@ -13,7 +13,7 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .runner import ERROR_PREFIX, _OWN_ARTIFACTS
+from .runner import _OWN_ARTIFACTS, ERROR_PREFIX
 
 
 @dataclass

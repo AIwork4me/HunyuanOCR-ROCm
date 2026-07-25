@@ -30,6 +30,7 @@ def test_double_score_does_not_pollute_preddir(tmp_path, monkeypatch):
     behind in the prediction directory (Phase 2.1 regression)."""
     sys.path.insert(0, SCRIPTS)
     import score_predictions as sp
+
     from hunyuan_ocr import scoring
 
     gt, pred = _valid_pred(tmp_path)

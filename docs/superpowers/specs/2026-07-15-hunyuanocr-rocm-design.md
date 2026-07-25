@@ -155,16 +155,18 @@ The **single shared layer** across backends. Frozen once P1 establishes `BASELIN
 ```python
 CONTRACT = Contract(
     task_type="doc_parse",
-    chat_template=IMAGE_FIRST_CHAT_TEMPLATE,        # emit <image> per image part, then text
-    special_tokens=dict(image_start=120118, image_token=120120,
-                        image_newline=120121, image_end=120119),
-    sampling=dict(temperature=0.0, top_p=1.0, top_k=-1,
-                  repetition_penalty=1.08, max_tokens=32768),
-    image=dict(patch_size=16, merge_size=2,
-               min_pixels=262144, max_pixels=4194304,        # 512² .. 2048²
-               norm_mean=[0.481,0.458,0.408],
-               norm_std=[0.269,0.261,0.276],
-               mode="native_pack"),                          # NaViT patch-n-pack
+    chat_template=IMAGE_FIRST_CHAT_TEMPLATE,  # emit <image> per image part, then text
+    special_tokens=dict(image_start=120118, image_token=120120, image_newline=120121, image_end=120119),
+    sampling=dict(temperature=0.0, top_p=1.0, top_k=-1, repetition_penalty=1.08, max_tokens=32768),
+    image=dict(
+        patch_size=16,
+        merge_size=2,
+        min_pixels=262144,
+        max_pixels=4194304,  # 512² .. 2048²
+        norm_mean=[0.481, 0.458, 0.408],
+        norm_std=[0.269, 0.261, 0.276],
+        mode="native_pack",
+    ),  # NaViT patch-n-pack
     postprocessors=["clean_repeated_substrings", "norm_formula_HYOCR"],
 )
 ```

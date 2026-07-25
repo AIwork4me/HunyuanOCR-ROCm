@@ -20,7 +20,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from hunyuan_ocr import scoring  # noqa: E402
+from hunyuan_ocr import scoring
 
 
 def main_with_args(argv):
