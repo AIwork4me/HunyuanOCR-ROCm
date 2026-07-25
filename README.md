@@ -25,7 +25,9 @@
 - **Most important limitation.** **Not precision-aligned.** No CUDA control on
   the same page set exists, and the official 94.10 headline is measured with
   **TensorRT** (a different engine) on an unlabeled OmniDocBench version. The
-  vLLM full-set run is **invalid** (server crashes).
+  vLLM full-set run was previously **invalid** (server crashes) but is **now
+  validated at 91.31 Overall** (2026-07-25) — see
+  [vLLM full-set validation](#vllm-full-set-validation-2026-07-25).
 - **Fastest path to one page.** [Quick start (llama.cpp)](#quick-start-llamacpp-recommended)
   — warm ~1.4 s/page on a single GPU.
 
@@ -45,7 +47,7 @@ definition of "precision-aligned" are in [Benchmark methodology](docs/benchmark-
 | canary 148 | transformers | 94.11 | reproducibility.lock.yaml |
 | canary 148 | vLLM | 94.81 | reproducibility.lock.yaml |
 | full 1651 | llama.cpp | 92.09 | reproducibility.lock.yaml |
-| full 1651 | vLLM | invalid (excluded; see reproducibility.lock.yaml) | reproducibility.lock.yaml |
+| full 1651 | vLLM | 91.31 | reproducibility.lock.yaml |
 | official | TensorRT | 94.10 | official HunyuanOCR table |
 
 <!-- END GENERATED RESULTS -->
@@ -76,16 +78,62 @@ on these 148 pages, so there is **no canary-vs-CUDA comparison** here.
 > llama.cpp on v1.6. A **94.74** figure quoted in some third-party summaries is
 > **not** in the official benchmark table and is treated as `not_verified`.
 
-> **vLLM full-set: NOT a valid result.** The 1651-page vLLM run never produced a
-> valid score — servers crashed under sustained load, yielding ~780 ERROR pages;
-> the resulting 46.31 is **not a valid benchmark** and is excluded from all
-> comparisons. The vLLM **canary (148 pages, 94.81) is the only reliable vLLM
-> number.**
+> **vLLM full-set: VALIDATED (2026-07-25) — 91.31 Overall.** Root-caused and
+> fixed: (1) server `--max-model-len 32768` was too small → raised to 65536;
+> (2) missing `--max-pixels 3400000` ViT cap → large pages errored; (3) concurrency
+> collapses throughput → run sequential (compiled, ~7 s/page). Result on the full
+> 1651: **text 95.48% · table TEDS 86.00% · formula CDM 92.46% (2352 formulas, 0
+> exceptions) · Overall 91.31 · 0 errors**. CDM required a full host toolchain
+> (TUG TeX Live 2025 + CJK/gkaiu + latexmlc + ImageMagick 7 + the `#mathcolor`
+> patch); one-shot reprovisioner at `/workspace/scripts/provision_cdm_host.sh`.
+> Comparable to llama.cpp (92.09, uncapped full-res).
 
 **Key findings:**
 - **Among the three tested backends, on the tested gfx1100/ROCm 7.2 stack**, llama.cpp is the fastest and most stable, and the only one of the three that runs with no pixel cap (full resolution). Its C++ ViT is deterministic at >14k vision tokens.
 - The **formula CDM gap** (~5.65 pts vLLM-vs-llama.cpp on the canary): after ruling out resolution, streaming, post-processing, and systematic formula omission, **inference-engine-level numerical divergence is the leading explanation** — not a singly-proven root cause ([analysis](docs/tencent-114-followup3-draft.md)).
 - The **>14k ViT instability** is a sharp threshold (~14,200 patches) **observed in the transformers/ROCm full-ViT path using SDPA on the tested gfx1100 stack**; a standalone SDPA op does not reproduce it, so it is **not pinned to a single SDPA kernel**, and there is no NVIDIA control to bound it to ROCm ([ROCm issue #6416](https://github.com/ROCm/ROCm/issues/6416)). It is not observed in vLLM's Flash-Attention or llama.cpp's C++ GGML paths.
+
+## vLLM full-set validation (2026-07-25)
+
+The vLLM full-set — previously documented as "invalid" (servers crashed, ~780
+ERROR pages, excluded 46.31) — is **now a valid, comparable result** after fixing
+three crash root causes and standing up the CDM toolchain on the host.
+
+**Result** (OmniDocBench v1.6, full 1651 pages, gfx1100/ROCm, capped 3.4 Mpx,
+compiled vLLM, sequential):
+
+| Metric | Value |
+|---|---|
+| text_block Edit_dist → accuracy | 0.0452 → **95.48%** |
+| table TEDS | **86.00%** |
+| formula CDM (2352 formulas, 0 exceptions) | **92.46%** |
+| **Overall = ((1−text)·100 + CDM·100 + TEDS·100)/3** | **91.31** |
+| hard errors | 0 / 1651 |
+
+**Root causes fixed** (the original "invalid"):
+1. Server `--max-model-len 32768` was too small — input + 32768 output tokens
+   overflowed the context (mass 400 errors). Fix: **65536** (the `serve_vllm.sh`
+   tuned default).
+2. No `--max-pixels` ViT cap — 56% of OmniDocBench pages exceed 3.4 Mpx and
+   exceed the gfx1100 ViT / encoder-cache limit. Fix: **`--max-pixels 3400000`**.
+3. Concurrency collapses vLLM throughput on this stack (5 concurrent = 209 s for
+   5 small pages; single request = ~7 s/page). Fix: run **sequential
+   (concurrency 1)**; compiled (torch.compile) is stable at ~100 tok/s — the
+   earlier "torch.compile stalls" note is stale.
+
+**CDM toolchain (host):** CDM silently scored 0 until the full chain was in
+place — Debian `texlive-full` lacks the Arphic `gkai` font, and TL2025's
+`xcolor` swallows `\mathcolor`. Required: official **TUG TeX Live 2025** +
+`cjk`/`arphic` gkaiu (+ `xcolor`/`amsmath`/`upgreek`/…) + `gkaiu` in
+`pdftex.map` + **`latexmlc`** (LaTeXML) + **ImageMagick 7** + the **`#mathcolor`
+patch** in the OmniDocBench checkout. One-shot, idempotent, re-runnable after
+pod rebuild: **`/workspace/scripts/provision_cdm_host.sh`** (all 7 steps).
+Failure-mode analysis: `omnidocbench-rocm/docs/pitfalls.md` (#cdm-zero tree).
+
+> vLLM full-set (91.31, capped 3.4 Mpx) remains slightly below llama.cpp
+> (92.09, uncapped full-res) — the pixel cap costs table/dense-page quality.
+> **llama.cpp is still the recommended backend for the best score; vLLM is now a
+> valid alternative.**
 
 ## Hardware support
 
@@ -99,7 +147,7 @@ on these 148 pages, so there is **no canary-vs-CUDA comparison** here.
 | 4-GPU full-set throughput — llama.cpp | ✅ Verified | one server/GPU; full 1651 in ~hours |
 | vLLM canary (148) | ✅ Verified | 94.81 Overall |
 | transformers canary (148) | ✅ Verified | 94.11 Overall |
-| vLLM full-set (1651) | ❌ Not verified | servers crash under sustained load (invalid 46.31) |
+| vLLM full-set (1651) | ✅ Validated | **91.31 Overall** (capped 3.4M, sequential); see [validation](#vllm-full-set-validation-2026-07-25) |
 | transformers full-set (1651) | ⚠️ Not verified | ~40 h, impractical |
 | Minimum VRAM | ❔ Unknown | not measured — do **not** assume a number |
 | Other RDNA3 / non-gfx1100 | ❔ Unknown | not tested; file a ROCm-compat issue |
