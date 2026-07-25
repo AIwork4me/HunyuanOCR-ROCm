@@ -45,7 +45,7 @@ client = ["openai>=1.0"]
 download = ["huggingface_hub>=0.25"]
 # transformers backend (Phase 1 oracle). Pinned to the benchmark version for
 # reproducibility; see reproducibility.lock.yaml. Requires a separate ROCm torch.
-transformers = ["transformers==5.13.0"]
+transformers = ["transformers==5.14.1"]
 # Convenience alias; pyyaml is already core. Reserved for future eval-only deps.
 eval = ["pyyaml"]
 # OmniDocBench-ROCm platform integration (conformance, score, publish).
