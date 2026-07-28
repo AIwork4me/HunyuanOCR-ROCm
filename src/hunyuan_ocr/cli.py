@@ -241,7 +241,15 @@ def _doctor(args) -> int:
             "model_dir": os.environ.get("HUNYUANOCR_MODEL"),
             "gt_json": os.environ.get("HUNYUANOCR_GT"),
         }
-        payload = {"ok": ok, "backend": backend, "checks": checks, "environment": env}
+        # Central doctor contract (cli-contract.md @ ccd466e) requires a `status`
+        # field in {"ready","not-ready"}; `ok` is retained for back-compat.
+        payload = {
+            "status": "ready" if ok else "not-ready",
+            "ok": ok,
+            "backend": backend,
+            "checks": checks,
+            "environment": env,
+        }
         print(json.dumps(payload, indent=2))
         return 0 if ok else 1
 
@@ -422,11 +430,62 @@ def _report(args) -> int:
     return 0
 
 
+# --- standard CLI contract (version / capabilities / parse) ------------------
+# Thin handlers over hunyuan_ocr.standard_cli (ADR-0011, locked to central
+# commit ccd466ef317fd6a710131db3a19ec9d55a65ce2e). Exit codes 0/1/2/3/4/5.
+
+
+def _version_cmd(args) -> int:
+    from hunyuan_ocr.standard_cli import cmd_version
+
+    return cmd_version()
+
+
+def _capabilities_cmd(args) -> int:
+    from hunyuan_ocr.standard_cli import cmd_capabilities
+
+    return cmd_capabilities()
+
+
+def _parse_cmd(args) -> int:
+    from hunyuan_ocr.standard_cli import cmd_parse
+
+    return cmd_parse(
+        img_dir=Path(args.img_dir),
+        out_dir=Path(args.out_dir),
+        platform=getattr(args, "platform", "linux-rocm"),
+        backend=getattr(args, "backend", None),
+        server_url=getattr(args, "server_url", None),
+        model=getattr(args, "model", None),
+        max_pixels=getattr(args, "max_pixels", None),
+        limit=getattr(args, "limit", None),
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="hunyuan-ocr", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     sub = p.add_subparsers(dest="cmd", required=True)
+
+    # --- standard CLI contract (ADR-0011) ---
+    ver = sub.add_parser("version", help="print package + contract version as JSON")
+    ver.add_argument("--json", action="store_true", help="emit JSON (always JSON; accepted for contract uniformity)")
+
+    cap = sub.add_parser("capabilities", help="declared platforms/backends as JSON")
+    cap.add_argument("--json", action="store_true", help="emit JSON (always JSON; accepted for contract uniformity)")
+
+    par = sub.add_parser("parse", help="parse an image dir -> canonical result.json (standard CLI)")
+    par.add_argument("--img-dir", required=True, help="directory of input page images")
+    par.add_argument("--out-dir", required=True, help="output directory for <stem>.md + result")
+    par.add_argument("--platform", default="linux-rocm", choices=["linux-rocm", "windows-hip"])
+    par.add_argument("--backend", help="backend to run (vllm|llama-cpp|openai|transformers)")
+    par.add_argument("--benchmark", default="omnidocbench-v16", help="benchmark tag (informational)")
+    par.add_argument("--server-url", help="OpenAI-compatible server URL (or HUNYUANOCR_SERVER_URL)")
+    par.add_argument("--model", default=None, help="api_model_name (default tencent/HunyuanOCR)")
+    par.add_argument("--max-pixels", type=int, default=None, help="optional client-side image pixel cap")
+    par.add_argument("--limit", type=int, default=None, help="process only the first N images (debug; not a full set)")
+    par.add_argument("--json", action="store_true", help="emit the cli_result JSON (always JSON; accepted for contract uniformity)")
 
     doc = sub.add_parser("doctor", help="environment + dataset + scorer readiness")
     doc.add_argument("--strict", action="store_true", help="exit non-zero if critical checks fail")
@@ -486,6 +545,9 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     dispatch = {
+        "version": _version_cmd,
+        "capabilities": _capabilities_cmd,
+        "parse": _parse_cmd,
         "doctor": _doctor,
         "validate": _validate,
         "manifest": lambda a: _manifest_verify(a) if a.mcmd == "verify" else 2,
