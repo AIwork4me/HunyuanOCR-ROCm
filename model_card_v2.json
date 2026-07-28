@@ -40,7 +40,9 @@
         "platform": "linux-rocm",
         "page_count": 1651,
         "full_set": true,
-        "categories": ["full_1651"]
+        "categories": [
+          "full_1651"
+        ]
       },
       "metrics": {
         "overall": 93.64,
@@ -82,7 +84,39 @@
         "dataset_revision": "2b161d0",
         "prediction_dir": "artifacts/predictions_vllm_full_seq",
         "note": "prediction_manifest_sha256 verified against the committed file; page conservation 1651 == 1651 ok_pages, 0 failed, 0 fallback. NOT score-reproduced: re-scoring was not performed in all-safe mode."
-      }
+      },
+      "producer_assurance": "evidence-complete",
+      "run_spec": {
+        "model": {
+          "model_id": "hunyuan-ocr",
+          "model_revision": "unknown",
+          "weights_sha256": "unknown"
+        },
+        "implementation": {
+          "implementation_id": "hunyuan-ocr-vllm-linux-rocm",
+          "platform": "linux-rocm",
+          "backend": "vllm",
+          "precision": "bf16",
+          "topology": "unknown"
+        },
+        "benchmark": {
+          "benchmark_id": "omnidocbench",
+          "benchmark_version": "v1.6",
+          "dataset_subset": "full",
+          "scorer_revision": "2b161d0",
+          "scoring_protocol": "default",
+          "page_set_hash": "unknown"
+        },
+        "inference": {
+          "prompt_hash": "unknown",
+          "preprocessing_config_hash": "unknown",
+          "postprocessing_config_hash": "unknown",
+          "runtime_config_hash": "unknown"
+        }
+      },
+      "run_spec_hash": "sha256:2f79b7db85e6ee89ab39fad93611890e7c99b40f8f90e6e8c9d15419a0641880",
+      "comparison_track_id": "omnidocbench-v1-6-full-default-f23c37da",
+      "accelerator_family": "rocm"
     },
     {
       "result_id": "hunyuan-ocr__linux-rocm__llama-cpp__bf16__v1-6__9afe77319b08",
@@ -102,7 +136,9 @@
         "platform": "linux-rocm",
         "page_count": 1651,
         "full_set": true,
-        "categories": ["full_1651"]
+        "categories": [
+          "full_1651"
+        ]
       },
       "metrics": {
         "overall": 92.09,
@@ -122,8 +158,97 @@
       "provenance": {
         "git_commit": "df0bbdd4c9c5f4bcf34c7c7c56cf6eaf4eb86017",
         "note": "Documented full-set result; prediction artifacts were not committed to this repo (machine-local). Assurance capped at submitted pending artifact migration; not evidence-complete."
+      },
+      "producer_assurance": "submitted",
+      "run_spec": {
+        "model": {
+          "model_id": "hunyuan-ocr",
+          "model_revision": "unknown",
+          "weights_sha256": "unknown"
+        },
+        "implementation": {
+          "implementation_id": "hunyuan-ocr-llama-cpp-linux-rocm",
+          "platform": "linux-rocm",
+          "backend": "llama-cpp",
+          "precision": "bf16",
+          "topology": "unknown"
+        },
+        "benchmark": {
+          "benchmark_id": "omnidocbench",
+          "benchmark_version": "v1.6",
+          "dataset_subset": "full",
+          "scorer_revision": "2b161d0",
+          "scoring_protocol": "default",
+          "page_set_hash": "unknown"
+        },
+        "inference": {
+          "prompt_hash": "unknown",
+          "preprocessing_config_hash": "unknown",
+          "postprocessing_config_hash": "unknown",
+          "runtime_config_hash": "unknown"
+        }
+      },
+      "run_spec_hash": "sha256:e96cbcc89f7884d5a447de819d35058e3d76b700e8c930b09b0fef50f6b5b25e",
+      "comparison_track_id": "omnidocbench-v1-6-full-default-f23c37da",
+      "accelerator_family": "rocm"
+    }
+  ],
+  "platforms": [
+    "linux-rocm"
+  ],
+  "primary_selection": {
+    "model_id": "hunyuan-ocr",
+    "comparison_track_id": "omnidocbench-v1-6-full-default-f23c37da",
+    "result_id": "hunyuan-ocr__linux-rocm__vllm__bf16__v1-6__38a99096c23d",
+    "selected_by": "AIwork4me",
+    "selected_at": "2026-07-28T00:00:00Z",
+    "rationale": "Explicit maintainer choice (round-2); never highest-score auto-select.",
+    "policy_version": "round-2-2026-07"
+  },
+  "comparison_tracks": [
+    {
+      "track_id": "omnidocbench-v1-6-full-default-f23c37da",
+      "version": "1",
+      "benchmark": {
+        "id": "omnidocbench",
+        "version": "v1.6"
+      },
+      "dataset": {
+        "subset": "full",
+        "page_set_hash": ""
+      },
+      "scorer": {
+        "protocol": "default",
+        "revision": ""
+      },
+      "eligibility": {
+        "excluded_statuses": [
+          "superseded",
+          "retracted",
+          "invalid"
+        ]
       }
     }
   ],
-  "platforms": ["linux-rocm"]
+  "licenses": {
+    "code": {
+      "category": "open-source-software",
+      "spdx": "Apache-2.0"
+    },
+    "model": {
+      "category": "restricted",
+      "weights_license": "Tencent Hunyuan Community License",
+      "assessment_basis": "Tencent Hunyuan Community License excludes EU/UK/KR; acceptable-use restrictions",
+      "commercial_use": "restricted",
+      "geographic_restrictions": [
+        "EU",
+        "UK",
+        "KR"
+      ],
+      "acceptable_use_restrictions": [
+        "Tencent Hunyuan AUP"
+      ],
+      "attribution_required": true
+    }
+  }
 }

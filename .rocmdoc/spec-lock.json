@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "central_repository": "AIwork4me/OmniDocBench-ROCm",
-  "central_commit": "ccd466ef317fd6a710131db3a19ec9d55a65ce2e",
+  "central_commit": "4556ee1ab35eb53481e7392dcd555abe3e599551",
   "central_remote": "https://github.com/AIwork4me/OmniDocBench-ROCm.git",
   "central_branch_at_lock": "main",
   "central_clean_at_lock": true,
@@ -12,19 +12,75 @@
     "artifact_schema_id": "https://omnidocbench-rocm/schemas/artifact-schema.json",
     "artifact_schema_version": 1,
     "cli_contract_doc": "contracts/cli-contract.md",
-    "cli_exit_codes": {"0": "OK", "1": "PARTIAL", "2": "USAGE", "3": "BACKEND_MISMATCH", "4": "CONTRACT", "5": "FATAL"},
-    "standard_cli_commands": ["version", "capabilities", "doctor", "parse"],
+    "cli_exit_codes": {
+      "0": "OK",
+      "1": "PARTIAL",
+      "2": "USAGE",
+      "3": "BACKEND_MISMATCH",
+      "4": "CONTRACT",
+      "5": "FATAL"
+    },
+    "standard_cli_commands": [
+      "version",
+      "capabilities",
+      "doctor",
+      "parse"
+    ],
     "model_card_v2_schema_version": 2,
     "rocmdoc_manifest_schema_version": 1,
     "result_record_schema_version": 1,
-    "license_record_category_enum": ["open-source-ai", "open-weights", "source-available", "restricted", "closed", "unknown"],
-    "result_status_enum": ["valid", "invalid", "retracted", "superseded"],
-    "assurance_enum": ["submitted", "evidence-complete", "score-reproduced", "inference-reproduced", "cross-hardware-reproduced"],
-    "platform_enum": ["linux-rocm", "windows-hip"],
-    "conformance_profiles": ["base", "runtime-core", "benchmark-omnidocbench-v16", "reproducible-score"]
+    "license_record_category_enum": [
+      "open-source-ai",
+      "open-weights",
+      "source-available",
+      "restricted",
+      "closed",
+      "unknown"
+    ],
+    "result_status_enum": [
+      "valid",
+      "invalid",
+      "retracted",
+      "superseded"
+    ],
+    "assurance_enum": [
+      "submitted",
+      "evidence-complete",
+      "score-reproduced",
+      "inference-reproduced",
+      "cross-hardware-reproduced"
+    ],
+    "platform_enum": [
+      "linux-rocm",
+      "windows-hip"
+    ],
+    "conformance_profiles": [
+      "base",
+      "runtime-core",
+      "benchmark-omnidocbench-v16",
+      "reproducible-score"
+    ]
   },
   "result_id_algorithm": "omnidocbench_rocm.model_card_v2.make_result_id(model_id, platform, backend, precision, benchmark_version) -> <model>__<platform>__<backend>__<precision>__<bench>__<sha256[:12]> of the canonical JSON tuple",
-  "readme_markers": ["<!-- BEGIN ROCMDOC GENERATED RESULTS -->", "<!-- END ROCMDOC GENERATED RESULTS -->", "<!-- BEGIN ROCMDOC GENERATED IMPLEMENTATIONS -->", "<!-- END ROCMDOC GENERATED IMPLEMENTATIONS -->"],
+  "readme_markers": [
+    "<!-- BEGIN ROCMDOC GENERATED RESULTS -->",
+    "<!-- END ROCMDOC GENERATED RESULTS -->",
+    "<!-- BEGIN ROCMDOC GENERATED IMPLEMENTATIONS -->",
+    "<!-- END ROCMDOC GENERATED IMPLEMENTATIONS -->"
+  ],
   "snapshot": null,
-  "snapshot_policy": "No local schema snapshot is kept. The central repository at central_commit is the single, read-only source of truth. If a snapshot is ever introduced it MUST record source path + central commit + source SHA-256 and be CI-checked; it must never be hand-edited (rule 11)."
+  "snapshot_policy": "No local schema snapshot is kept. The central repository at central_commit is the single, read-only source of truth. If a snapshot is ever introduced it MUST record source path + central commit + source SHA-256 and be CI-checked; it must never be hand-edited (rule 11).",
+  "repo": "AIwork4me/OmniDocBench-ROCm",
+  "commit": "4556ee1ab35eb53481e7392dcd555abe3e599551",
+  "cohort": {
+    "contract_release": "rocmdoc-contracts-0.4.0",
+    "conformance_release": "rocmdoc-conformance-0.4.0",
+    "central_commit": "4556ee1ab35eb53481e7392dcd555abe3e599551"
+  },
+  "schema_versions": {
+    "model_card_v2": 2,
+    "result_record": "round-2-additive",
+    "run_spec": "v3",
+    "license_split": "round-2-additive"
+  }
 }
