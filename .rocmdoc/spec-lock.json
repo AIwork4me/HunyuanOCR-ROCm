@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
   "central_repository": "AIwork4me/OmniDocBench-ROCm",
-  "central_commit": "4556ee1ab35eb53481e7392dcd555abe3e599551",
+  "central_commit": "17b5d65652ddab342a1abedad487d90ec2c4393f",
   "central_remote": "https://github.com/AIwork4me/OmniDocBench-ROCm.git",
   "central_branch_at_lock": "main",
   "central_clean_at_lock": true,
-  "locked_on": "2026-07-27",
+  "locked_on": "2026-07-31",
   "central_package_version": "0.3.3",
-  "lock_generation_method": "git -C <central-checkout> rev-parse HEAD against a clean working tree (git status --short empty); then verify central capabilities + the four conformance profiles are present at this commit. No env var ROCMDOC_CENTRAL_REF was set; the SHA is the resolved HEAD of the clean local checkout of AIwork4me/OmniDocBench-ROCm.",
+  "lock_generation_method": "Central main HEAD after PR AIwork4me/OmniDocBench-ROCm#31 merged the ROCmDoc Standard 1.0 umbrella (contracts/ROCMDOC_STANDARD.md + COMPATIBILITY.md + badge-policy legacy). Clean working tree; four no-GPU conformance profiles verified present at this commit.",
   "contracts": {
     "artifact_schema_id": "https://omnidocbench-rocm/schemas/artifact-schema.json",
     "artifact_schema_version": 1,
@@ -71,11 +71,11 @@
   "snapshot": null,
   "snapshot_policy": "No local schema snapshot is kept. The central repository at central_commit is the single, read-only source of truth. If a snapshot is ever introduced it MUST record source path + central commit + source SHA-256 and be CI-checked; it must never be hand-edited (rule 11).",
   "repo": "AIwork4me/OmniDocBench-ROCm",
-  "commit": "4556ee1ab35eb53481e7392dcd555abe3e599551",
+  "commit": "17b5d65652ddab342a1abedad487d90ec2c4393f",
   "cohort": {
     "contract_release": "rocmdoc-contracts-0.4.0",
     "conformance_release": "rocmdoc-conformance-0.4.0",
-    "central_commit": "4556ee1ab35eb53481e7392dcd555abe3e599551"
+    "central_commit": "17b5d65652ddab342a1abedad487d90ec2c4393f"
   },
   "schema_versions": {
     "model_card_v2": 2,
