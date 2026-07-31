@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-07-31T17:48:37.418992+00:00",
+  "git_commit": "143f1c2",
+  "engine_version": "0.3.3",
+  "model_id": "hunyuan-ocr",
+  "platform": "linux-rocm",
+  "vlm_server_url": "",
+  "api_model_name": "",
+  "adapter_command": "HUNYUANOCR_VIT_MAX_PIXELS=0 python scripts/run_phase1_transformers.py --gt-json OmniDocBench.json --images-dir images --pred-dir predictions --model tencent/HunyuanOCR --gpu-ids 0,1,2 (cap OFF, full-res, GA-7.14)",
+  "scoring_config_path": ".",
+  "dataset_manifest_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_dataset_identity.json",
+  "dataset_revision": "2b161d010d2e3aff77a0edef359ea3a6411d23cd",
+  "prediction_dir": "/root/tf714-eval",
+  "page_count": 1651,
+  "ok_pages": 1648,
+  "failed_pages": 3,
+  "fallback_pages": 0,
+  "metric_result_paths": [
+    "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_metric_result.json"
+  ],
+  "run_summary_paths": [
+    "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_run_summary.json"
+  ],
+  "run_stats_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_run_stats.json",
+  "backend": "transformers",
+  "packaging_commit": "143f1c2",
+  "prediction_source_commit": "",
+  "prediction_source_command": "",
+  "prediction_source_run_manifest": "",
+  "prediction_manifest_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_prediction_manifest.json",
+  "prediction_manifest_sha256": "c5f80b629117bae68a0769ab60f18cc32ff6a02f3accb36e7df2f3b8860cf49e",
+  "dataset_identity_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_dataset_identity.json",
+  "source_metric_result_path": "/workspace/OmniDocBench/result/tf714-eval_quick_match_metric_result.json",
+  "source_run_stats_path": "/root/tf714-eval/_run_stats.json",
+  "source_prediction_dir": "/root/tf714-eval",
+  "migration_type": ""
+}
