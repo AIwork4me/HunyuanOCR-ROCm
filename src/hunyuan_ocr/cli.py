@@ -485,7 +485,9 @@ def build_parser() -> argparse.ArgumentParser:
     par.add_argument("--model", default=None, help="api_model_name (default tencent/HunyuanOCR)")
     par.add_argument("--max-pixels", type=int, default=None, help="optional client-side image pixel cap")
     par.add_argument("--limit", type=int, default=None, help="process only the first N images (debug; not a full set)")
-    par.add_argument("--json", action="store_true", help="emit the cli_result JSON (always JSON; accepted for contract uniformity)")
+    par.add_argument(
+        "--json", action="store_true", help="emit the cli_result JSON (always JSON; accepted for contract uniformity)"
+    )
 
     doc = sub.add_parser("doctor", help="environment + dataset + scorer readiness")
     doc.add_argument("--strict", action="store_true", help="exit non-zero if critical checks fail")
