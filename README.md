@@ -392,3 +392,12 @@ Tencent is not affiliated with, sponsoring, or endorsing this project.
 - [vLLM](https://github.com/vllm-project/vllm) — the serving backend.
 - [OmniDocBench](https://github.com/opendatalab/OmniDocBench) — the evaluation benchmark.
 - [ROCm](https://github.com/ROCm/ROCm) — the AMD compute platform.
+
+<!-- BEGIN ROCMDOC GENERATED RESULTS -->
+| Backend | Platform | Pages | Overall | Assurance | Status | Result ID |
+|---|---|---|---|---|---|---|
+| llama-cpp | linux-rocm | 1651 | 92.09 | submitted | valid | `hunyuan-ocr__linux-rocm__llama-cpp__bf16__v1-6__9afe77319b08` |
+| vllm | linux-rocm | 1651 | 93.64 | evidence-complete | valid | `hunyuan-ocr__linux-rocm__vllm__bf16__v1-6__38a99096c23d` *(primary)* |
+
+> Generated from `model_card_v2.json` (single source of truth). Overall is the raw-evidence-derived value; external/experimental references live in `docs/benchmark-context.md`.
+<!-- END ROCMDOC GENERATED RESULTS -->

@@ -1,0 +1,73 @@
+# rocmdoc.yaml — HunyuanOCR-ROCm CAPABILITY manifest (ADR-0009).
+# Declares what the model CAN do and under what license. It is NOT a benchmark
+# result: measured scores live in model_card_v2.json (single source of truth) and
+# the central hub/canonical_results.json. Validate + align to the card:
+#   omnidocbench-rocm manifest rocmdoc.yaml --card model_card_v2.json
+schema_version: 1
+project:
+  name: HunyuanOCR-ROCm
+  repo: AIwork4me/HunyuanOCR-ROCm
+  homepage: https://github.com/AIwork4me/HunyuanOCR-ROCm
+  description: Evaluation-backed AMD ROCm port of HunyuanOCR-1.5 for OmniDocBench v1.6.
+upstream:
+  name: Tencent HunyuanOCR
+  repo: https://github.com/Tencent-Hunyuan/HunyuanOCR
+  revision: de8f10ad2f00a0cefd790b526de8a65dcfdb3205   # tencent/HunyuanOCR @ main (REPRO.yaml)
+  url: https://github.com/Tencent-Hunyuan/HunyuanOCR
+model:
+  id: hunyuan-ocr
+  version: "0.1.3"
+  task: document-parsing
+  arch: VLM (vision-language model)
+  params_b: 1.1
+licenses:
+  # Mixed: original packaging/tooling is Apache-2.0; code ported from Tencent
+  # HunyuanOCR and the model weights are under the Tencent Hunyuan Community
+  # License (NOT OSI open source; excludes EU/UK/KR). See NOTICE + LICENSES/.
+  # Central license-classify maps "Tencent Hunyuan Community License" -> restricted.
+  code:
+    category: restricted
+    spdx: "Apache-2.0 AND Tencent Hunyuan Community License"
+    name: "Mixed (see NOTICE): Apache-2.0 packaging/tooling + Tencent Hunyuan Community License for ported code (contract.py, tasks.py, postprocess.py, backends/*)"
+    commercial_use: "restricted for ported Tencent code; Apache-2.0 portions permit commercial use"
+    geographic_restrictions: "Tencent Hunyuan code + weights NOT licensed in EU/UK/KR"
+    acceptable_use_restrictions: "see Tencent Hunyuan Community License Agreement"
+  weights:
+    category: restricted
+    spdx: "Tencent Hunyuan Community License"
+    name: "Tencent Hunyuan Community License Agreement"
+    url: "https://huggingface.co/tencent/HunyuanOCR"
+    commercial_use: "commercial-use conditions; see license"
+    geographic_restrictions: "not licensed in EU/UK/KR"
+    acceptable_use_restrictions: "see license"
+interfaces:
+  - standard-cli
+  - adapter-script
+implementations:
+  - platform: linux-rocm
+    backend: vllm
+    precision: bf16
+    interface: standard-cli
+    status: supported
+    topology: managed-local-server
+    note: "PRIMARY. Full 1651-page result, evidence-complete (Overall 93.64). vLLM 0.16.1 OpenAI-compatible server; managed-local or external endpoint (localhost default)."
+  - platform: linux-rocm
+    backend: llama-cpp
+    precision: bf16
+    interface: adapter-script
+    status: supported
+    topology: managed-local-server
+    note: "Full 1651-page result, submitted (Overall 92.09; documented, no committed platform artifacts). llama.cpp HIP server."
+  - platform: linux-rocm
+    backend: transformers
+    precision: bf16
+    interface: adapter-script
+    status: experimental
+    topology: embedded-python
+    note: "Canary-subset (148-page) measurement only (Overall 94.11); NO full-set result. Requires a separate ROCm torch + transformers==5.13.0 venv; not usable from the base installed wheel."
+  - platform: windows-hip
+    backend: llama-cpp
+    precision: bf16
+    interface: adapter-script
+    status: planned
+    note: "Community-wanted; no evidence. Not an evaluated platform."
