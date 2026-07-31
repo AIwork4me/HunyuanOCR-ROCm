@@ -64,7 +64,7 @@ implementations:
     interface: adapter-script
     status: experimental
     topology: embedded-python
-    note: "Canary-subset (148-page) measurement only (Overall 94.11); NO full-set result. Requires a separate ROCm torch + transformers==5.13.0 venv; not usable from the base installed wheel."
+    note: "Full 1651-page result (Overall 94.05; text 96.22 / CDM 92.60 / TEDS 93.33) on GA-7.14 (torch 2.11.0+rocm7.14.0, transformers 5.13.0), cap OFF, attn sdpa — recorded in REPRO.yaml + README; model_card_v2 entry pending v2-tooling. Canary 148 = 94.11. Requires a separate ROCm torch + transformers==5.13.0 venv; not usable from the base installed wheel."
   - platform: windows-hip
     backend: llama-cpp
     precision: bf16
