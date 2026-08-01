@@ -24,29 +24,46 @@ import sys
 from ..contract import CONTRACT
 from ..postprocess import clean_repeated_substrings, process_one
 
-# --- gfx1100 / ROCm ViT resolution cap (workaround) -------------------------
-# On AMD gfx1100 + torch 2.9.1 ROCm, the Hunyuan-ViT bf16 forward becomes
-# non-deterministic and emits NaN above ~14.2k-14.7k vision tokens (sharp
-# threshold). Capping the input pixel area keeps the patch count below the
-# threshold so inference is deterministic and correct. Override or disable
-# (set to 0) via HUNYUANOCR_VIT_MAX_PIXELS. See ROCm issue #6416:
-# https://github.com/ROCm/ROCm/issues/6416
-GFX1100_VIT_MAX_PIXELS = int(os.environ.get("HUNYUANOCR_VIT_MAX_PIXELS", "3400000"))
-# gfx1100 attention impl. With the ViT cap above, sdpa is deterministic, correct,
-# and ~1.4x faster than eager on RDNA3 (eager is the upstream default, tuned for
+# --- gfx1100 / ROCm floor (ADR-0003) ---------------------------------------
+# ROCm #6416 (gfx1100 bf16 ViT >14.3k-token non-determinism + NaN) is fixed at
+# the source in GA ROCm 7.14 (verified: ViT max|Δ|=0, e2e 3× byte-identical).
+# The pixel-area cap that dodged it is REMOVED; this floor makes an env below the
+# proven-fix threshold fail fast (clear error) instead of silently emitting
+# NaN/corrupt OCR. No-op on non-ROCm builds (#6416 does not apply there).
+# See https://github.com/ROCm/ROCm/issues/6416
+_GFX1100_FLOOR_TORCH = (2, 11)
+_GFX1100_FLOOR_HIP = (7, 14)
+
+
+def _below_gfx1100_floor(torch_version: str, hip: str | None) -> bool:
+    """True if a ROCm build is below the proven #6416-fix floor
+    (torch<2.11 or hip<7.14). Non-ROCm (``hip`` falsy) -> False."""
+    if not hip:
+        return False
+    torch_v = tuple(int(x) for x in torch_version.split("+", 1)[0].split(".")[:2])
+    hip_v = tuple(int(x) for x in hip.split(".")[:2])
+    return torch_v < _GFX1100_FLOOR_TORCH or hip_v < _GFX1100_FLOOR_HIP
+
+
+def _check_gfx1100_rocm_floor() -> None:
+    """Raise EnvironmentError if the running ROCm stack is below the #6416-fix
+    floor. Called from :func:`load_model_and_processor` before model load."""
+    import torch
+
+    if _below_gfx1100_floor(torch.__version__, torch.version.hip):
+        raise OSError(
+            f"HunyuanOCR-ROCm requires torch>={'.'.join(map(str, _GFX1100_FLOOR_TORCH))} "
+            f"and ROCm/HIP>={'.'.join(map(str, _GFX1100_FLOOR_HIP))} on gfx1100 "
+            f"(got torch={torch.__version__}, hip={torch.version.hip}); the #6416 ViT bug is "
+            f"present below this floor and the pixel-area cap was removed (ADR-0003). "
+            f"See https://github.com/ROCm/ROCm/issues/6416"
+        )
+
+
+# gfx1100 attention impl. sdpa is deterministic + correct + ~1.4x faster than
+# eager on RDNA3 on the fixed floor (eager is the upstream default, tuned for
 # H100). Override via HUNYUANOCR_ATTN.
 GFX1100_ATTN_IMPLEMENTATION = os.environ.get("HUNYUANOCR_ATTN", "sdpa")
-
-
-def _apply_vit_resolution_cap(processor):
-    """Cap HunyuanVL image-processor pixel area to stay under the ROCm ViT
-    threshold. No-op when the cap is 0 or the processor lacks the ``size`` knob."""
-    if GFX1100_VIT_MAX_PIXELS:
-        try:
-            processor.image_processor.size.longest_edge = GFX1100_VIT_MAX_PIXELS
-        except Exception:
-            pass
-    return processor
 
 
 def _patch_hunyuan_tokenizer_special_tokens(tokenizer) -> None:
@@ -95,6 +112,7 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
     import torch
     from transformers import AutoProcessor, HunYuanVLForConditionalGeneration
 
+    _check_gfx1100_rocm_floor()
     dtype = getattr(torch, CONTRACT.dtype)
     try:
         processor = AutoProcessor.from_pretrained(model_path, use_fast=False)
@@ -103,7 +121,6 @@ def load_model_and_processor(model_path: str, device: str = "cuda:0"):
             raise
         print("[warn] AutoProcessor tokenizer lacks video_token; retrying with patched tokenizer.", file=sys.stderr)
         processor = _load_processor_with_patch(model_path)
-    processor = _apply_vit_resolution_cap(processor)
     model = HunYuanVLForConditionalGeneration.from_pretrained(
         model_path,
         attn_implementation=GFX1100_ATTN_IMPLEMENTATION,
