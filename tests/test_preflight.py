@@ -124,3 +124,23 @@ def test_valid_inputs_pass(tmp_path):
         pred_dir=tmp_path / "pred",
     )
     assert problems == []
+
+
+def test_transformers_backend_needs_no_ports(tmp_path):
+    # the in-process transformers backend has no server -> ports not required
+    # (regression: run_phase1_transformers passed ports=None and failed preflight)
+    gt, img = _write_gt(tmp_path, ["a"])
+    problems = preflight.check_prediction_inputs(
+        gt_json=gt,
+        images_dir=img,
+        ports=None,
+        gpu_ids="0,1,2",
+        concurrency=1,
+        max_retries=1,
+        retry_backoff=0,
+        max_pixels=0,
+        model="HYVL",
+        pred_dir=tmp_path / "pred",
+        backend_name="transformers",
+    )
+    assert problems == []
