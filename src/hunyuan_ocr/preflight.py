@@ -122,11 +122,13 @@ def check_prediction_inputs(
     """
     problems: list[tuple[str, str]] = []
 
-    # ports
-    try:
-        _split_ids(ports, name="ports")
-    except PreflightError as exc:
-        problems.extend(("ports", e) for e in exc.errors)
+    # ports (required for OpenAI-compatible server backends; the in-process
+    # transformers backend has no server, so ports are not required there)
+    if backend_name != "transformers":
+        try:
+            _split_ids(ports, name="ports")
+        except PreflightError as exc:
+            problems.extend(("ports", e) for e in exc.errors)
 
     # gpu_ids (optional for the OAI driver, required for transformers)
     if gpu_ids is not None:

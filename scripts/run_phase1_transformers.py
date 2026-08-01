@@ -102,6 +102,7 @@ def main():
         max_pixels=0,
         model=args.model,
         pred_dir=args.pred_dir,
+        backend_name="transformers",
     )
     pages = preflight.pages_with_images(args.gt_json, args.images_dir)  # raises PreflightError
     preflight.assert_ok(problems)
