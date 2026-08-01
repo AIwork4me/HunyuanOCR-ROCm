@@ -94,6 +94,7 @@ benchmark:
   full_1651:
     llamacpp_overall: 92.09
     vllm_overall: 91.31                                # validated 2026-07-25 (capped 3.4M, sequential): text 95.48 / CDM 92.46 / TEDS 86.00; 0 errors
+    transformers_overall: 94.05                        # validated 2026-07-31 (GA-7.14 torch 2.11.0+rocm7.14.0, cap OFF, full-res ≤15360 ViT tok/page, attn sdpa, 4-GPU sharded, GPU3 excluded-faulty): text 96.22 / CDM 92.60 / TEDS 93.33; reading_order EditDist 0.1315; 0 errors, 1651/1651
   # Official reference, taken from the HunyuanOCR GitHub benchmark table. NOTE:
   # measured with TensorRT (a different engine) on an unlabeled OmniDocBench
   # version — not a same-engine, same-page-set comparison. See docs/benchmark-methodology.md.

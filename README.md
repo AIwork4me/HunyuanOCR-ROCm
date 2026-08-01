@@ -46,6 +46,7 @@ definition of "precision-aligned" are in [Benchmark methodology](docs/benchmark-
 | canary 148 | transformers | 94.11 | REPRO.yaml |
 | canary 148 | vLLM | 94.81 | REPRO.yaml |
 | full 1651 | llama.cpp | 92.09 | REPRO.yaml |
+| full 1651 | transformers | 94.05 | REPRO.yaml |
 | full 1651 | vLLM | 91.31 | REPRO.yaml |
 | official | TensorRT | 94.10 | official HunyuanOCR table |
 

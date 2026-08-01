@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "save_name": "hunyuan-ocr_v16_quick_match_cdm",
+  "engine": "transformers",
+  "cdm": true,
+  "created_at_utc": "2026-07-31T17:48:37.416374+00:00",
+  "prediction_count": 1651,
+  "ok_pages": 1648,
+  "failed_pages": 3,
+  "fallback_pages": 0,
+  "metric_result_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_metric_result.json",
+  "run_stats_path": "/workspace/HunyuanOCR-ROCm/results/omnidocbench/v16/linux-rocm/transformers/hunyuan-ocr_v16_quick_match_cdm_run_stats.json",
+  "readme_metrics": {
+    "text_edit_dist": 0.03777124415183974,
+    "reading_order_edit_dist": 0.13154401895803222,
+    "table_teds_percent": 93.32715544145036,
+    "formula_cdm_percent": 92.60029840216475
+  },
+  "metric_quality": {
+    "formula_cdm": {
+      "valid": true,
+      "reason": "",
+      "sample_count": 2352,
+      "exception_case_count": 0
+    }
+  },
+  "run_stats_summary": {
+    "count": 1651,
+    "ok": 1648,
+    "fail": 3,
+    "fallback": 0,
+    "limit_pages": null,
+    "failure_samples": [
+      {
+        "image": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点五年级英语上册_课本_人教新起点英语5A电子课本_page_001.png",
+        "status": "failed: empty prediction",
+        "error": "empty prediction",
+        "seconds": 0.0,
+        "attempts": 0
+      },
+      {
+        "image": "color_textbook_zhonggaokao_小学_13.人教新起点英语（4-5年级）_人教新起点五年级英语上册_课本_人教新起点英语5A电子课本_page_004.png",
+        "status": "failed: empty prediction",
+        "error": "empty prediction",
+        "seconds": 0.0,
+        "attempts": 0
+      },
+      {
+        "image": "yanbaopptmerge_yanbaoPPT_4975.png",
+        "status": "failed: empty prediction",
+        "error": "empty prediction",
+        "seconds": 0.0,
+        "attempts": 0
+      }
+    ]
+  },
+  "efficiency": {
+    "latency_s_per_page": 0.0
+  }
+}
