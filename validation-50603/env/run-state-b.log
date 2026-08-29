@@ -1,0 +1,18 @@
+/workspace/HunyuanOCR-ROCm/validation-50603/scripts/run_state.sh: line 21: /workspace/HunyuanOCR-ROCm/validation-50603/scripts/capture_env.sh: Permission denied
+[pr53856] running repro_determinism.py ...
+[pr53856] repro_determinism.py ok
+[pr53856] running repro_warmup.py ...
+[pr53856] repro_warmup.py ok
+[pr53856] running repro_control_short.py ...
+[pr53856] repro_control_short.py ok
+[pr53856] routing markers:
+    (EngineCore pid=279992) WARNING 08-29 07:16:02 [chunked_prefill_paged_decode.py:419] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+    (EngineCore pid=279992) WARNING 08-29 07:16:02 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+    (EngineCore pid=279992) WARNING 08-29 07:16:02 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.
+    (EngineCore pid=280325) WARNING 08-29 07:16:41 [chunked_prefill_paged_decode.py:419] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+    (EngineCore pid=280325) WARNING 08-29 07:16:41 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+    (EngineCore pid=280325) WARNING 08-29 07:16:41 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.
+    (EngineCore pid=280660) WARNING 08-29 07:17:21 [chunked_prefill_paged_decode.py:419] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+    (EngineCore pid=280660) WARNING 08-29 07:17:21 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+    (EngineCore pid=280660) WARNING 08-29 07:17:21 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.
+STATE-B SUITE rc=0

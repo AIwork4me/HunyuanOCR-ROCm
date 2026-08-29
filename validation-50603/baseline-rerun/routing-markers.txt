@@ -1,0 +1,9 @@
+(EngineCore pid=286461) WARNING 08-29 07:48:28 [chunked_prefill_paged_decode.py:419] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+(EngineCore pid=286461) WARNING 08-29 07:48:28 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=286461) WARNING 08-29 07:48:28 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=286795) WARNING 08-29 07:49:07 [chunked_prefill_paged_decode.py:419] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+(EngineCore pid=286795) WARNING 08-29 07:49:07 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=286795) WARNING 08-29 07:49:07 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=287128) WARNING 08-29 07:49:46 [chunked_prefill_paged_decode.py:419] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+(EngineCore pid=287128) WARNING 08-29 07:49:46 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+(EngineCore pid=287128) WARNING 08-29 07:49:46 [jit_monitor.py:129] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.

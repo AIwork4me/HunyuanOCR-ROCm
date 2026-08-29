@@ -1,0 +1,637 @@
++ export HF_HOME=/root/.cache/huggingface
++ HF_HOME=/root/.cache/huggingface
++ export HF_ENDPOINT=https://hf-mirror.com
++ HF_ENDPOINT=https://hf-mirror.com
++ export VLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python
++ VLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python
++ VPY=/workspace/venv-vllm50603/bin/python
++ PIP=/workspace/venv-vllm50603/bin/pip
++ AMD_IDX=https://repo.amd.com/rocm/whl-multi-arch/
++ cd /workspace/vllm-50603
++ git checkout -q state-a
++ echo '=== stage 1: torch 2.13.0+rocm7.14.0 (leaf gfx1100 2.13; family gfx11 wheel pins torch==2.12 and is intentionally omitted — this workload routes through Triton/CK attention, not aten-SDPA fused backends; pytorch#194498 context) ==='
+=== stage 1: torch 2.13.0+rocm7.14.0 (leaf gfx1100 2.13; family gfx11 wheel pins torch==2.12 and is intentionally omitted — this workload routes through Triton/CK attention, not aten-SDPA fused backends; pytorch#194498 context) ===
++ /workspace/venv-vllm50603/bin/pip install --index-url https://repo.amd.com/rocm/whl-multi-arch/ torch==2.13.0+rocm7.14.0 torchvision==0.28.0+rocm7.14.0 amd-torch-device-gfx1100==2.13.0+rocm7.14.0
+Looking in indexes: https://repo.amd.com/rocm/whl-multi-arch/
+Collecting torch==2.13.0+rocm7.14.0
+  Using cached torch-2.13.0%2Brocm7.14.0-cp312-cp312-linux_x86_64.whl (193.7 MB)
+Collecting torchvision==0.28.0+rocm7.14.0
+  Using cached torchvision-0.28.0%2Brocm7.14.0-cp312-cp312-linux_x86_64.whl (1.1 MB)
+Collecting amd-torch-device-gfx1100==2.13.0+rocm7.14.0
+  Using cached amd_torch_device_gfx1100-2.13.0%2Brocm7.14.0-cp312-cp312-linux_x86_64.whl (50.5 MB)
+Requirement already satisfied: filelock in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (3.32.4)
+Requirement already satisfied: typing-extensions>=4.10.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (4.16.0)
+Requirement already satisfied: setuptools>=77.0.3 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (81.0.0)
+Requirement already satisfied: sympy>=1.13.3 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (3.6.1)
+Requirement already satisfied: jinja2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (3.1.6)
+Requirement already satisfied: fsspec>=0.8.5 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (2026.7.0)
+Requirement already satisfied: rocm==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rocm[libraries]==7.14.0->torch==2.13.0+rocm7.14.0) (7.14.0)
+Collecting triton==3.8.0+git4cff872c.rocm7.14.0 (from torch==2.13.0+rocm7.14.0)
+  Using cached triton-3.8.0%2Bgit4cff872c.rocm7.14.0-cp312-cp312-linux_x86_64.whl (426.4 MB)
+Requirement already satisfied: rocm-bootstrap in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch==2.13.0+rocm7.14.0) (0.1.0)
+Requirement already satisfied: numpy in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torchvision==0.28.0+rocm7.14.0) (2.5.2)
+Requirement already satisfied: pillow!=8.3.*,>=5.3.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torchvision==0.28.0+rocm7.14.0) (12.3.0)
+Requirement already satisfied: rocm-sdk-device-gfx1100==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from amd-torch-device-gfx1100==2.13.0+rocm7.14.0) (7.14.0)
+Requirement already satisfied: rocm-sdk-core==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rocm==7.14.0->rocm[libraries]==7.14.0->torch==2.13.0+rocm7.14.0) (7.14.0)
+Requirement already satisfied: rocm-sdk-libraries==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rocm-sdk-device-gfx1100==7.14.0->amd-torch-device-gfx1100==2.13.0+rocm7.14.0) (7.14.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from sympy>=1.13.3->torch==2.13.0+rocm7.14.0) (1.3.0)
+Requirement already satisfied: MarkupSafe>=2.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from jinja2->torch==2.13.0+rocm7.14.0) (3.0.3)
+Installing collected packages: triton, torch, torchvision, amd-torch-device-gfx1100
+  Attempting uninstall: triton
+    Found existing installation: triton 3.7.1+git0263a6a6.rocm7.14.0
+    Uninstalling triton-3.7.1+git0263a6a6.rocm7.14.0:
+      Successfully uninstalled triton-3.7.1+git0263a6a6.rocm7.14.0
+  Attempting uninstall: torch
+    Found existing installation: torch 2.12.0+rocm7.14.0
+    Uninstalling torch-2.12.0+rocm7.14.0:
+      Successfully uninstalled torch-2.12.0+rocm7.14.0
+  Attempting uninstall: torchvision
+    Found existing installation: torchvision 0.27.0+rocm7.14.0
+    Uninstalling torchvision-0.27.0+rocm7.14.0:
+      Successfully uninstalled torchvision-0.27.0+rocm7.14.0
+  Attempting uninstall: amd-torch-device-gfx1100
+    Found existing installation: amd-torch-device-gfx1100 2.12.0+rocm7.14.0
+    Uninstalling amd-torch-device-gfx1100-2.12.0+rocm7.14.0:
+      Successfully uninstalled amd-torch-device-gfx1100-2.12.0+rocm7.14.0
+
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sensenova-u1 0.1.0 requires packaging==25.0, but you have packaging 26.3 which is incompatible.
+sensenova-u1 0.1.0 requires pillow==12.0.0, but you have pillow 12.3.0 which is incompatible.
+sensenova-u1 0.1.0 requires torch==2.8.0, but you have torch 2.13.0+rocm7.14.0 which is incompatible.
+sensenova-u1 0.1.0 requires torchvision==0.23.0, but you have torchvision 0.28.0+rocm7.14.0 which is incompatible.
+amd-torch-device-gfx11 2.12.0+rocm7.14.0 requires torch==2.12.0+rocm7.14.0, but you have torch 2.13.0+rocm7.14.0 which is incompatible.
+Successfully installed amd-torch-device-gfx1100-2.13.0+rocm7.14.0 torch-2.13.0+rocm7.14.0 torchvision-0.28.0+rocm7.14.0 triton-3.8.0+git4cff872c.rocm7.14.0
++ echo '=== stage 2: GPU sanity on the new torch ==='
+=== stage 2: GPU sanity on the new torch ===
++ /workspace/venv-vllm50603/bin/python -
+torch 2.13.0+rocm7.14.0 hip 7.14.60850
+device AMD Radeon Pro W7900D
+matmul mean ok: 0.054142724722623825
+sdpa ok: (1, 8, 128)
++ echo '=== stage 3: vLLM runtime deps (requirements/common.txt at state-a) + build tools ==='
+=== stage 3: vLLM runtime deps (requirements/common.txt at state-a) + build tools ===
++ /workspace/venv-vllm50603/bin/pip install 'setuptools>=77.0.3,<81.0.0' setuptools-rust 'cmake>=3.26.1' ninja 'setuptools-scm>=8.0' wheel jinja2 'packaging>=24.2'
+Collecting setuptools<81.0.0,>=77.0.3
+  Downloading setuptools-80.10.2-py3-none-any.whl.metadata (6.6 kB)
+Collecting setuptools-rust
+  Downloading setuptools_rust-1.13.0-py3-none-any.whl.metadata (9.6 kB)
+Requirement already satisfied: cmake>=3.26.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (4.4.2)
+Requirement already satisfied: ninja in /workspace/venv-vllm50603/lib/python3.12/site-packages (1.13.0)
+Requirement already satisfied: setuptools-scm>=8.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (10.2.1)
+Requirement already satisfied: wheel in /workspace/venv-vllm50603/lib/python3.12/site-packages (0.48.0)
+Requirement already satisfied: jinja2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (3.1.6)
+Requirement already satisfied: packaging>=24.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (26.3)
+Collecting semantic_version<3,>=2.8.2 (from setuptools-rust)
+  Downloading semantic_version-2.10.0-py2.py3-none-any.whl.metadata (9.7 kB)
+Requirement already satisfied: vcs-versioning<3,>=2.0.0.dev0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from setuptools-scm>=8.0) (2.3.1)
+Requirement already satisfied: MarkupSafe>=2.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from jinja2) (3.0.3)
+Downloading setuptools-80.10.2-py3-none-any.whl (1.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 5.8 MB/s  0:00:00
+Downloading setuptools_rust-1.13.0-py3-none-any.whl (30 kB)
+Downloading semantic_version-2.10.0-py2.py3-none-any.whl (15 kB)
+Installing collected packages: setuptools, semantic_version, setuptools-rust
+  Attempting uninstall: setuptools
+    Found existing installation: setuptools 81.0.0
+    Uninstalling setuptools-81.0.0:
+      Successfully uninstalled setuptools-81.0.0
+
+Successfully installed semantic_version-2.10.0 setuptools-80.10.2 setuptools-rust-1.13.0
++ /workspace/venv-vllm50603/bin/pip install -r requirements/common.txt
+Requirement already satisfied: regex in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 1)) (2026.7.19)
+Collecting cachetools (from -r requirements/common.txt (line 2))
+  Downloading cachetools-7.1.7-py3-none-any.whl.metadata (5.5 kB)
+Requirement already satisfied: psutil in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 3)) (7.2.2)
+Requirement already satisfied: sentencepiece in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 4)) (0.2.1)
+Requirement already satisfied: numpy in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 5)) (2.5.2)
+Requirement already satisfied: requests>=2.26.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 6)) (2.34.2)
+Requirement already satisfied: tqdm in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 7)) (4.67.1)
+Collecting blake3 (from -r requirements/common.txt (line 8))
+  Downloading blake3-1.0.9-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.9 kB)
+Collecting py-cpuinfo (from -r requirements/common.txt (line 9))
+  Using cached py_cpuinfo-9.0.0-py3-none-any.whl.metadata (794 bytes)
+Requirement already satisfied: transformers>=5.10.4 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 10)) (5.16.1)
+Requirement already satisfied: huggingface_hub>=1.28.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 11)) (1.29.0)
+Requirement already satisfied: tokenizers>=0.21.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 12)) (0.23.1)
+Requirement already satisfied: safetensors>=0.6.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 13)) (0.8.0)
+Collecting protobuf!=6.30.*,!=6.31.*,!=6.32.*,!=6.33.0.*,!=6.33.1.*,!=6.33.2.*,!=6.33.3.*,!=6.33.4.*,>=5.29.6 (from -r requirements/common.txt (line 14))
+  Downloading protobuf-7.36.0-cp310-abi3-manylinux2014_x86_64.whl.metadata (595 bytes)
+Collecting fastapi<0.137.0,>=0.133.0 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading fastapi-0.136.3-py3-none-any.whl.metadata (27 kB)
+Collecting starlette>=1.0.1 (from -r requirements/common.txt (line 16))
+  Downloading starlette-1.6.0-py3-none-any.whl.metadata (6.4 kB)
+Collecting aiohttp>=3.13.3 (from -r requirements/common.txt (line 17))
+  Downloading aiohttp-3.14.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (8.3 kB)
+Collecting openai>=2.0.0 (from -r requirements/common.txt (line 18))
+  Downloading openai-3.6.0-py3-none-any.whl.metadata (41 kB)
+Collecting pydantic>=2.12.0 (from -r requirements/common.txt (line 19))
+  Downloading pydantic-2.13.5-py3-none-any.whl.metadata (110 kB)
+Collecting prometheus_client>=0.18.0 (from -r requirements/common.txt (line 20))
+  Downloading prometheus_client-0.26.0-py3-none-any.whl.metadata (2.1 kB)
+Requirement already satisfied: pillow in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 21)) (12.3.0)
+Collecting prometheus-fastapi-instrumentator>=8.0.0 (from -r requirements/common.txt (line 22))
+  Downloading prometheus_fastapi_instrumentator-8.1.0-py3-none-any.whl.metadata (13 kB)
+Collecting tiktoken>=0.6.0 (from -r requirements/common.txt (line 23))
+  WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='files.pythonhosted.org', port=443): Read timed out. (read timeout=15)")': /packages/51/11/9976ad86980a00cdef05e730a0127a2578a1bc6d11644d8d47246de2eb26/tiktoken-0.14.0-cp312-cp312-manylinux_2_28_x86_64.whl.metadata
+  Downloading tiktoken-0.14.0-cp312-cp312-manylinux_2_28_x86_64.whl.metadata (6.7 kB)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/lm-format-enforcer/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/lm-format-enforcer/
+Collecting lm-format-enforcer==0.11.3 (from -r requirements/common.txt (line 24))
+  WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='files.pythonhosted.org', port=443): Read timed out. (read timeout=15)")': /packages/a0/ef/11292bb0b85cf4c93447cab5a29f64576ed14d3ab4280e35ddd23486594a/lm_format_enforcer-0.11.3-py3-none-any.whl.metadata
+  Downloading lm_format_enforcer-0.11.3-py3-none-any.whl.metadata (17 kB)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/llguidance/
+Collecting llguidance<1.8.0,>=1.7.0 (from -r requirements/common.txt (line 25))
+  WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='files.pythonhosted.org', port=443): Read timed out. (read timeout=15)")': /packages/1a/64/d74336f22242ef94356a456057d4ff1be7c1bc9c7dbc867171c6982a5512/llguidance-1.7.6-cp39-abi3-manylinux_2_31_x86_64.whl.metadata
+  Downloading llguidance-1.7.6-cp39-abi3-manylinux_2_31_x86_64.whl.metadata (10 kB)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/outlines-core/
+Collecting outlines_core==0.2.14 (from -r requirements/common.txt (line 26))
+  WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='files.pythonhosted.org', port=443): Read timed out. (read timeout=15)")': /packages/29/29/3a04944407207a5d214879ca5ca33c2bd3e65199a4e927051c1bdaaa4d50/outlines_core-0.2.14-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata
+  Downloading outlines_core-0.2.14-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (7.6 kB)
+WARNING: Retrying (Retry(total=4, connect=None, read=None, redirect=None, status=None)) after connection broken by 'ReadTimeoutError("HTTPSConnectionPool(host='pypi.org', port=443): Read timed out. (read timeout=15)")': /simple/lark/
+WARNING: Retrying (Retry(total=3, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/lark/
+WARNING: Retrying (Retry(total=2, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/lark/
+WARNING: Retrying (Retry(total=1, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/lark/
+WARNING: Retrying (Retry(total=0, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/lark/
+ERROR: Could not find a version that satisfies the requirement lark==1.2.2 (from versions: none)
+ERROR: No matching distribution found for lark==1.2.2
++ export HF_HOME=/root/.cache/huggingface
++ HF_HOME=/root/.cache/huggingface
++ export HF_ENDPOINT=https://hf-mirror.com
++ HF_ENDPOINT=https://hf-mirror.com
++ export VLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python
++ VLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python
++ VPY=/workspace/venv-vllm50603/bin/python
++ PIP=/workspace/venv-vllm50603/bin/pip
++ PIPFLAGS='--retries 10 --timeout 60'
++ cd /workspace/vllm-50603
++ git checkout -q state-a
++ echo '=== stage 3 (cont): vLLM runtime deps + build tools ==='
+=== stage 3 (cont): vLLM runtime deps + build tools ===
++ /workspace/venv-vllm50603/bin/pip install --retries 10 --timeout 60 -r requirements/common.txt
+Requirement already satisfied: regex in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 1)) (2026.7.19)
+WARNING: Retrying (Retry(total=9, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/cachetools/
+WARNING: Retrying (Retry(total=8, connect=None, read=None, redirect=None, status=None)) after connection broken by 'NewConnectionError("HTTPSConnection(host='pypi.org', port=443): Failed to establish a new connection: [Errno 101] Network is unreachable")': /simple/cachetools/
++ export HF_HOME=/root/.cache/huggingface
++ HF_HOME=/root/.cache/huggingface
++ export HF_ENDPOINT=https://hf-mirror.com
++ HF_ENDPOINT=https://hf-mirror.com
++ export VLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python
++ VLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python
++ VPY=/workspace/venv-vllm50603/bin/python
++ PIP=/workspace/venv-vllm50603/bin/pip
++ PIPFLAGS='--retries 10 --timeout 60'
++ PYPIDX=https://mirrors.aliyun.com/pypi/simple/
++ cd /workspace/vllm-50603
++ git checkout -q state-a
++ echo '=== stage 3 (cont): vLLM runtime deps + build tools ==='
+=== stage 3 (cont): vLLM runtime deps + build tools ===
++ /workspace/venv-vllm50603/bin/pip install --retries 10 --timeout 60 -i https://mirrors.aliyun.com/pypi/simple/ -r requirements/common.txt
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: regex in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 1)) (2026.7.19)
+Collecting cachetools (from -r requirements/common.txt (line 2))
+  Downloading cachetools-7.1.7-py3-none-any.whl (16 kB)
+Requirement already satisfied: psutil in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 3)) (7.2.2)
+Requirement already satisfied: sentencepiece in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 4)) (0.2.1)
+Requirement already satisfied: numpy in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 5)) (2.5.2)
+Requirement already satisfied: requests>=2.26.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 6)) (2.34.2)
+Requirement already satisfied: tqdm in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 7)) (4.67.1)
+Collecting blake3 (from -r requirements/common.txt (line 8))
+  Downloading blake3-1.0.9-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (383 kB)
+Collecting py-cpuinfo (from -r requirements/common.txt (line 9))
+  Downloading py_cpuinfo-9.0.0-py3-none-any.whl (22 kB)
+Requirement already satisfied: transformers>=5.10.4 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 10)) (5.16.1)
+Requirement already satisfied: huggingface_hub>=1.28.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 11)) (1.29.0)
+Requirement already satisfied: tokenizers>=0.21.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 12)) (0.23.1)
+Requirement already satisfied: safetensors>=0.6.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 13)) (0.8.0)
+Collecting protobuf!=6.30.*,!=6.31.*,!=6.32.*,!=6.33.0.*,!=6.33.1.*,!=6.33.2.*,!=6.33.3.*,!=6.33.4.*,>=5.29.6 (from -r requirements/common.txt (line 14))
+  Downloading protobuf-7.36.0-cp310-abi3-manylinux2014_x86_64.whl (340 kB)
+Collecting fastapi<0.137.0,>=0.133.0 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading fastapi-0.136.3-py3-none-any.whl (117 kB)
+Collecting starlette>=1.0.1 (from -r requirements/common.txt (line 16))
+  Downloading starlette-1.6.0-py3-none-any.whl (75 kB)
+Collecting aiohttp>=3.13.3 (from -r requirements/common.txt (line 17))
+  Downloading aiohttp-3.14.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 6.5 MB/s  0:00:00
+Collecting openai>=2.0.0 (from -r requirements/common.txt (line 18))
+  Downloading openai-3.5.0-py3-none-any.whl (1.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.7/1.7 MB 6.4 MB/s  0:00:00
+Collecting pydantic>=2.12.0 (from -r requirements/common.txt (line 19))
+  Downloading pydantic-2.13.4-py3-none-any.whl (472 kB)
+Collecting prometheus_client>=0.18.0 (from -r requirements/common.txt (line 20))
+  Downloading prometheus_client-0.26.0-py3-none-any.whl (64 kB)
+Requirement already satisfied: pillow in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 21)) (12.3.0)
+Collecting prometheus-fastapi-instrumentator>=8.0.0 (from -r requirements/common.txt (line 22))
+  Downloading prometheus_fastapi_instrumentator-8.1.0-py3-none-any.whl (19 kB)
+Collecting tiktoken>=0.6.0 (from -r requirements/common.txt (line 23))
+  Downloading tiktoken-0.14.0-cp312-cp312-manylinux_2_28_x86_64.whl (1.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 4.3 MB/s  0:00:00
+Collecting lm-format-enforcer==0.11.3 (from -r requirements/common.txt (line 24))
+  Downloading lm_format_enforcer-0.11.3-py3-none-any.whl (45 kB)
+Collecting llguidance<1.8.0,>=1.7.0 (from -r requirements/common.txt (line 25))
+  Downloading llguidance-1.7.6-cp39-abi3-manylinux_2_31_x86_64.whl (3.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.1/3.1 MB 4.4 MB/s  0:00:00
+Collecting outlines_core==0.2.14 (from -r requirements/common.txt (line 26))
+  Downloading outlines_core-0.2.14-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.3/2.3 MB 4.9 MB/s  0:00:00
+Collecting lark==1.2.2 (from -r requirements/common.txt (line 27))
+  Downloading lark-1.2.2-py3-none-any.whl (111 kB)
+Collecting xgrammar<1.0.0,>=0.2.1 (from -r requirements/common.txt (line 28))
+  Downloading xgrammar-0.2.3-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (44.9 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 44.9/44.9 MB 3.2 MB/s  0:00:13
+Requirement already satisfied: typing_extensions>=4.10 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 29)) (4.16.0)
+Requirement already satisfied: filelock>=3.16.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 30)) (3.32.4)
+Collecting partial-json-parser (from -r requirements/common.txt (line 31))
+  Downloading partial_json_parser-0.2.1.1.post7-py3-none-any.whl (10 kB)
+Collecting jsonschema>=4.23.0 (from -r requirements/common.txt (line 32))
+  Downloading jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Collecting pyzmq>=25.0.0 (from -r requirements/common.txt (line 33))
+  Downloading pyzmq-27.2.0-cp312-abi3-manylinux_2_26_x86_64.manylinux_2_28_x86_64.whl (872 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 872.3/872.3 kB 54.8 MB/s  0:00:00
+Collecting msgspec (from -r requirements/common.txt (line 34))
+  Downloading msgspec-0.21.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (225 kB)
+Collecting mistral_common>=1.11.6 (from mistral_common[image]>=1.11.6->-r requirements/common.txt (line 35))
+  Downloading mistral_common-1.11.7-py3-none-any.whl (6.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 3.0 MB/s  0:00:02
+Collecting opencv-python-headless>=4.13.0 (from -r requirements/common.txt (line 36))
+  Downloading opencv_python_headless-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl (61.2 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.2/61.2 MB 3.3 MB/s  0:00:18
+Requirement already satisfied: pyyaml in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 37)) (6.0.3)
+Collecting six>=1.16.0 (from -r requirements/common.txt (line 38))
+  Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Requirement already satisfied: setuptools<81.0.0,>=77.0.3 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 39)) (80.10.2)
+Collecting einops (from -r requirements/common.txt (line 40))
+  Downloading einops-0.8.2-py3-none-any.whl (65 kB)
+Collecting compressed-tensors==0.17.0 (from -r requirements/common.txt (line 41))
+  Downloading compressed_tensors-0.17.0-py3-none-any.whl (211 kB)
+Collecting depyf==0.20.0 (from -r requirements/common.txt (line 42))
+  Downloading depyf-0.20.0-py3-none-any.whl (39 kB)
+Collecting cloudpickle (from -r requirements/common.txt (line 43))
+  Downloading cloudpickle-3.1.2-py3-none-any.whl (22 kB)
+Collecting watchfiles (from -r requirements/common.txt (line 44))
+  Downloading watchfiles-1.2.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (456 kB)
+Collecting python-json-logger (from -r requirements/common.txt (line 45))
+  Downloading python_json_logger-4.2.0-py3-none-any.whl (14 kB)
+Requirement already satisfied: ninja in /workspace/venv-vllm50603/lib/python3.12/site-packages (from -r requirements/common.txt (line 46)) (1.13.0)
+Collecting pybase64 (from -r requirements/common.txt (line 47))
+  Downloading pybase64-1.5.0-cp312-cp312-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (94 kB)
+Collecting cbor2 (from -r requirements/common.txt (line 48))
+  Downloading cbor2-6.1.4-cp312-cp312-manylinux_2_28_x86_64.whl (461 kB)
+Collecting ijson (from -r requirements/common.txt (line 49))
+  Downloading ijson-3.5.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (149 kB)
+Collecting setproctitle (from -r requirements/common.txt (line 50))
+  Downloading setproctitle-1.3.7-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (32 kB)
+Collecting openai-harmony>=0.0.3 (from -r requirements/common.txt (line 51))
+  Downloading openai_harmony-0.0.8-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (3.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 4.2 MB/s  0:00:00
+Collecting anthropic>=0.71.0 (from -r requirements/common.txt (line 52))
+  Downloading anthropic-1.2.0-py3-none-any.whl (1.3 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.3/1.3 MB 4.8 MB/s  0:00:00
+Collecting model-hosting-container-standards<1.0.0,>=0.1.14 (from -r requirements/common.txt (line 53))
+  Downloading model_hosting_container_standards-0.1.16-py3-none-any.whl (125 kB)
+Collecting mcp (from -r requirements/common.txt (line 54))
+  Downloading mcp-2.1.1-py3-none-any.whl (357 kB)
+Collecting opentelemetry-sdk>=1.27.0 (from -r requirements/common.txt (line 55))
+  Downloading opentelemetry_sdk-1.44.0-py3-none-any.whl (137 kB)
+Collecting opentelemetry-api>=1.27.0 (from -r requirements/common.txt (line 56))
+  Downloading opentelemetry_api-1.44.0-py3-none-any.whl (60 kB)
+Collecting opentelemetry-exporter-otlp>=1.27.0 (from -r requirements/common.txt (line 57))
+  Downloading opentelemetry_exporter_otlp-1.44.0-py3-none-any.whl (6.7 kB)
+Collecting opentelemetry-semantic-conventions-ai>=0.4.1 (from -r requirements/common.txt (line 58))
+  Downloading opentelemetry_semantic_conventions_ai-0.5.1-py3-none-any.whl (11 kB)
+Collecting interegular>=0.3.2 (from lm-format-enforcer==0.11.3->-r requirements/common.txt (line 24))
+  Downloading interegular-0.3.3-py37-none-any.whl (23 kB)
+Requirement already satisfied: packaging in /workspace/venv-vllm50603/lib/python3.12/site-packages (from lm-format-enforcer==0.11.3->-r requirements/common.txt (line 24)) (26.3)
+Requirement already satisfied: torch>=2.10.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (2.13.0+rocm7.14.0)
+Collecting loguru (from compressed-tensors==0.17.0->-r requirements/common.txt (line 41))
+  Downloading loguru-0.7.3-py3-none-any.whl (61 kB)
+Collecting astor (from depyf==0.20.0->-r requirements/common.txt (line 42))
+  Downloading astor-0.8.1-py2.py3-none-any.whl (27 kB)
+Collecting dill (from depyf==0.20.0->-r requirements/common.txt (line 42))
+  Downloading dill-0.4.1-py3-none-any.whl (120 kB)
+Collecting typing-inspection>=0.4.2 (from fastapi<0.137.0,>=0.133.0->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Requirement already satisfied: annotated-doc>=0.0.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from fastapi<0.137.0,>=0.133.0->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (0.0.5)
+Collecting apache-tvm-ffi>=0.1.9 (from xgrammar<1.0.0,>=0.2.1->-r requirements/common.txt (line 28))
+  Downloading apache_tvm_ffi-0.1.13.post3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl (3.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.0/3.0 MB 4.1 MB/s  0:00:00
+Requirement already satisfied: triton in /workspace/venv-vllm50603/lib/python3.12/site-packages (from xgrammar<1.0.0,>=0.2.1->-r requirements/common.txt (line 28)) (3.8.0+git4cff872c.rocm7.14.0)
+Requirement already satisfied: httpx in /workspace/venv-vllm50603/lib/python3.12/site-packages (from model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53)) (0.28.1)
+Collecting jmespath (from model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53))
+  Downloading jmespath-1.1.0-py3-none-any.whl (20 kB)
+Collecting supervisor>=4.2.0 (from model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53))
+  Downloading supervisor-4.3.0-py2.py3-none-any.whl (320 kB)
+Collecting fastapi-cli>=0.0.8 (from fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading fastapi_cli-0.0.32-py3-none-any.whl (14 kB)
+Collecting fastar>=0.9.0 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading fastar-0.12.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (808 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 808.1/808.1 kB 64.0 MB/s  0:00:00
+Requirement already satisfied: jinja2>=3.1.5 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (3.1.6)
+Collecting python-multipart>=0.0.18 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading python_multipart-0.0.32-py3-none-any.whl (30 kB)
+Collecting email-validator>=2.0.0 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading email_validator-2.3.0-py3-none-any.whl (35 kB)
+Collecting uvicorn>=0.12.0 (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading uvicorn-0.52.4-py3-none-any.whl (79 kB)
+Collecting pydantic-settings>=2.0.0 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading pydantic_settings-2.15.0-py3-none-any.whl (69 kB)
+Collecting pydantic-extra-types>=2.0.0 (from fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading pydantic_extra_types-2.11.1-py3-none-any.whl (79 kB)
+Requirement already satisfied: anyio in /workspace/venv-vllm50603/lib/python3.12/site-packages (from httpx->model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53)) (4.14.2)
+Requirement already satisfied: certifi in /workspace/venv-vllm50603/lib/python3.12/site-packages (from httpx->model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53)) (2026.7.22)
+Requirement already satisfied: httpcore==1.* in /workspace/venv-vllm50603/lib/python3.12/site-packages (from httpx->model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53)) (1.0.9)
+Requirement already satisfied: idna in /workspace/venv-vllm50603/lib/python3.12/site-packages (from httpx->model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53)) (3.19)
+Requirement already satisfied: h11>=0.16 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from httpcore==1.*->httpx->model-hosting-container-standards<1.0.0,>=0.1.14->-r requirements/common.txt (line 53)) (0.16.0)
+Requirement already satisfied: charset_normalizer<4,>=2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from requests>=2.26.0->-r requirements/common.txt (line 6)) (3.5.1)
+Requirement already satisfied: urllib3<3,>=1.26 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from requests>=2.26.0->-r requirements/common.txt (line 6)) (2.7.0)
+Requirement already satisfied: typer in /workspace/venv-vllm50603/lib/python3.12/site-packages (from transformers>=5.10.4->-r requirements/common.txt (line 10)) (0.27.2)
+Requirement already satisfied: click<9.0.0,>=8.4.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from huggingface_hub>=1.28.0->-r requirements/common.txt (line 11)) (8.5.0)
+Requirement already satisfied: fsspec>=2023.5.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from huggingface_hub>=1.28.0->-r requirements/common.txt (line 11)) (2026.7.0)
+Requirement already satisfied: hf-xet<2.0.0,>=1.5.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from huggingface_hub>=1.28.0->-r requirements/common.txt (line 11)) (1.6.0)
+Collecting aiohappyeyeballs>=2.5.0 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+Collecting aiosignal>=1.4.0 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+Collecting attrs>=17.3.0 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+Collecting frozenlist>=1.1.1 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (242 kB)
+Collecting multidict<7.0,>=4.5 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (256 kB)
+Collecting propcache>=0.2.0 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (61 kB)
+Collecting yarl<2.0,>=1.17.0 (from aiohttp>=3.13.3->-r requirements/common.txt (line 17))
+  Downloading yarl-1.24.5-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (109 kB)
+Collecting httpx2<3,>=2.7.0 (from openai>=2.0.0->-r requirements/common.txt (line 18))
+  Downloading httpx2-2.12.0-py3-none-any.whl (95 kB)
+Collecting jiter<1,>=0.16.0 (from openai>=2.0.0->-r requirements/common.txt (line 18))
+  Downloading jiter-0.16.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (343 kB)
+Collecting sniffio (from openai>=2.0.0->-r requirements/common.txt (line 18))
+  Downloading sniffio-1.3.1-py3-none-any.whl (10 kB)
+Collecting annotated-types>=0.6.0 (from pydantic>=2.12.0->-r requirements/common.txt (line 19))
+  Downloading annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Collecting pydantic-core==2.46.4 (from pydantic>=2.12.0->-r requirements/common.txt (line 19))
+  Downloading pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 4.3 MB/s  0:00:00
+Collecting httpcore2==2.12.0 (from httpx2<3,>=2.7.0->openai>=2.0.0->-r requirements/common.txt (line 18))
+  Downloading httpcore2-2.12.0-py3-none-any.whl (83 kB)
+Collecting truststore>=0.10 (from httpx2<3,>=2.7.0->openai>=2.0.0->-r requirements/common.txt (line 18))
+  Downloading truststore-0.10.4-py3-none-any.whl (18 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=4.23.0->-r requirements/common.txt (line 32))
+  Downloading jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Collecting referencing>=0.28.4 (from jsonschema>=4.23.0->-r requirements/common.txt (line 32))
+  Downloading referencing-0.37.0-py3-none-any.whl (26 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema>=4.23.0->-r requirements/common.txt (line 32))
+  Downloading rpds_py-2026.6.3-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (366 kB)
+Collecting numpy (from -r requirements/common.txt (line 5))
+  Downloading numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.6 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.6/16.6 MB 3.9 MB/s  0:00:04
+Collecting docstring-parser<1,>=0.15 (from anthropic>=0.71.0->-r requirements/common.txt (line 52))
+  Downloading docstring_parser-0.18.0-py3-none-any.whl (22 kB)
+Collecting mcp-types==2.1.1 (from mcp->-r requirements/common.txt (line 54))
+  Downloading mcp_types-2.1.1-py3-none-any.whl (69 kB)
+Collecting pyjwt>=2.10.1 (from pyjwt[crypto]>=2.10.1->mcp->-r requirements/common.txt (line 54))
+  Downloading pyjwt-2.13.0-py3-none-any.whl (31 kB)
+Collecting sse-starlette>=3.0.0 (from mcp->-r requirements/common.txt (line 54))
+  Downloading sse_starlette-3.4.8-py3-none-any.whl (16 kB)
+Collecting opentelemetry-semantic-conventions==0.65b0 (from opentelemetry-sdk>=1.27.0->-r requirements/common.txt (line 55))
+  Downloading opentelemetry_semantic_conventions-0.65b0-py3-none-any.whl (204 kB)
+Collecting opentelemetry-exporter-otlp-proto-grpc==1.44.0 (from opentelemetry-exporter-otlp>=1.27.0->-r requirements/common.txt (line 57))
+  Downloading opentelemetry_exporter_otlp_proto_grpc-1.44.0-py3-none-any.whl (19 kB)
+Collecting opentelemetry-exporter-otlp-proto-http==1.44.0 (from opentelemetry-exporter-otlp>=1.27.0->-r requirements/common.txt (line 57))
+  Downloading opentelemetry_exporter_otlp_proto_http-1.44.0-py3-none-any.whl (21 kB)
+Collecting googleapis-common-protos~=1.57 (from opentelemetry-exporter-otlp-proto-grpc==1.44.0->opentelemetry-exporter-otlp>=1.27.0->-r requirements/common.txt (line 57))
+  Downloading googleapis_common_protos-1.75.2-py3-none-any.whl (307 kB)
+Collecting grpcio<2.0.0,>=1.63.2 (from opentelemetry-exporter-otlp-proto-grpc==1.44.0->opentelemetry-exporter-otlp>=1.27.0->-r requirements/common.txt (line 57))
+  Downloading grpcio-1.83.0-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (7.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 7.0/7.0 MB 4.0 MB/s  0:00:01
+Collecting opentelemetry-exporter-otlp-proto-common==1.44.0 (from opentelemetry-exporter-otlp-proto-grpc==1.44.0->opentelemetry-exporter-otlp>=1.27.0->-r requirements/common.txt (line 57))
+  Downloading opentelemetry_exporter_otlp_proto_common-1.44.0-py3-none-any.whl (17 kB)
+Collecting opentelemetry-proto==1.44.0 (from opentelemetry-exporter-otlp-proto-grpc==1.44.0->opentelemetry-exporter-otlp>=1.27.0->-r requirements/common.txt (line 57))
+  Downloading opentelemetry_proto-1.44.0-py3-none-any.whl (72 kB)
+Collecting dnspython>=2.0.0 (from email-validator>=2.0.0->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading dnspython-2.8.0-py3-none-any.whl (331 kB)
+Collecting rich-toolkit>=0.14.8 (from fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading rich_toolkit-0.20.3-py3-none-any.whl (36 kB)
+Collecting fastapi-cloud-cli>=0.1.1 (from fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading fastapi_cloud_cli-0.23.0-py3-none-any.whl (78 kB)
+Collecting rignore>=0.5.1 (from fastapi-cloud-cli>=0.1.1->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading rignore-0.8.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (927 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 927.8/927.8 kB 83.0 MB/s  0:00:00
+Collecting sentry-sdk>=2.20.0 (from fastapi-cloud-cli>=0.1.1->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading sentry_sdk-2.68.1-py3-none-any.whl (520 kB)
+Collecting detect-installer>=0.1.0 (from fastapi-cloud-cli>=0.1.1->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading detect_installer-0.1.0-py3-none-any.whl (4.5 kB)
+Requirement already satisfied: MarkupSafe>=2.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from jinja2>=3.1.5->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (3.0.3)
+Collecting pycountry>=23 (from pydantic-extra-types[pycountry]>=2.10.5->mistral_common>=1.11.6->mistral_common[image]>=1.11.6->-r requirements/common.txt (line 35))
+  Downloading pycountry-26.2.16-py3-none-any.whl (8.0 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.0/8.0 MB 3.7 MB/s  0:00:02
+Collecting python-dotenv>=0.21.0 (from pydantic-settings>=2.0.0->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading python_dotenv-1.2.3-py3-none-any.whl (22 kB)
+Collecting cryptography>=3.4.0 (from pyjwt[crypto]>=2.10.1->mcp->-r requirements/common.txt (line 54))
+  Downloading cryptography-50.0.1-cp311-abi3-manylinux_2_34_x86_64.whl (4.7 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 4.3 MB/s  0:00:01
+Collecting cffi>=2.0.0 (from cryptography>=3.4.0->pyjwt[crypto]>=2.10.1->mcp->-r requirements/common.txt (line 54))
+  Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=3.4.0->pyjwt[crypto]>=2.10.1->mcp->-r requirements/common.txt (line 54))
+  Downloading pycparser-3.0-py3-none-any.whl (48 kB)
+Requirement already satisfied: rich>=13.7.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rich-toolkit>=0.14.8->fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (15.0.0)
+Requirement already satisfied: markdown-it-py>=2.2.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rich>=13.7.1->rich-toolkit>=0.14.8->fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (4.2.0)
+Requirement already satisfied: pygments<3.0.0,>=2.13.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rich>=13.7.1->rich-toolkit>=0.14.8->fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (2.21.0)
+Requirement already satisfied: mdurl~=0.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from markdown-it-py>=2.2.0->rich>=13.7.1->rich-toolkit>=0.14.8->fastapi-cli>=0.0.8->fastapi-cli[standard]>=0.0.8; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15)) (0.1.2)
+Requirement already satisfied: sympy>=1.13.3 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (1.14.0)
+Requirement already satisfied: networkx>=2.5.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (3.6.1)
+Requirement already satisfied: rocm==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rocm[libraries]==7.14.0->torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (7.14.0)
+Requirement already satisfied: rocm-bootstrap in /workspace/venv-vllm50603/lib/python3.12/site-packages (from torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (0.1.0)
+Requirement already satisfied: rocm-sdk-core==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rocm==7.14.0->rocm[libraries]==7.14.0->torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (7.14.0)
+Requirement already satisfied: rocm-sdk-libraries==7.14.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from rocm[libraries]==7.14.0->torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (7.14.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from sympy>=1.13.3->torch>=2.10.0->compressed-tensors==0.17.0->-r requirements/common.txt (line 41)) (1.3.0)
+Requirement already satisfied: shellingham>=1.3.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from typer->transformers>=5.10.4->-r requirements/common.txt (line 10)) (1.5.4)
+Collecting httptools>=0.8.0 (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading httptools-0.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (523 kB)
+Collecting uvloop>=0.15.1 (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading uvloop-0.22.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (4.4 MB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.4/4.4 MB 4.0 MB/s  0:00:01
+Collecting websockets>=13.0 (from uvicorn[standard]>=0.12.0; extra == "standard"->fastapi[standard]<0.137.0,>=0.133.0->-r requirements/common.txt (line 15))
+  Downloading websockets-17.1-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (224 kB)
+Installing collected packages: supervisor, py-cpuinfo, websockets, uvloop, uvicorn, typing-inspection, truststore, sniffio, six, setproctitle, sentry-sdk, rpds-py, rignore, pyzmq, python-multipart, python-json-logger, python-dotenv, pyjwt, pydantic-core, pycparser, pycountry, pybase64, protobuf, propcache, prometheus_client, partial-json-parser, outlines_core, opentelemetry-api, numpy, multidict, msgspec, loguru, llguidance, lark, jmespath, jiter, interegular, ijson, httptools, grpcio, frozenlist, fastar, einops, docstring-parser, dnspython, dill, detect-installer, cloudpickle, cbor2, cachetools, blake3, attrs, astor, apache-tvm-ffi, annotated-types, aiohappyeyeballs, yarl, watchfiles, tiktoken, starlette, referencing, pydantic, opentelemetry-semantic-conventions, opentelemetry-proto, opencv-python-headless, httpcore2, googleapis-common-protos, email-validator, depyf, cffi, aiosignal, sse-starlette, rich-toolkit, pydantic-settings, pydantic-extra-types, prometheus-fastapi-instrumentator, opentelemetry-sdk, opentelemetry-exporter-otlp-proto-common, openai-harmony, mcp-types, lm-format-enforcer, jsonschema-specifications, httpx2, fastapi, cryptography, aiohttp, opentelemetry-semantic-conventions-ai, opentelemetry-exporter-otlp-proto-http, opentelemetry-exporter-otlp-proto-grpc, openai, model-hosting-container-standards, jsonschema, fastapi-cloud-cli, fastapi-cli, anthropic, opentelemetry-exporter-otlp, mistral_common, mcp, xgrammar, compressed-tensors
+  Attempting uninstall: numpy
+    Found existing installation: numpy 2.5.2
+    Uninstalling numpy-2.5.2:
+      Successfully uninstalled numpy-2.5.2
+
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+sensenova-u1 0.1.0 requires packaging==25.0, but you have packaging 26.3 which is incompatible.
+sensenova-u1 0.1.0 requires pillow==12.0.0, but you have pillow 12.3.0 which is incompatible.
+sensenova-u1 0.1.0 requires torch==2.8.0, but you have torch 2.13.0+rocm7.14.0 which is incompatible.
+sensenova-u1 0.1.0 requires torchvision==0.23.0, but you have torchvision 0.28.0+rocm7.14.0 which is incompatible.
+Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.3 aiosignal-1.4.0 annotated-types-0.8.0 anthropic-1.2.0 apache-tvm-ffi-0.1.13.post3 astor-0.8.1 attrs-26.1.0 blake3-1.0.9 cachetools-7.1.7 cbor2-6.1.4 cffi-2.1.1 cloudpickle-3.1.2 compressed-tensors-0.17.0 cryptography-50.0.1 depyf-0.20.0 detect-installer-0.1.0 dill-0.4.1 dnspython-2.8.0 docstring-parser-0.18.0 einops-0.8.2 email-validator-2.3.0 fastapi-0.136.3 fastapi-cli-0.0.32 fastapi-cloud-cli-0.23.0 fastar-0.12.0 frozenlist-1.8.0 googleapis-common-protos-1.75.2 grpcio-1.83.0 httpcore2-2.12.0 httptools-0.8.0 httpx2-2.12.0 ijson-3.5.1 interegular-0.3.3 jiter-0.16.0 jmespath-1.1.0 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 lark-1.2.2 llguidance-1.7.6 lm-format-enforcer-0.11.3 loguru-0.7.3 mcp-2.1.1 mcp-types-2.1.1 mistral_common-1.11.7 model-hosting-container-standards-0.1.16 msgspec-0.21.1 multidict-6.7.1 numpy-2.3.5 openai-3.5.0 openai-harmony-0.0.8 opencv-python-headless-5.0.0.93 opentelemetry-api-1.44.0 opentelemetry-exporter-otlp-1.44.0 opentelemetry-exporter-otlp-proto-common-1.44.0 opentelemetry-exporter-otlp-proto-grpc-1.44.0 opentelemetry-exporter-otlp-proto-http-1.44.0 opentelemetry-proto-1.44.0 opentelemetry-sdk-1.44.0 opentelemetry-semantic-conventions-0.65b0 opentelemetry-semantic-conventions-ai-0.5.1 outlines_core-0.2.14 partial-json-parser-0.2.1.1.post7 prometheus-fastapi-instrumentator-8.1.0 prometheus_client-0.26.0 propcache-0.5.2 protobuf-7.36.0 py-cpuinfo-9.0.0 pybase64-1.5.0 pycountry-26.2.16 pycparser-3.0 pydantic-2.13.4 pydantic-core-2.46.4 pydantic-extra-types-2.11.1 pydantic-settings-2.15.0 pyjwt-2.13.0 python-dotenv-1.2.3 python-json-logger-4.2.0 python-multipart-0.0.32 pyzmq-27.2.0 referencing-0.37.0 rich-toolkit-0.20.3 rignore-0.8.1 rpds-py-2026.6.3 sentry-sdk-2.68.1 setproctitle-1.3.7 six-1.17.0 sniffio-1.3.1 sse-starlette-3.4.8 starlette-1.6.0 supervisor-4.3.0 tiktoken-0.14.0 truststore-0.10.4 typing-inspection-0.4.4 uvicorn-0.52.4 uvloop-0.22.1 watchfiles-1.2.0 websockets-17.1 xgrammar-0.2.3 yarl-1.24.5
++ /workspace/venv-vllm50603/bin/pip install --retries 10 --timeout 60 -i https://mirrors.aliyun.com/pypi/simple/ 'setuptools>=77.0.3,<81.0.0' setuptools-rust 'cmake>=3.26.1' ninja 'setuptools-scm>=8.0' wheel jinja2 'packaging>=24.2'
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple/
+Requirement already satisfied: setuptools<81.0.0,>=77.0.3 in /workspace/venv-vllm50603/lib/python3.12/site-packages (80.10.2)
+Requirement already satisfied: setuptools-rust in /workspace/venv-vllm50603/lib/python3.12/site-packages (1.13.0)
+Requirement already satisfied: cmake>=3.26.1 in /workspace/venv-vllm50603/lib/python3.12/site-packages (4.4.2)
+Requirement already satisfied: ninja in /workspace/venv-vllm50603/lib/python3.12/site-packages (1.13.0)
+Requirement already satisfied: setuptools-scm>=8.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (10.2.1)
+Requirement already satisfied: wheel in /workspace/venv-vllm50603/lib/python3.12/site-packages (0.48.0)
+Requirement already satisfied: jinja2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (3.1.6)
+Requirement already satisfied: packaging>=24.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (26.3)
+Requirement already satisfied: semantic_version<3,>=2.8.2 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from setuptools-rust) (2.10.0)
+Requirement already satisfied: vcs-versioning<3,>=2.0.0.dev0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from setuptools-scm>=8.0) (2.3.1)
+Requirement already satisfied: MarkupSafe>=2.0 in /workspace/venv-vllm50603/lib/python3.12/site-packages (from jinja2) (3.0.3)
++ echo '=== stage 4 (cont): model download (tencent/HunyuanOCR @ de8f10ad) ==='
+=== stage 4 (cont): model download (tencent/HunyuanOCR @ de8f10ad) ===
++ for i in 1 2 3
++ dl
++ echo 'model download attempt 1 failed; retrying'
+model download attempt 1 failed; retrying
++ sleep 30
++ [[ 1 == 3 ]]
++ for i in 1 2 3
++ dl
++ echo 'model download ok (attempt 2)'
+model download ok (attempt 2)
++ break
++ echo '=== stage 5 (cont): editable build of vLLM state-a ==='
+=== stage 5 (cont): editable build of vLLM state-a ===
++ PYTORCH_ROCM_ARCH=gfx1100
++ VLLM_TARGET_DEVICE=rocm
++ MAX_JOBS=96
++ /workspace/venv-vllm50603/bin/pip install -e . --no-build-isolation --no-deps
+Obtaining file:///workspace/vllm-50603
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: vllm
+  Building editable for vllm (pyproject.toml): started
+  Building editable for vllm (pyproject.toml): finished with status 'error'
+  error: subprocess-exited-with-error
+  
+  × Building editable for vllm (pyproject.toml) did not run successfully.
+  │ exit code: 1
+  ╰─> [115 lines of output]
+      /workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools_scm/_integration/version_inference.py:222: UserWarning: version of None already set
+        warnings.warn(f"version of {self.dist_name} already set")
+      running editable_wheel
+      creating /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info
+      writing /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/PKG-INFO
+      writing dependency_links to /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/dependency_links.txt
+      writing entry points to /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/entry_points.txt
+      writing requirements to /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/requires.txt
+      writing top-level names to /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/top_level.txt
+      writing manifest file '/tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/SOURCES.txt'
+      reading manifest template 'MANIFEST.in'
+      adding license file 'LICENSE'
+      writing manifest file '/tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm.egg-info/SOURCES.txt'
+      creating '/tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm-0.28.1rc1.dev49+gd1922cb5a.rocm714.dist-info'
+      creating /tmp/pip-ephem-wheel-cache-0kvam9g4/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e/tmpk9h03yzg/.tmp-lidbqzow/vllm-0.28.1rc1.dev49+gd1922cb5a.rocm714.dist-info/WHEEL
+      running build_py
+      running build_ext
+      Using MAX_JOBS=96 as the number of jobs.
+      -- The CXX compiler identification is GNU 13.3.0
+      -- Detecting CXX compiler ABI info
+      -- Detecting CXX compiler ABI info - done
+      -- Check for working CXX compiler: /usr/bin/c++ - skipped
+      -- Detecting CXX compile features
+      -- Detecting CXX compile features - done
+      -- Build type: RelWithDebInfo
+      -- Target device: rocm
+      -- Found Python: /workspace/venv-vllm50603/bin/python3 (found version "3.12.3") found components: Interpreter Development.Module Development.SABIModule
+      -- Found python matching: /workspace/venv-vllm50603/bin/python3.
+      Building PyTorch for GPU arch: gfx1100
+      -- The HIP compiler identification is unknown
+      -- Detecting HIP compiler ABI info
+      -- Detecting HIP compiler ABI info - done
+      -- Check for working HIP compiler: /workspace/venv-vllm50603/lib/python3.12/site-packages/_rocm_sdk_core/lib/llvm/bin/clang++ - skipped
+      -- Detecting HIP compile features
+      -- Detecting HIP compile features - done
+      -- HIP language enabled with compiler: /workspace/venv-vllm50603/lib/python3.12/site-packages/_rocm_sdk_core/lib/llvm/bin/clang++
+      -- HIP architectures: gfx1100
+      CMake Error at /workspace/venv-vllm50603/lib/python3.12/site-packages/torch/share/cmake/Caffe2/public/LoadHIP.cmake:79 (find_package):
+        Could not find a package configuration file provided by "hip" with any of
+        the following names:
+      
+          hipConfig.cmake
+          hip-config.cmake
+      
+        Add the installation prefix of "hip" to CMAKE_PREFIX_PATH or set "hip_DIR"
+        to a directory containing one of the above files.  If "hip" provides a
+        separate development package or SDK, be sure it has been installed.
+      Call Stack (most recent call first):
+        /workspace/venv-vllm50603/lib/python3.12/site-packages/torch/share/cmake/Caffe2/public/LoadHIP.cmake:203 (find_package_and_print_version)
+        /workspace/venv-vllm50603/lib/python3.12/site-packages/torch/share/cmake/Caffe2/Caffe2Config.cmake:74 (include)
+        /workspace/venv-vllm50603/lib/python3.12/site-packages/torch/share/cmake/Torch/TorchConfig.cmake:62 (find_package)
+        CMakeLists.txt:112 (find_package)
+      
+      
+      -- Configuring incomplete, errors occurred!
+      Traceback (most recent call last):
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 389, in <module>
+          main()
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 373, in main
+          json_out["return_val"] = hook(**hook_input["kwargs"])
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/pip/_vendor/pyproject_hooks/_in_process/_in_process.py", line 303, in build_editable
+          return hook(wheel_directory, config_settings, metadata_directory)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/build_meta.py", line 472, in build_editable
+          return self._build_with_temp_dir(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/build_meta.py", line 408, in _build_with_temp_dir
+          self.run_setup()
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/build_meta.py", line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 1499, in <module>
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/__init__.py", line 117, in setup
+          return distutils.core.setup(**attrs)  # type: ignore[return-value]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 186, in setup
+          return run_commands(dist)
+                 ^^^^^^^^^^^^^^^^^^
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/core.py", line 202, in run_commands
+          dist.run_commands()
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1002, in run_commands
+          self.run_command(cmd)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/dist.py", line 1107, in run_command
+          super().run_command(command)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/command/editable_wheel.py", line 140, in run
+          self._create_wheel_file(bdist_wheel)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/command/editable_wheel.py", line 350, in _create_wheel_file
+          files, mapping = self._run_build_commands(dist_name, unpacked, lib, tmp)
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/command/editable_wheel.py", line 273, in _run_build_commands
+          self._run_build_subcommands()
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/command/editable_wheel.py", line 300, in _run_build_subcommands
+          self.run_command(name)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/cmd.py", line 357, in run_command
+          self.distribution.run_command(command)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/dist.py", line 1107, in run_command
+          super().run_command(command)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/dist.py", line 1021, in run_command
+          cmd_obj.run()
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools_rust/setuptools_ext.py", line 177, in run
+          super().run()
+        File "<string>", line 389, in run
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/command/build_ext.py", line 97, in run
+          _build_ext.run(self)
+        File "/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_distutils/command/build_ext.py", line 368, in run
+          self.build_extensions()
+        File "<string>", line 346, in build_extensions
+        File "<string>", line 323, in configure
+        File "/usr/lib/python3.12/subprocess.py", line 413, in check_call
+          raise CalledProcessError(retcode, cmd)
+      subprocess.CalledProcessError: Command '['cmake', '/workspace/vllm-50603', '-G', 'Ninja', '-DCMAKE_BUILD_TYPE=RelWithDebInfo', '-DVLLM_TARGET_DEVICE=rocm', '-DVLLM_PYTHON_EXECUTABLE=/workspace/venv-vllm50603/bin/python3', '-DVLLM_PYTHON_PATH=/usr/lib/python312.zip:/usr/lib/python3.12:/usr/lib/python3.12/lib-dynload:/workspace/venv-vllm50603/lib/python3.12/site-packages:/workspace/SenseNova-U1.5-ROCm/third_party/SenseNova-U1/src:/workspace/venv-vllm50603/lib/python3.12/site-packages/setuptools/_vendor', '-DFETCHCONTENT_BASE_DIR=/workspace/vllm-50603/.deps', '-DCMAKE_JOB_POOL_COMPILE:STRING=compile', '-DCMAKE_JOB_POOLS:STRING=compile=96', '-DROCM_PATH=/workspace/venv-vllm50603/lib/python3.12/site-packages/_rocm_sdk_core']' returned non-zero exit status 1.
+      An error occurred when building editable wheel for vllm.
+      See debugging tips in: https://setuptools.pypa.io/en/latest/userguide/development_mode.html#debugging-tips
+      [end of output]
+  
+  note: This error originates from a subprocess, and is likely not a problem with pip.
+  ERROR: Failed building editable for vllm
+Failed to build vllm
+error: failed-wheel-build-for-install
+
+× Failed to build installable wheels for some pyproject.toml based projects
+╰─> vllm
+CONTINUATION EXIT rc=1

@@ -1,0 +1,50 @@
++ BRANCH=state-b
++ VREPO=/workspace/vllm-50603
++ source /workspace/HunyuanOCR-ROCm/validation-50603/env/env.sh
+++ export PATH=/workspace/venv-vllm50603/bin:/root/.opencode/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/root/.zcode/server/tools/bfs:/root/.zcode/server/tools/ripgrep:/root/.zcode/server/tools/ugrep
+++ PATH=/workspace/venv-vllm50603/bin:/root/.opencode/bin:/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/root/.zcode/server/tools/bfs:/root/.zcode/server/tools/ripgrep:/root/.zcode/server/tools/ugrep
+++ export HF_HOME=/root/.cache/huggingface
+++ HF_HOME=/root/.cache/huggingface
+++ export HF_HUB_OFFLINE=1
+++ HF_HUB_OFFLINE=1
+++ export HF_ENDPOINT=https://hf-mirror.com
+++ HF_ENDPOINT=https://hf-mirror.com
+++ export CUDA_VISIBLE_DEVICES=0
+++ CUDA_VISIBLE_DEVICES=0
+++ export HSA_OVERRIDE_GFX_VERSION=11.0.0
+++ HSA_OVERRIDE_GFX_VERSION=11.0.0
+++ _SP=/workspace/venv-vllm50603/lib/python3.12/site-packages
+++ export PYTHONPATH=/workspace/venv-vllm50603/lib/python3.12/site-packages/_rocm_sdk_core/share/amd_smi
+++ PYTHONPATH=/workspace/venv-vllm50603/lib/python3.12/site-packages/_rocm_sdk_core/share/amd_smi
++ cd /workspace/vllm-50603
++ git checkout -q --force state-b
++ ROCM_PATH=/opt/rocm
++ HIP_PATH=/opt/rocm
++ CMAKE_PREFIX_PATH=/opt/rocm
++ PYTORCH_ROCM_ARCH=gfx1100
++ VLLM_TARGET_DEVICE=rocm
++ MAX_JOBS=96
++ pip install -e . --no-build-isolation --no-deps
+Obtaining file:///workspace/vllm-50603
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: vllm
+  Building editable for vllm (pyproject.toml): started
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): finished with status 'done'
+  Created wheel for vllm: filename=vllm-0.25.2.dev1+gc2a2677a1.rocm721-0.editable-cp312-cp312-linux_x86_64.whl size=12304 sha256=edf591edf1e750642c233e9227cc544fe6be3f9879f83bb836cbbb20ef5f7605
+  Stored in directory: /tmp/pip-ephem-wheel-cache-ktpv5v1l/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e
+Successfully built vllm
+Installing collected packages: vllm
+  Attempting uninstall: vllm
+    Found existing installation: vllm 0.25.1+rocm721
+    Uninstalling vllm-0.25.1+rocm721:
+      Successfully uninstalled vllm-0.25.1+rocm721
+Successfully installed vllm-0.25.2.dev1+gc2a2677a1.rocm721
++ python -c 'import vllm; print('\''rebuilt:'\'', vllm.__version__, vllm.__file__)'
+WARNING 08-29 07:15:28 [rocm.py:123] Using CUDA_VISIBLE_DEVICES on ROCm is deprecated and support will be removed in vLLM v0.26.0. Please use HIP_VISIBLE_DEVICES instead.
+rebuilt: 0.25.2.dev1+gc2a2677a1 /workspace/vllm-50603/vllm/__init__.py

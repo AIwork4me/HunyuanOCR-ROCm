@@ -1,0 +1,9 @@
+/workspace/HunyuanOCR-ROCm/validation-50603/scripts/run_state.sh: line 21: /workspace/HunyuanOCR-ROCm/validation-50603/scripts/capture_env.sh: Permission denied
+[baseline] running repro_determinism.py ...
+[baseline] repro_determinism.py FAILED rc=1 (log kept)
+[baseline] running repro_warmup.py ...
+[baseline] repro_warmup.py FAILED rc=1 (log kept)
+[baseline] running repro_control_short.py ...
+[baseline] repro_control_short.py FAILED rc=1 (log kept)
+[baseline] routing markers:
+STATE-A SUITE (torch211) rc=1
