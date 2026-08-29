@@ -1,0 +1,40 @@
+diff --git a/vllm/v1/worker/gpu/mm/rope.py b/vllm/v1/worker/gpu/mm/rope.py
+index e5de282234..99b9fbd12e 100644
+--- a/vllm/v1/worker/gpu/mm/rope.py
++++ b/vllm/v1/worker/gpu/mm/rope.py
+@@ -131,6 +131,20 @@ class RopeState:
+         )
+ 
+ 
++def _mrope_num_dims_from_config(hf_config) -> int:
++    """Match the HF modeling rule: position axes == len(mrope_section)."""
++    rope_parameters = getattr(hf_config.get_text_config(), "rope_parameters", None)
++    if not isinstance(rope_parameters, dict):
++        return 3
++    candidates: list[dict] = [rope_parameters]
++    candidates += [v for v in rope_parameters.values() if isinstance(v, dict)]
++    for params in candidates:
++        section = params.get("mrope_section")
++        if isinstance(section, list) and section:
++            return len(section)
++    return 3
++
++
+ def get_rope_state(
+     model_config: ModelConfig,
+     model: nn.Module,
+@@ -142,8 +156,13 @@ def get_rope_state(
+     """Create a RopeState if the model uses multi-dimensional RoPE."""
+     if model_config.uses_mrope:
+         assert isinstance(model, SupportsMRoPE)
++        # validation-50603 enabling fix: the HF rule is that the number of
++        # position axes equals len(mrope_section); transformers normalizes
++        # 4-axis xdrope models (e.g. HunYuanVL) into a 4-section mrope, so
++        # size the buffer from the config instead of the hardcoded 3 or the
++        # 4th channel is silently dropped by init_prefill_positions' row loop.
+         return RopeState(
+-            num_dims=3,
++            num_dims=_mrope_num_dims_from_config(model_config.hf_config),
+             has_delta=True,
+             max_num_reqs=max_num_reqs,
+             max_num_tokens=max_num_tokens,

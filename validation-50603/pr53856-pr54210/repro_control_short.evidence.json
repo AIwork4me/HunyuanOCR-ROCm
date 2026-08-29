@@ -1,0 +1,13 @@
+{
+  "script": "repro_control_short.py",
+  "sha8s": [
+    "a2fe683f",
+    "a2fe683f",
+    "a2fe683f"
+  ],
+  "texts": [
+    "# Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\n\nCost of Goods Sold: 4,210,000 USD\n\nGross Profit: 8,270,000 USD\n\nOperating Expense: 3,150,000 USD\n\nNet Income: 5,120,000 USD",
+    "# Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\n\nCost of Goods Sold: 4,210,000 USD\n\nGross Profit: 8,270,000 USD\n\nOperating Expense: 3,150,000 USD\n\nNet Income: 5,120,000 USD",
+    "# Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\n\nCost of Goods Sold: 4,210,000 USD\n\nGross Profit: 8,270,000 USD\n\nOperating Expense: 3,150,000 USD\n\nNet Income: 5,120,000 USD"
+  ]
+}

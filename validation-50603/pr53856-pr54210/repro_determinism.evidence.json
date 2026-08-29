@@ -1,0 +1,13 @@
+{
+  "script": "repro_determinism.py",
+  "sha8s": [
+    "d2bbe837",
+    "d2bbe837",
+    "d2bbe837"
+  ],
+  "texts": [
+    "Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\nCost of Goods Sold: 4,210,000 USD\nGross Profit: 8,270,000 USD\nOperating Expense: 3,150,000 USD\nNet Income: 5,120,000 USD\nEarnings Per Share: 2.84 USD\nFiscal Year: 2026 Q2 Report\nPrepared by Finance Committee",
+    "Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\nCost of Goods Sold: 4,210,000 USD\nGross Profit: 8,270,000 USD\nOperating Expense: 3,150,000 USD\nNet Income: 5,120,000 USD\nEarnings Per Share: 2.84 USD\nFiscal Year: 2026 Q2 Report\nPrepared by Finance Committee",
+    "Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\nCost of Goods Sold: 4,210,000 USD\nGross Profit: 8,270,000 USD\nOperating Expense: 3,150,000 USD\nNet Income: 5,120,000 USD\nEarnings Per Share: 2.84 USD\nFiscal Year: 2026 Q2 Report\nPrepared by Finance Committee"
+  ]
+}

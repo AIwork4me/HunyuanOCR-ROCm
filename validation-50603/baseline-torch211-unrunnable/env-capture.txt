@@ -1,0 +1,5 @@
+# No capture was taken at run time (the suite failed at engine init). The stack for this
+# probe was torch 2.11.0+rocm7.14.0 / torchvision 0.26.0+rocm7.14.0 / amd-torch-device-gfx1100
+# 2.11.0 (second configuration: amd-torch-device-gfx11 family wheel removed; the first
+# configuration's log was overwritten by the rerun). vLLM 0.25.1 built against torch 2.11
+# headers with the same /opt/rocm 7.2.1 hipcc as the canonical states.

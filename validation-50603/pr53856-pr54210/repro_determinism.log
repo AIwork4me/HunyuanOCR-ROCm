@@ -1,0 +1,92 @@
+WARNING 08-29 07:31:04 [rocm.py:123] Using CUDA_VISIBLE_DEVICES on ROCm is deprecated and support will be removed in vLLM v0.26.0. Please use HIP_VISIBLE_DEVICES instead.
+INFO 08-29 07:31:08 [arg_utils.py:772] HF_HUB_OFFLINE is True, replace model_id [tencent/HunyuanOCR] to model_path [/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205]
+INFO 08-29 07:31:08 [api_utils.py:273] non-default args: {'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 32768, 'gpu_memory_utilization': 0.9, 'disable_log_stats': True, 'enforce_eager': True, 'limit_mm_per_prompt': {'image': 1}, 'model': '/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205'}
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+INFO 08-29 07:31:08 [model.py:619] Resolved architecture: HunYuanVLForConditionalGeneration
+INFO 08-29 07:31:08 [model.py:1776] Using max model len 32768
+INFO 08-29 07:31:08 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 08-29 07:31:08 [vllm.py:1042] Asynchronous scheduling is enabled.
+WARNING 08-29 07:31:08 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 08-29 07:31:08 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 08-29 07:31:09 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 08-29 07:31:09 [vllm.py:1322] Cudagraph is disabled under eager mode
+INFO 08-29 07:31:09 [compilation.py:312] Enabled custom fusions: norm_quant, act_quant
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] `HunYuanVLProcessor` defines `image_processor_class = 'AutoImageProcessor'`, which is deprecated. Register the correct mapping in `AutoImageProcessor` instead.
+[transformers] Requested torchvision backend is not available. Falling back to pil backend.
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=283323) INFO 08-29 07:31:13 [core.py:114] Initializing a V1 LLM engine (v0.25.2.dev2+g01a3fe7d2) with config: model='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', speculative_config=None, tokenizer='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=True, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['+sparse_attn_indexer', 'all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=283323) INFO 08-29 07:31:13 [parallel_state.py:1607] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.232.10.191:38127 backend=nccl
+(EngineCore pid=283323) INFO 08-29 07:31:13 [parallel_state.py:1942] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+(EngineCore pid=283323) INFO 08-29 07:31:14 [gpu_model_runner.py:5209] Starting to load model /root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205...
+(EngineCore pid=283323) INFO 08-29 07:31:14 [rocm.py:669] Using Torch SDPA backend for ViT model.
+(EngineCore pid=283323) INFO 08-29 07:31:14 [mm_encoder_attention.py:373] Using AttentionBackendEnum.TORCH_SDPA for MMEncoderAttention.
+(EngineCore pid=283323) WARNING 08-29 07:31:14 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=283323) WARNING 08-29 07:31:14 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=283323) INFO 08-29 07:31:14 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=283323) INFO 08-29 07:31:14 [vllm.py:1322] Cudagraph is disabled under eager mode
+(EngineCore pid=283323) INFO 08-29 07:31:14 [rocm.py:601] Found incompatible backend(s) [TURBOQUANT] with AttentionType.DECODER. Overriding with ROCM_ATTN out of potential backends: ['ROCM_ATTN', 'TRITON_ATTN'].
+(EngineCore pid=283323) WARNING 08-29 07:31:14 [compilation.py:1304] Op 'sparse_attn_indexer' not present in model, enabling with '+sparse_attn_indexer' has no effect
+(EngineCore pid=283323) INFO 08-29 07:31:14 [weight_utils.py:849] Filesystem type for checkpoints: EXT4. Checkpoint size: 2.09 GiB. Available RAM: 952.38 GiB.
+(EngineCore pid=283323) INFO 08-29 07:31:14 [weight_utils.py:872] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=283323) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=283323) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.85s/it]
+(EngineCore pid=283323) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.85s/it]
+(EngineCore pid=283323) 
+(EngineCore pid=283323) INFO 08-29 07:31:16 [default_loader.py:430] Loading weights took 1.97 seconds
+(EngineCore pid=283323) INFO 08-29 07:31:17 [gpu_model_runner.py:5306] Model loading took 1.92 GiB memory and 2.312285 seconds
+(EngineCore pid=283323) INFO 08-29 07:31:17 [gpu_model_runner.py:6322] Encoder cache will be initialized with a budget of 8192 tokens, and profiled with 1 image items of the maximum feature size.
+(EngineCore pid=283323) [transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+(EngineCore pid=283323) [transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=283323) [transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=283323) INFO 08-29 07:31:23 [gpu_worker.py:538] Available KV cache memory: 40.24 GiB
+(EngineCore pid=283323) INFO 08-29 07:31:23 [kv_cache_utils.py:2146] GPU KV cache size: 439,568 tokens
+(EngineCore pid=283323) INFO 08-29 07:31:23 [kv_cache_utils.py:2147] Maximum concurrency for 32,768 tokens per request: 13.41x
+(EngineCore pid=283323) INFO 08-29 07:31:23 [cutedsl_warmup.py:92] Skipping CuTeDSL warmup on non-CUDA platform.
+(EngineCore pid=283323) INFO 08-29 07:31:23 [jit_monitor.py:73] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+(EngineCore pid=283323) INFO 08-29 07:31:24 [core.py:344] init engine (profile, create kv cache, warmup model) took 6.68 s
+(EngineCore pid=283323) WARNING 08-29 07:31:24 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=283323) WARNING 08-29 07:31:24 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=283323) INFO 08-29 07:31:24 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=283323) INFO 08-29 07:31:24 [vllm.py:1322] Cudagraph is disabled under eager mode
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=283323) WARNING 08-29 07:31:34 [jit_monitor.py:129] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+run0: sha8=d2bbe837 chars=260 :: 'Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\nCost of Goods Sold: 4,210,0'
+run1: sha8=d2bbe837 chars=260 :: 'Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\nCost of Goods Sold: 4,210,0'
+run2: sha8=d2bbe837 chars=260 :: 'Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\nCost of Goods Sold: 4,210,0'
+3x identical (deterministic): True
+GT title present in any run: True
+(EngineCore pid=283323) INFO 08-29 07:31:39 [core.py:1214] [shutdown] EngineCore: trigger received signal=SIGTERM
+(EngineCore pid=283323) INFO 08-29 07:31:39 [core.py:1333] [shutdown] EngineCore: start mode=abort timeout=0s
+(EngineCore pid=283323) INFO 08-29 07:31:39 [core.py:1364] [shutdown] EngineCore: request processing complete; starting resource teardown
+(EngineCore pid=283323) INFO 08-29 07:31:39 [core.py:1227] [shutdown] EngineCore: exiting busy loop
+WARNING 08-29 07:31:40 [core_client.py:702] [shutdown] MPClient: engine core exited unexpectedly; starting cleanup
+INFO 08-29 07:31:40 [core_client.py:655] [shutdown] MPClient: start timeout=default
+INFO 08-29 07:31:40 [core_client.py:657] [shutdown] MPClient: stopping engine manager
+INFO 08-29 07:31:40 [core_client.py:659] [shutdown] MPClient: engine manager stopped
+INFO 08-29 07:31:40 [core_client.py:660] [shutdown] MPClient: cleaning up background resources
+INFO 08-29 07:31:40 [core_client.py:662] [shutdown] MPClient: complete

@@ -1,0 +1,298 @@
+WARNING 08-29 06:57:11 [rocm.py:123] Using CUDA_VISIBLE_DEVICES on ROCm is deprecated and support will be removed in vLLM v0.26.0. Please use HIP_VISIBLE_DEVICES instead.
+INFO 08-29 06:57:16 [arg_utils.py:772] HF_HUB_OFFLINE is True, replace model_id [tencent/HunyuanOCR] to model_path [/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205]
+INFO 08-29 06:57:16 [api_utils.py:273] non-default args: {'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 32768, 'gpu_memory_utilization': 0.9, 'disable_log_stats': True, 'enforce_eager': True, 'limit_mm_per_prompt': {'image': 1}, 'model': '/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205'}
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+INFO 08-29 06:57:16 [model.py:619] Resolved architecture: HunYuanVLForConditionalGeneration
+INFO 08-29 06:57:16 [model.py:1776] Using max model len 32768
+INFO 08-29 06:57:16 [scheduler.py:252] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 08-29 06:57:16 [vllm.py:1042] Asynchronous scheduling is enabled.
+WARNING 08-29 06:57:16 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 08-29 06:57:16 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 08-29 06:57:16 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 08-29 06:57:16 [vllm.py:1322] Cudagraph is disabled under eager mode
+INFO 08-29 06:57:16 [compilation.py:312] Enabled custom fusions: norm_quant, act_quant
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] `HunYuanVLProcessor` defines `image_processor_class = 'AutoImageProcessor'`, which is deprecated. Register the correct mapping in `AutoImageProcessor` instead.
+[transformers] Requested torchvision backend is not available. Falling back to pil backend.
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] The `use_fast` parameter is deprecated and will be removed in a future version. Use `backend="torchvision"` instead of `use_fast=True`, or `backend="pil"` instead of `use_fast=False`.
+[transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=276838) INFO 08-29 06:57:20 [core.py:114] Initializing a V1 LLM engine (v0.25.1) with config: model='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', speculative_config=None, tokenizer='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=32768, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=True, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['+sparse_attn_indexer', 'all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=276838) INFO 08-29 06:57:20 [parallel_state.py:1607] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://10.232.10.191:47113 backend=nccl
+(EngineCore pid=276838) INFO 08-29 06:57:20 [parallel_state.py:1942] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+(EngineCore pid=276838) INFO 08-29 06:57:21 [gpu_model_runner.py:5209] Starting to load model /root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205...
+(EngineCore pid=276838) INFO 08-29 06:57:21 [rocm.py:669] Using Torch SDPA backend for ViT model.
+(EngineCore pid=276838) INFO 08-29 06:57:21 [mm_encoder_attention.py:373] Using AttentionBackendEnum.TORCH_SDPA for MMEncoderAttention.
+(EngineCore pid=276838) WARNING 08-29 06:57:21 [vllm.py:1096] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+(EngineCore pid=276838) WARNING 08-29 06:57:21 [vllm.py:1144] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+(EngineCore pid=276838) INFO 08-29 06:57:21 [kernel.py:292] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+(EngineCore pid=276838) INFO 08-29 06:57:21 [vllm.py:1322] Cudagraph is disabled under eager mode
+(EngineCore pid=276838) INFO 08-29 06:57:21 [rocm.py:601] Found incompatible backend(s) [TURBOQUANT] with AttentionType.DECODER. Overriding with ROCM_ATTN out of potential backends: ['ROCM_ATTN', 'TRITON_ATTN'].
+(EngineCore pid=276838) WARNING 08-29 06:57:21 [compilation.py:1304] Op 'sparse_attn_indexer' not present in model, enabling with '+sparse_attn_indexer' has no effect
+(EngineCore pid=276838) INFO 08-29 06:57:21 [weight_utils.py:849] Filesystem type for checkpoints: EXT4. Checkpoint size: 2.09 GiB. Available RAM: 975.39 GiB.
+(EngineCore pid=276838) INFO 08-29 06:57:21 [weight_utils.py:872] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=276838) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=276838) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.89s/it]
+(EngineCore pid=276838) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.89s/it]
+(EngineCore pid=276838) 
+(EngineCore pid=276838) INFO 08-29 06:57:23 [default_loader.py:430] Loading weights took 2.03 seconds
+(EngineCore pid=276838) INFO 08-29 06:57:24 [gpu_model_runner.py:5306] Model loading took 1.92 GiB memory and 2.350347 seconds
+(EngineCore pid=276838) INFO 08-29 06:57:24 [gpu_model_runner.py:6322] Encoder cache will be initialized with a budget of 8192 tokens, and profiled with 1 image items of the maximum feature size.
+(EngineCore pid=276838) [transformers] HunYuanVLConfig got `key=rope_scaling` in kwargs but hasn't set it as attribute. For RoPE standardization you need to set `self.rope_parameters` in model's config. 
+(EngineCore pid=276838) [transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=276838) [transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='xdrope'
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] EngineCore failed to start.
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] Traceback (most recent call last):
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 1200, in run_engine_core
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return func(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 966, in __init__
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     super().__init__(
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 133, in __init__
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return func(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 283, in _initialize_kv_caches
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     available_gpu_memory = self.model_executor.determine_available_memory()
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/executor/abstract.py", line 147, in determine_available_memory
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self.collective_rpc("determine_available_memory")
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/executor/uniproc_executor.py", line 92, in collective_rpc
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     result = run_method(self.driver_worker, method, args, kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/serial_utils.py", line 510, in run_method
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return func(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return func(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/worker/gpu_worker.py", line 468, in determine_available_memory
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     self.model_runner.profile_run()
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/v1/worker/gpu_model_runner.py", line 6338, in profile_run
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     dummy_encoder_outputs = self.model.embed_multimodal(
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 972, in embed_multimodal
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     image_embeddings = self._process_image_input(multimodal_input)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 939, in _process_image_input
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     image_embeds = self.visual(pixel_values, grid_thw=grid_thw_list)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return forward_call(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 524, in forward
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     parts = [layer(p) for p in parts]
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]              ^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return forward_call(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 291, in forward
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     x = x + self.self_attn(self.input_layernorm(x))
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return forward_call(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 251, in forward
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     output, _ = self.o_proj(out)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                 ^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return forward_call(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/layers/linear.py", line 1688, in forward
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     output_parallel = self.quant_method.apply(self, input_parallel, bias_)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/layers/linear.py", line 228, in apply
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return dispatch_unquantized_gemm()(layer, x, layer.weight, bias)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/layers/utils.py", line 209, in rocm_unquantized_gemm
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return torch.ops.vllm.rocm_unquantized_gemm(x, weight, bias)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/_ops.py", line 1269, in __call__
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self._op(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/parameter.py", line 126, in __torch_function__
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return super().__torch_function__(func, types, args, kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/_ops.py", line 1269, in __call__
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return self._op(*args, **kwargs)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]   File "/workspace/vllm-50603/vllm/model_executor/layers/utils.py", line 194, in rocm_unquantized_gemm_impl
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]     return torch.nn.functional.linear(x, weight, bias)
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] torch.AcceleratorError: CUDA error: invalid argument
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] Search for `hipErrorInvalidValue' in https://rocm.docs.amd.com/projects/HIP/en/latest/index.html for more information.
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] For debugging consider passing AMD_SERIALIZE_KERNEL=3
+(EngineCore pid=276838) ERROR 08-29 06:57:27 [core.py:1231] Device-side assertion tracking was not enabled by user.
+(EngineCore pid=276838) Process EngineCore:
+(EngineCore pid=276838) Traceback (most recent call last):
+(EngineCore pid=276838)   File "/usr/lib/python3.12/multiprocessing/process.py", line 314, in _bootstrap
+(EngineCore pid=276838)     self.run()
+(EngineCore pid=276838)   File "/usr/lib/python3.12/multiprocessing/process.py", line 108, in run
+(EngineCore pid=276838)     self._target(*self._args, **self._kwargs)
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 1235, in run_engine_core
+(EngineCore pid=276838)     raise e
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 1200, in run_engine_core
+(EngineCore pid=276838)     engine_core = EngineCoreProc(*args, engine_index=dp_rank, **kwargs)
+(EngineCore pid=276838)                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=276838)     return func(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 966, in __init__
+(EngineCore pid=276838)     super().__init__(
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 133, in __init__
+(EngineCore pid=276838)     kv_cache_config = self._initialize_kv_caches(vllm_config)
+(EngineCore pid=276838)                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/tracing/otel.py", line 178, in sync_wrapper
+(EngineCore pid=276838)     return func(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/engine/core.py", line 283, in _initialize_kv_caches
+(EngineCore pid=276838)     available_gpu_memory = self.model_executor.determine_available_memory()
+(EngineCore pid=276838)                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/executor/abstract.py", line 147, in determine_available_memory
+(EngineCore pid=276838)     return self.collective_rpc("determine_available_memory")
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/executor/uniproc_executor.py", line 92, in collective_rpc
+(EngineCore pid=276838)     result = run_method(self.driver_worker, method, args, kwargs)
+(EngineCore pid=276838)              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/serial_utils.py", line 510, in run_method
+(EngineCore pid=276838)     return func(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+(EngineCore pid=276838)     return func(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/worker/gpu_worker.py", line 468, in determine_available_memory
+(EngineCore pid=276838)     self.model_runner.profile_run()
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/v1/worker/gpu_model_runner.py", line 6338, in profile_run
+(EngineCore pid=276838)     dummy_encoder_outputs = self.model.embed_multimodal(
+(EngineCore pid=276838)                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 972, in embed_multimodal
+(EngineCore pid=276838)     image_embeddings = self._process_image_input(multimodal_input)
+(EngineCore pid=276838)                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 939, in _process_image_input
+(EngineCore pid=276838)     image_embeds = self.visual(pixel_values, grid_thw=grid_thw_list)
+(EngineCore pid=276838)                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838)     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838)     return forward_call(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 524, in forward
+(EngineCore pid=276838)     parts = [layer(p) for p in parts]
+(EngineCore pid=276838)              ^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838)     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838)     return forward_call(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 291, in forward
+(EngineCore pid=276838)     x = x + self.self_attn(self.input_layernorm(x))
+(EngineCore pid=276838)             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838)     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838)     return forward_call(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/models/hunyuan_vision.py", line 251, in forward
+(EngineCore pid=276838)     output, _ = self.o_proj(out)
+(EngineCore pid=276838)                 ^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1779, in _wrapped_call_impl
+(EngineCore pid=276838)     return self._call_impl(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1790, in _call_impl
+(EngineCore pid=276838)     return forward_call(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/layers/linear.py", line 1688, in forward
+(EngineCore pid=276838)     output_parallel = self.quant_method.apply(self, input_parallel, bias_)
+(EngineCore pid=276838)                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/layers/linear.py", line 228, in apply
+(EngineCore pid=276838)     return dispatch_unquantized_gemm()(layer, x, layer.weight, bias)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/layers/utils.py", line 209, in rocm_unquantized_gemm
+(EngineCore pid=276838)     return torch.ops.vllm.rocm_unquantized_gemm(x, weight, bias)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/_ops.py", line 1269, in __call__
+(EngineCore pid=276838)     return self._op(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/parameter.py", line 126, in __torch_function__
+(EngineCore pid=276838)     return super().__torch_function__(func, types, args, kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/venv-vllm50603/lib/python3.12/site-packages/torch/_ops.py", line 1269, in __call__
+(EngineCore pid=276838)     return self._op(*args, **kwargs)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838)   File "/workspace/vllm-50603/vllm/model_executor/layers/utils.py", line 194, in rocm_unquantized_gemm_impl
+(EngineCore pid=276838)     return torch.nn.functional.linear(x, weight, bias)
+(EngineCore pid=276838)            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+(EngineCore pid=276838) torch.AcceleratorError: CUDA error: invalid argument
+(EngineCore pid=276838) Search for `hipErrorInvalidValue' in https://rocm.docs.amd.com/projects/HIP/en/latest/index.html for more information.
+(EngineCore pid=276838) CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+(EngineCore pid=276838) For debugging consider passing AMD_SERIALIZE_KERNEL=3
+(EngineCore pid=276838) Device-side assertion tracking was not enabled by user.
+Traceback (most recent call last):
+  File "/workspace/HunyuanOCR-ROCm/validation-50603/scripts/repro_warmup.py", line 27, in <module>
+    llm = LLM(model="tencent/HunyuanOCR", dtype="bfloat16", max_model_len=32768,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/vllm-50603/vllm/entrypoints/llm.py", line 349, in __init__
+    self.llm_engine = LLMEngine.from_engine_args(
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/vllm-50603/vllm/v1/engine/llm_engine.py", line 179, in from_engine_args
+    return cls(
+           ^^^^
+  File "/workspace/vllm-50603/vllm/v1/engine/llm_engine.py", line 105, in __init__
+    self.engine_core = EngineCoreClient.make_client(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/vllm-50603/vllm/v1/engine/core_client.py", line 103, in make_client
+    return SyncMPClient(vllm_config, executor_class, log_stats)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/vllm-50603/vllm/tracing/otel.py", line 178, in sync_wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/vllm-50603/vllm/v1/engine/core_client.py", line 786, in __init__
+    super().__init__(
+  File "/workspace/vllm-50603/vllm/v1/engine/core_client.py", line 573, in __init__
+    with launch_core_engines(
+  File "/usr/lib/python3.12/contextlib.py", line 144, in __exit__
+    next(self.gen)
+  File "/workspace/vllm-50603/vllm/v1/engine/utils.py", line 1213, in launch_core_engines
+    wait_for_engine_startup(
+  File "/workspace/vllm-50603/vllm/v1/engine/utils.py", line 1272, in wait_for_engine_startup
+    raise RuntimeError(
+RuntimeError: Engine core initialization failed. See root cause above. Failed core proc(s): {}

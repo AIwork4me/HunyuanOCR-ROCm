@@ -1,0 +1,202 @@
+diff --git a/csrc/rocm/attention.cu b/csrc/rocm/attention.cu
+index 5ca55fe3b9..cebb71b7b3 100644
+--- a/csrc/rocm/attention.cu
++++ b/csrc/rocm/attention.cu
+@@ -59,6 +59,26 @@ enum class MFMAType {
+   Fp4 = 2,
+ };
+ 
++// Score masking is insufficient for unwritten V padding: 0 * NaN is NaN.
++template <typename cache_t, typename Vec>
++__device__ __forceinline__ void mask_v_cache_padding(Vec& values,
++                                                     const int first_token_idx,
++                                                     const int seq_len) {
++  constexpr int NUM_ELEMS = sizeof(Vec) / sizeof(cache_t);
++  if (first_token_idx + NUM_ELEMS <= seq_len) {
++    return;
++  }
++  if (first_token_idx >= seq_len) {
++    values = Vec{};
++    return;
++  }
++  cache_t* values_ptr = reinterpret_cast<cache_t*>(&values);
++#pragma unroll
++  for (int i = 0; i < NUM_ELEMS; i++) {
++    values_ptr[i] = first_token_idx + i < seq_len ? values_ptr[i] : cache_t{};
++  }
++}
++
+ #if defined(__HIP__GFX9__)
+ 
+   #define GCN_MFMA_INSTR1 __builtin_amdgcn_mfma_f32_16x16x4f32
+@@ -578,6 +598,26 @@ __launch_bounds__(NUM_THREADS, 5) void paged_attention_ll4mi_QKV_mfma16_kernel(
+     }
+   }
+ 
++  if (partition_start_token_idx + T_PAR_SIZE > seq_len) {
++  #pragma unroll
++    for (int vhe_depth = 0; vhe_depth < VHELOOP; vhe_depth++) {
++  #pragma unroll
++      for (int vtoken_depth = 0; vtoken_depth < VTLOOP; vtoken_depth++) {
++  #pragma unroll
++        for (int vfetch_depth = 0; vfetch_depth < VTLANELOOP; vfetch_depth++) {
++          const int vglobal_fetch_start =
++              partition_start_token_idx +
++              vtoken_depth * VTOKENS_PER_LANE * ROWS_PER_WARP +
++              rowid * VTOKENS_PER_LANE +
++              vfetch_depth * CONTIGUOUS_KV_ELEMS_16B_LOAD;
++          mask_v_cache_padding<cache_t>(
++              Vlocal[vtoken_depth][vhe_depth][vfetch_depth],
++              vglobal_fetch_start, seq_len);
++        }
++      }
++    }
++  }
++
+   // calculate post qk mfma scale
+   float scale2 = scale;
+   if constexpr (KV_DTYPE != vllm::Fp8KVCacheDataType::kAuto) {
+@@ -1120,6 +1160,21 @@ __launch_bounds__(NUM_THREADS) void paged_attention_ll4mi_QKV_mfma4_kernel(
+           }
+         }
+       }
++      if (partition_start_token_idx + partition_size > seq_len) {
++  #pragma unroll
++        for (int h = 0; h < VHELOOP; h++) {
++  #pragma unroll
++          for (int b = 0; b < VBLOCKS; b++) {
++  #pragma unroll
++            for (int d = 0; d < BLOCK_SIZE / 8; d++) {
++              const int vglobal_fetch_start =
++                  warp_start_token_idx + b * BLOCK_SIZE + d * 8;
++              mask_v_cache_padding<cache_t>(Vlocal[h][b * BLOCK_SIZE / 8 + d],
++                                            vglobal_fetch_start, seq_len);
++            }
++          }
++        }
++      }
+     }  // if constexpr (KV_DTYPE == vllm::Fp8KVCacheDataType::kAuto)
+     // fetch vcache in fp8 case
+     else {  // if constexpr (KV_DTYPE != vllm::Fp8KVCacheDataType::kAuto)
+@@ -1142,6 +1197,21 @@ __launch_bounds__(NUM_THREADS) void paged_attention_ll4mi_QKV_mfma4_kernel(
+           }
+         }
+       }
++      if (partition_start_token_idx + partition_size > seq_len) {
++  #pragma unroll
++        for (int h = 0; h < VHELOOP; h++) {
++  #pragma unroll
++          for (int b = 0; b < VBLOCKS; b++) {
++  #pragma unroll
++            for (int d = 0; d < BLOCK_SIZE / 8; d++) {
++              const int vglobal_fetch_start =
++                  warp_start_token_idx + b * BLOCK_SIZE + d * 8;
++              mask_v_cache_padding<cache_t>(Vlocalb8[h][b * BLOCK_SIZE / 8 + d],
++                                            vglobal_fetch_start, seq_len);
++            }
++          }
++        }
++      }
+     }
+ 
+   #define QK_mfma(x)                                             \
+@@ -1963,6 +2033,23 @@ __launch_bounds__(NUM_THREADS, 3) void paged_attention_ll4mi_QKV_mfma16_kernel(
+     }
+   }
+ 
++  if (partition_start_token_idx + T_PAR_SIZE > seq_len) {
++    for (int vhe_depth = 0; vhe_depth < VHELOOP; vhe_depth++) {
++      for (int vtoken_depth = 0; vtoken_depth < VTLOOP; vtoken_depth++) {
++        for (int vfetch_depth = 0; vfetch_depth < VTLANELOOP; vfetch_depth++) {
++          const int vglobal_fetch_start =
++              partition_start_token_idx +
++              vtoken_depth * VTOKENS_PER_LANE * ROWS_PER_WARP +
++              vfetch_depth * CONTIGUOUS_KV_ELEMS_16B_LOAD;
++          mask_v_cache_padding<cache_t>(
++              Vlocal[vtoken_depth][vhe_depth][vfetch_depth / 2]
++                  .xy[vfetch_depth % 2],
++              vglobal_fetch_start, seq_len);
++        }
++      }
++    }
++  }
++
+   floatx8 dout[TLOOP];
+   // qk wmma
+   for (int token_depth = 0; token_depth < TLOOP; token_depth++) {
+@@ -2741,6 +2828,23 @@ __launch_bounds__(NUM_THREADS, 3) void paged_attention_ll4mi_QKV_mfma16_kernel(
+     }
+   }
+ 
++  if (partition_start_token_idx + T_PAR_SIZE > seq_len) {
++    for (int vhe_depth = 0; vhe_depth < VHELOOP; vhe_depth++) {
++      for (int vtoken_depth = 0; vtoken_depth < VTLOOP; vtoken_depth++) {
++        for (int vfetch_depth = 0; vfetch_depth < VTLANELOOP; vfetch_depth++) {
++          const int vglobal_fetch_start =
++              partition_start_token_idx +
++              vtoken_depth * VTOKENS_PER_LANE * ROWS_PER_WARP +
++              rowid * VTOKENS_PER_LANE +
++              vfetch_depth * CONTIGUOUS_KV_ELEMS_16B_LOAD;
++          mask_v_cache_padding<cache_t>(
++              Vlocal[vtoken_depth][vhe_depth][vfetch_depth],
++              vglobal_fetch_start, seq_len);
++        }
++      }
++    }
++  }
++
+   floatx8 dout[TLOOP];
+   // qk wmma
+   for (int token_depth = 0; token_depth < TLOOP; token_depth++) {
+diff --git a/tests/kernels/attention/test_attention.py b/tests/kernels/attention/test_attention.py
+index 5e37f71172..940de73033 100644
+--- a/tests/kernels/attention/test_attention.py
++++ b/tests/kernels/attention/test_attention.py
+@@ -183,8 +183,28 @@ def test_paged_attention(
+     )
+     key_cache, value_cache = key_caches[0], value_caches[0]
+ 
+-    # Using default kv_scale
+-    k_scale = v_scale = torch.tensor(1.0, dtype=torch.float32, device=device)
++    k_scale_value = 0.5 if kv_cache_dtype == "fp8" else 1.0
++    v_scale_value = 0.25 if kv_cache_dtype == "fp8" else 1.0
++    k_scale = torch.tensor(k_scale_value, dtype=torch.float32, device=device)
++    v_scale = torch.tensor(v_scale_value, dtype=torch.float32, device=device)
++
++    if kv_cache_dtype == "fp8":
++        # Fill unused slots in referenced blocks with FP8 E4M3 NaNs. The
++        # attention result must not depend on values beyond each sequence.
++        fp8_nan = 0x80 if current_platform.is_fp8_fnuz() else 0x7F
++        valid_offsets_by_block: dict[int, set[int]] = {}
++        for seq_idx, seq_len in enumerate(seq_lens.tolist()):
++            for token_idx in range(seq_len):
++                block_idx = block_tables_lst[seq_idx][token_idx // block_size]
++                valid_offsets_by_block.setdefault(block_idx, set()).add(
++                    token_idx % block_size
++                )
++        for block_idx, valid_offsets in valid_offsets_by_block.items():
++            padding_offsets = [
++                offset for offset in range(block_size) if offset not in valid_offsets
++            ]
++            if padding_offsets:
++                value_cache[block_idx, :, :, padding_offsets] = fp8_nan
+ 
+     # Call the paged attention kernel.
+     output = torch.empty_like(query)
+@@ -256,14 +276,14 @@ def test_paged_attention(
+         dequantized_key_cache = torch.empty(
+             size=key_cache_shape, dtype=dtype, device=device
+         )
+-        ops.convert_fp8(dequantized_key_cache, key_cache)
++        ops.convert_fp8(dequantized_key_cache, key_cache, k_scale_value)
+         key_cache = dequantized_key_cache
+ 
+         value_cache_shape = value_cache.shape
+         dequantized_value_cache = torch.empty(
+             size=value_cache_shape, dtype=dtype, device=device
+         )
+-        ops.convert_fp8(dequantized_value_cache, value_cache)
++        ops.convert_fp8(dequantized_value_cache, value_cache, v_scale_value)
+         value_cache = dequantized_value_cache
+ 
+     ref_output = torch.empty_like(query)

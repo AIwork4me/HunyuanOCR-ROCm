@@ -1,0 +1,21 @@
+Obtaining file:///workspace/vllm-mainline-probe
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: vllm
+  Building editable for vllm (pyproject.toml): started
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): finished with status 'done'
+  Created wheel for vllm: filename=vllm-0.28.1rc1.dev49+gd1922cb5a.rocm721-0.editable-cp312-cp312-linux_x86_64.whl size=12147 sha256=655ed9be8cc5521fa407822e39212fdd58ddaf1564ee321caec8a7d608be0a51
+  Stored in directory: /tmp/pip-ephem-wheel-cache-rrncelzs/wheels/f8/6e/bd/9ac1fd1adf364a5f9a05e3b3cc42abfde19a20605906f716ff
+Successfully built vllm
+Installing collected packages: vllm
+  Attempting uninstall: vllm
+    Found existing installation: vllm 0.25.2.dev2+g01a3fe7d2.rocm721
+    Uninstalling vllm-0.25.2.dev2+g01a3fe7d2.rocm721:
+      Successfully uninstalled vllm-0.25.2.dev2+g01a3fe7d2.rocm721
+Successfully installed vllm-0.28.1rc1.dev49+gd1922cb5a.rocm721

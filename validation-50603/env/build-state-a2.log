@@ -1,0 +1,19 @@
+Obtaining file:///workspace/vllm-50603
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: vllm
+  Building editable for vllm (pyproject.toml): started
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): finished with status 'done'
+  Created wheel for vllm: filename=vllm-0.28.1rc1.dev49+gd1922cb5a.rocm721-0.editable-cp312-cp312-linux_x86_64.whl size=12144 sha256=356321e6fe799b7b7f11125a012c4ff33afce8298b5e8ee49e76b1cd03b3f4fb
+  Stored in directory: /tmp/pip-ephem-wheel-cache-1bbupc1c/wheels/af/7e/89/b9718379876bcd62f2a88c24178c10a6043cec6518fbf4bb6e
+Successfully built vllm
+Installing collected packages: vllm
+Successfully installed vllm-0.28.1rc1.dev49+gd1922cb5a.rocm721
+BUILD rc=0
