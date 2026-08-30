@@ -1,8 +1,8 @@
 ARTIFACTS.txt	0 bytes
 README.md	3604 bytes
 REPRODUCE.md	7741 bytes
-SHA256SUMS	4485 bytes
-SUMMARY.md	17689 bytes
+SHA256SUMS	6346 bytes
+SUMMARY.md	19586 bytes
 baseline/run-baseline.log	31806 bytes
 diff/hunyuanocr-vllm-candidate-b5707bf994.patch	14348 bytes
 diff/hunyuanocr-vllm-candidate.patch	22940 bytes
@@ -39,6 +39,14 @@ latest-main/config-probe-latest-main.log	388 bytes
 latest-main/e2e-default-piecewise.json	799 bytes
 latest-main/e2e-eager.json	797 bytes
 latest-main/e2e-v1-runner.json	797 bytes
+latest-main/rc3-boundary-after.log	11011 bytes
+latest-main/rc3-boundary-before.log	14989 bytes
+latest-main/rc3-final-after.log	1593 bytes
+latest-main/rc3-final-before.log	6046 bytes
+latest-main/rc3-final-candidate.diff	5534 bytes
+latest-main/rc3-only-after-candidate.log	947 bytes
+latest-main/rc3-only-before-pristine-2c7d7dd64a.log	6620 bytes
+latest-main/rc3-pr-draft.md	3130 bytes
 latest-main/run-baseline-latest-main.log	15962 bytes
 latest-main/run-e2e-default-piecewise.log	19229 bytes
 latest-main/run-e2e-eager.log	11206 bytes

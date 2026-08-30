@@ -1,6 +1,6 @@
 e4b314d7cc9c73af482d66a9d1865513e9c07083105057133375321f38e0763c  ./README.md
 c46e8b1613e56c166453bc64a4e7a5ae3a9a9e305c4e5e7a72a2160de211e3c7  ./REPRODUCE.md
-91ced9dc0f0d5c3a90bf43f77c73c140fedab6084bafd3a2dcba237d439bf10a  ./SUMMARY.md
+ddbf6cf91f511765931cfa3009c4f48185faa7e5768d81607614435e3dc62880  ./SUMMARY.md
 f03b03e360692d808e238bdcc9bced276142ce2a35299be1d333f51c74e413e1  ./baseline/run-baseline.log
 f625c82f0e2bf4aed9eb0f6d6cb266144ed071e0f41f2d79c2eda7145a72817f  ./diff/hunyuanocr-vllm-candidate-b5707bf994.patch
 b8738dfcf5a7815aae3a6032360a4f4c7ccd262b120f5fbfdf80257a869ba1e6  ./diff/hunyuanocr-vllm-candidate.patch
@@ -37,6 +37,14 @@ fc9ae9e2a3790d55280ee59fbb605335100f143d33453ec32fcf7a5b40b4b953  ./latest-main/
 2bbaa0a263edb58471a26122f651825697cc5a743bb8a7a338c44dacebf0ad7c  ./latest-main/e2e-default-piecewise.json
 de794049a761248196d28ddb331f4781f6a7081930a7055908dc0ed7558708ca  ./latest-main/e2e-eager.json
 de794049a761248196d28ddb331f4781f6a7081930a7055908dc0ed7558708ca  ./latest-main/e2e-v1-runner.json
+624fedca02852be5864df78fe25060718885a6d146f128c71251574472de0ed6  ./latest-main/rc3-boundary-after.log
+1ff143a60e6e739bc3930b88f1e653097bfc9d0e76b42fea258abe09398d67c9  ./latest-main/rc3-boundary-before.log
+c5990e5b18ab91f76f9854fe4a0e4a19db5c79c799cdc3ffd6220eab90d0b3ff  ./latest-main/rc3-final-after.log
+e4f235a9e98dfb7d479611a1999317a52f94615197b9e40ea1ac818d7e1f699f  ./latest-main/rc3-final-before.log
+6ab46581f95e065764bf4a836e5addf69bdb23eac695e6491473526ad240ad9e  ./latest-main/rc3-final-candidate.diff
+a061ee1d63bc9d50ffa54c3b94f445a231df1783618c33be04763edbe978db5d  ./latest-main/rc3-only-after-candidate.log
+18e594f20a724244f9d914d3c30be7e39bca22f8f4c9b7d7b46f6c2757305464  ./latest-main/rc3-only-before-pristine-2c7d7dd64a.log
+dd38309b56c057194ddc0c3c2da7adfb49d9f2a064323f5510118c624c5ca3e1  ./latest-main/rc3-pr-draft.md
 25ca47f34e47a8fd5ddd671f20ddf8a99fb286af429ae677d62024dc4a395247  ./latest-main/run-baseline-latest-main.log
 a10bb3735df9a3db41f664410564aab0357fcd7a9971c42362f0a3bd8d7d2f36  ./latest-main/run-e2e-default-piecewise.log
 8b2a95af9530ccb69b9299c7e710d376f4586206e9a57e230dff6114e315bfc1  ./latest-main/run-e2e-eager.log

@@ -1,0 +1,124 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /workspace/venv-mainline-probe/bin/python
+cachedir: .pytest_cache
+rootdir: /workspace/vllm-mainline-probe
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 3 items
+
+tests/models/transformers/test_get_rope_index_kwargs.py::test_image_only_request_skips_absent_grid_kwargs FAILED [ 33%]
+tests/models/transformers/test_get_rope_index_kwargs.py::test_present_image_grid_is_forwarded_as_keyword FAILED [ 66%]
+tests/models/transformers/test_get_rope_index_kwargs.py::test_video_feature_is_rejected_above_get_rope_index PASSED [100%]
+
+=================================== FAILURES ===================================
+_______________ test_image_only_request_skips_absent_grid_kwargs _______________
+
+    def test_image_only_request_skips_absent_grid_kwargs():
+        # Pristine main raises TypeError here: HunYuanVL's signature has no
+        # `video_grid_thw` parameter, but it was passed unconditionally.
+        model = _HunYuanStyleModel()
+        feature = _feature("image", 2, 4, image_grid_thw=torch.tensor([1, 4, 4]))
+    
+>       positions, delta = MultiModalMixin.get_mrope_input_positions(
+            SimpleNamespace(model=model), [1] * 10, [feature]
+        )
+
+tests/models/transformers/test_get_rope_index_kwargs.py:102: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = namespace(model=<tests.models.transformers.test_get_rope_index_kwargs._HunYuanStyleModel object at 0x740a626da690>, _get_rope_index_accepts_mm_token_type_ids=True)
+input_tokens = [1, 1, 1, 1, 1, 1, ...]
+mm_features = [MultiModalFeatureSpec(data=<tests.models.transformers.test_get_rope_index_kwargs._KwargsItem object at 0x740a626da630>, modality='image', identifier='image-0', mm_position=PlaceholderRange(offset=2, length=4, is_embed=None), mm_hash=None)]
+
+    def get_mrope_input_positions(
+        self,
+        input_tokens: list[int],
+        mm_features: list[MultiModalFeatureSpec],
+    ) -> tuple[torch.Tensor, int]:
+        kwargs = MultiModalFeatureSpec.gather_kwargs(
+            mm_features,
+            {
+                "image_grid_thw",
+                "video_grid_thw",
+                "second_per_grid_ts",
+                "audio_feature_lengths",
+                "use_audio_in_video",
+            },
+        )
+        if any(v for k, v in kwargs.items() if k not in {"image_grid_thw"}):
+            raise NotImplementedError(
+                "Transformers modeling backend only supports images."
+            )
+    
+        image_grid_thw = kwargs.get("image_grid_thw", [])
+        video_grid_thw = kwargs.get("video_grid_thw", [])
+    
+        image_grid_thw = torch.stack(image_grid_thw) if image_grid_thw else None
+        video_grid_thw = torch.stack(video_grid_thw) if video_grid_thw else None
+    
+        # `get_rope_index` doesn't always accept arbitrary `kwargs`
+        kwargs = {}
+        if not hasattr(self, "_get_rope_index_accepts_mm_token_type_ids"):
+            import inspect
+    
+            sig = inspect.signature(self.model.get_rope_index)
+            params = sig.parameters
+            self._get_rope_index_accepts_mm_token_type_ids = (
+                "mm_token_type_ids" in params
+                or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+            )
+        if self._get_rope_index_accepts_mm_token_type_ids:
+            mm_token_type_ids = torch.zeros(len(input_tokens), dtype=torch.int)
+            for feature in mm_features:
+                position = feature.mm_position
+                offset, length = position.offset, position.length
+                mm_token_type_id = _MODALITY_TO_TOKEN_TYPE_ID[feature.modality]
+                mm_token_type_ids[offset : offset + length] = mm_token_type_id
+            kwargs["mm_token_type_ids"] = mm_token_type_ids.unsqueeze(0)
+    
+>       mrope_positions, mrope_position_delta = self.model.get_rope_index(
+            input_ids=torch.tensor(input_tokens).unsqueeze(0),
+            image_grid_thw=image_grid_thw,
+            video_grid_thw=video_grid_thw,
+            **kwargs,
+        )
+E       TypeError: _HunYuanStyleModel.get_rope_index() got an unexpected keyword argument 'video_grid_thw'
+
+vllm/model_executor/models/transformers/multimodal.py:1257: TypeError
+_______________ test_present_image_grid_is_forwarded_as_keyword ________________
+
+    def test_present_image_grid_is_forwarded_as_keyword():
+        model = _QwenStyleModel()
+        feature = _feature("image", 2, 4, image_grid_thw=torch.tensor([1, 2, 2]))
+    
+        MultiModalMixin.get_mrope_input_positions(
+            SimpleNamespace(model=model), [1] * 8, [feature]
+        )
+    
+        (call,) = model.calls
+        # Present grid: keyword passed with the real tensor. Absent grid:
+        # keyword not passed at all (sentinel), rather than passed as None.
+        assert call["image_grid_thw"] is not _ABSENT
+        assert torch.equal(call["image_grid_thw"], torch.tensor([[1, 2, 2]]))
+>       assert call["video_grid_thw"] is _ABSENT
+E       assert None is <object object at 0x740a6a741820>
+
+tests/models/transformers/test_get_rope_index_kwargs.py:131: AssertionError
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+../venv-mainline-probe/lib/python3.12/site-packages/torch/jit/_script.py:365: 14 warnings
+  /workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/models/transformers/test_get_rope_index_kwargs.py::test_image_only_request_skips_absent_grid_kwargs
+FAILED tests/models/transformers/test_get_rope_index_kwargs.py::test_present_image_grid_is_forwarded_as_keyword
+=================== 2 failed, 1 passed, 16 warnings in 1.25s ===================
+sys:1: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
