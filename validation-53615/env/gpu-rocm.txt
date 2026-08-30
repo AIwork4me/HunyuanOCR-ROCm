@@ -1,0 +1,49 @@
+=== rocm-smi ===
+
+
+============================ ROCm System Management Interface ============================
+================================== Memory Usage (Bytes) ==================================
+GPU[0]		: VRAM Total Memory (B): 51522830336
+GPU[0]		: VRAM Total Used Memory (B): 28012544
+==========================================================================================
+====================================== Product Info ======================================
+GPU[0]		: Card Series: 		AMD Radeon Graphics
+GPU[0]		: Card Model: 		0x744b
+GPU[0]		: Card Vendor: 		Advanced Micro Devices, Inc. [AMD/ATI]
+GPU[0]		: Card SKU: 		D7070910
+GPU[0]		: Subsystem ID: 	0x0e0c
+GPU[0]		: Device Rev: 		0x00
+GPU[0]		: Node ID: 		2
+GPU[0]		: GUID: 		6853
+GPU[0]		: GFX Version: 		gfx1100
+==========================================================================================
+================================== End of ROCm SMI Log ===================================
+
+=== rocminfo (gfx + VRAM excerpt) ===
+Runtime Version:         1.18
+Runtime Ext Version:     1.15
+  Name:                    AMD EPYC 9334 32-Core Processor    
+  Marketing Name:          AMD EPYC 9334 32-Core Processor    
+  Vendor Name:             CPU                                
+  Compute Unit:            64                                 
+  Name:                    AMD EPYC 9334 32-Core Processor    
+  Marketing Name:          AMD EPYC 9334 32-Core Processor    
+  Vendor Name:             CPU                                
+  Compute Unit:            64                                 
+  Name:                    gfx1100                            
+  Marketing Name:          AMD Radeon Graphics                
+  Vendor Name:             AMD                                
+  Compute Unit:            96                                 
+      Name:                    amdgcn-amd-amdhsa--gfx1100         
+      Name:                    amdgcn-amd-amdhsa--gfx11-generic   
+
+=== hipcc ===
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /opt/rocm-7.2.1/lib/llvm/bin
+Configuration file: /opt/rocm-7.2.1/lib/llvm/bin/clang++.cfg
+
+=== torch/ROCm runtime ===
+torch: 2.12.0+rocm7.14.0
+torch.version.hip: 7.14.60850
+cuda-arch-list-ish: AMD Radeon Pro W7900D (11, 0)

@@ -1,0 +1,18 @@
+=== python ===
+Python 3.12.3
+
+=== packages ===
+torch: 2.12.0+rocm7.14.0
+torch.version.hip: 7.14.60850
+transformers: 5.13.0
+vllm: 0.28.1rc1.dev49+gd1922cb5a
+vllm file: /workspace/vllm-mainline-probe/vllm/__init__.py
+
+=== vllm git ===
+b5707bf994cb968adfc7a29fbb80b0582f53f38d
+v0.13.0rc1-8455-gb5707bf994
+b5707bf994 [Bugfix][MoE] Enable cuBLAS out_dtype router GEMM on all CUDA archs (fixes family-120/GB10) (#54048)
+
+=== model revision ===
+tencent/HunyuanOCR pinned revision: de8f10ad2f00a0cefd790b526de8a65dcfdb3205 (refs/main)
+de8f10ad2f00a0cefd790b526de8a65dcfdb3205

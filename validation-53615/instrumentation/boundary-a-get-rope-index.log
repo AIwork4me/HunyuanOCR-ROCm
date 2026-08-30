@@ -1,0 +1,9 @@
+input_ids: (1, 1038) image_grid_thw: [[1, 60, 64]]
+vision-token count: 992
+text_config.rope_parameters.mrope_section: [16, 16, 16, 16]
+sections sum: 64 | head_dim // 2: 64
+get_rope_index output shape: (4, 1, 1038) delta: [[0]]
+axis 0: min=0 max=1037 text-range=(0..1037) vis-range=(2..993)
+axis 1: min=0 max=1037 text-range=(0..1037) vis-range=(0..993)
+axis 2: min=0 max=1037 text-range=(0..1037) vis-range=(0..993)
+axis 3: min=0 max=1037 text-range=(0..1037) vis-range=(0..993)

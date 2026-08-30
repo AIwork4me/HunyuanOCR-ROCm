@@ -1,0 +1,38 @@
+type(hf_config): HunYuanVLConfig
+type(hf_text_config): HunYuanVLTextConfig
+
+-- uses_mrope(hf_config): True
+-- uses_xdrope_dim(hf_config): 0
+
+== hf_config (top) ==
+  rope_parameters = <absent>
+  rope_scaling = <absent>
+  mrope_section = <absent>
+  xdrope_section = <absent>
+  rope_theta = <absent>
+  num_attention_heads = <absent>
+  num_key_value_heads = <absent>
+  head_dim = <absent>
+  hidden_size = <absent>
+  vocab_size = <absent>
+
+== text_config ==
+  rope_parameters = {'alpha': 1000.0, 'beta_fast': 32, 'beta_slow': 1, 'factor': 1.0, 'mscale': 1.0, 'mscale_all_dim': 1.0, 'type': 'dynamic', 'rope_theta': 10000.0, 'rope_type': 'dynamic', 'mrope_section': [16, 16, 16, 16]}
+  rope_scaling = {'alpha': 1000.0, 'beta_fast': 32, 'beta_slow': 1, 'factor': 1.0, 'mscale': 1.0, 'mscale_all_dim': 1.0, 'type': 'dynamic', 'rope_theta': 10000.0, 'rope_type': 'dynamic', 'mrope_section': [16, 16, 16, 16]}
+  mrope_section = <absent>
+  xdrope_section = <absent>
+  rope_theta = <absent>
+  num_attention_heads = 16
+  num_key_value_heads = 8
+  head_dim = 128
+  hidden_size = 1024
+  vocab_size = 120818
+INFO 08-30 02:34:59 [model.py:684] Resolved architecture: HunYuanVLForConditionalGeneration
+INFO 08-30 02:34:59 [model.py:2021] Using max model len 131072
+
+ModelConfig views:
+  mc.uses_mrope: True
+  mc.uses_xdrope_dim: 0
+  mc.uses_xdrope: False
+  type(mc.hf_config): HunYuanVLConfig
+  type(mc.hf_text_config): HunYuanVLTextConfig

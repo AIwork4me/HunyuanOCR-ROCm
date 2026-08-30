@@ -1,0 +1,367 @@
+diff --git a/tests/v1/worker/test_rope_state.py b/tests/v1/worker/test_rope_state.py
+new file mode 100644
+index 0000000000..f9305af45d
+--- /dev/null
++++ b/tests/v1/worker/test_rope_state.py
+@@ -0,0 +1,191 @@
++# SPDX-License-Identifier: Apache-2.0
++# SPDX-FileCopyrightText: Copyright contributors to the vLLM project
++"""Position-axis count selection for multi-dimensional RoPE (RopeState).
++
++The number of multimodal RoPE position axes must follow the
++transformers-normalized `rope_parameters["mrope_section"]` length: Qwen-style
++3-section M-RoPE stays 3 axes, and XD-RoPE checkpoints that transformers
++normalizes into a 4-section m-RoPE (e.g. HunYuanVL's legacy
++`rope_scaling.type="xdrope"` with `xdrope_section=[16, 16, 16, 16]`) must get
++4 axes. A hardcoded 3-axis buffer silently drops the 4th channel and the HF
++model then rejects the positions ("Expected 4 multimodal RoPE channels").
++"""
++
++import json
++from dataclasses import dataclass
++from typing import ClassVar, Literal
++
++import pytest
++import torch
++
++import vllm.v1.worker.gpu.mm.rope as rope_mod
++from vllm.config import ModelConfig
++from vllm.v1.worker.gpu.mm.rope import get_rope_state
++
++pytestmark = pytest.mark.cpu_test
++
++# Minimal but faithful text configs. `head_dim` is chosen so the sections sum
++# to `head_dim // 2`, which the HunYuanVL config validation requires.
++QWEN_LIKE = {
++    "architectures": ["Qwen2VLForConditionalGeneration"],
++    "model_type": "qwen2_vl",
++    "text_config": {
++        "model_type": "qwen2_vl",
++        "hidden_size": 64,
++        "intermediate_size": 128,
++        "num_attention_heads": 4,
++        "num_key_value_heads": 2,
++        "head_dim": 16,
++        "num_hidden_layers": 2,
++        "vocab_size": 1000,
++        "max_position_embeddings": 1024,
++        "rope_theta": 1000000.0,
++        "rope_scaling": {
++            "type": "mrope",
++            "mrope_section": [2, 2, 4],
++            "rope_theta": 1000000.0,
++        },
++    },
++    "vision_config": {"model_type": "qwen2_vl_vision"},
++}
++
++HUNYUAN_LIKE = {
++    "architectures": ["HunYuanVLForConditionalGeneration"],
++    "model_type": "hunyuan_vl",
++    "dtype": "bfloat16",
++    "text_config": {
++        "model_type": "hunyuan_vl_text",
++        "hidden_size": 64,
++        "intermediate_size": 128,
++        "num_attention_heads": 4,
++        "num_key_value_heads": 2,
++        "head_dim": 32,
++        "num_hidden_layers": 2,
++        "vocab_size": 1000,
++        "max_position_embeddings": 1024,
++        "rope_theta": 10000.0,
++        "rope_scaling": {
++            "alpha": 1000.0,
++            "beta_fast": 32,
++            "beta_slow": 1,
++            "factor": 1.0,
++            "mscale": 1.0,
++            "mscale_all_dim": 1.0,
++            "type": "xdrope",
++            "xdrope_section": [4, 4, 4, 4],
++        },
++    },
++    "vision_config": {"model_type": "hunyuan_vl_vision"},
++}
++
++
++TOKENIZER_LIKE = {
++    "extra_special_tokens": {
++        "image_end_token": "<|hy_img_end|>",
++        "image_start_token": "<|hy_img_start|>",
++        "image_token": "<|hy_img|>",
++        "video_end_token": "<|hy_vid_end|>",
++        "video_start_token": "<|hy_vid_start|>",
++        "video_token": "<|hy_vid|>",
++    },
++    "processor_class": "HunYuanVLProcessor",
++    "tokenizer_class": "PreTrainedTokenizerFast",
++}
++
++
++HUNYUAN_LIKE_PREPROCESSOR = {
++    "do_convert_rgb": True,
++    "do_normalize": True,
++    "do_rescale": True,
++    "do_resize": True,
++    "image_mean": [0.48145466, 0.4578275, 0.40821073],
++    "image_processor_type": "HunYuanVLImageProcessor",
++    "image_std": [0.26862954, 0.26130258, 0.27577711],
++    "max_pixels": 16777216,
++    "merge_size": 2,
++    "min_pixels": 262144,
++    "patch_size": 16,
++    "processor_class": "HunYuanVLProcessor",
++    "resample": 1,
++    "rescale_factor": 0.00392156862745098,
++    "size": {"longest_edge": 4194304, "shortest_edge": 262144},
++    "temporal_patch_size": 1,
++}
++
++
++def _model_config(
++    tmp_path, name: str, raw: dict, preprocessor: dict | None = None
++) -> ModelConfig:
++    model_dir = tmp_path / name
++    model_dir.mkdir()
++    (model_dir / "config.json").write_text(json.dumps(raw))
++    if preprocessor is not None:
++        # Multimodal architectures resolve their image processor and tokenizer
++        # at ModelConfig time, so the fixture needs those sidecar files too.
++        (model_dir / "preprocessor_config.json").write_text(json.dumps(preprocessor))
++        (model_dir / "tokenizer_config.json").write_text(json.dumps(TOKENIZER_LIKE))
++    return ModelConfig(
++        model=str(model_dir), trust_remote_code=True, dtype="bfloat16", seed=0
++    )
++
++
++class _StubMropeModel:
++    """Satisfies the SupportsMRoPE runtime_checkable protocol."""
++
++    supports_mrope: ClassVar[Literal[True]] = True
++
++    def get_mrope_input_positions(self, input_tokens, mm_features):
++        raise NotImplementedError
++
++
++@dataclass
++class _RecordingRopeState:
++    num_dims: int
++    has_delta: bool
++    max_num_reqs: int
++    max_num_tokens: int
++    max_model_len: int
++    device: torch.device
++
++
++def _get_rope_state(model_config: ModelConfig, monkeypatch) -> _RecordingRopeState:
++    monkeypatch.setattr(rope_mod, "RopeState", _RecordingRopeState)
++    state = get_rope_state(
++        model_config,
++        _StubMropeModel(),
++        max_num_reqs=2,
++        max_num_tokens=16,
++        max_model_len=64,
++        device=torch.device("cpu"),
++    )
++    assert state is not None
++    return state
++
++
++def test_rope_state_qwen_style_mrope_keeps_3_axes(tmp_path, monkeypatch):
++    model_config = _model_config(tmp_path, "qwen-like", QWEN_LIKE)
++
++    assert model_config.uses_mrope
++    text_config = model_config.hf_config.get_text_config()
++    assert text_config.rope_parameters["mrope_section"] == [2, 2, 4]
++
++    state = _get_rope_state(model_config, monkeypatch)
++    assert state.num_dims == 3
++    assert state.has_delta
++
++
++def test_rope_state_hunyuan_style_xdrope_gets_4_axes(tmp_path, monkeypatch):
++    model_config = _model_config(
++        tmp_path, "hunyuan-like", HUNYUAN_LIKE, HUNYUAN_LIKE_PREPROCESSOR
++    )
++
++    # Transformers normalized the legacy xdrope fields away, so vLLM must take
++    # the axis count from the normalized mrope_section, not from xdrope fields.
++    assert model_config.uses_mrope
++    assert model_config.uses_xdrope_dim == 0
++    text_config = model_config.hf_config.get_text_config()
++    assert text_config.rope_parameters["mrope_section"] == [4, 4, 4, 4]
++
++    state = _get_rope_state(model_config, monkeypatch)
++    assert state.num_dims == 4
++    assert state.has_delta
+diff --git a/vllm/config/model.py b/vllm/config/model.py
+index 2b69d7ce4c..9bdc849b9a 100644
+--- a/vllm/config/model.py
++++ b/vllm/config/model.py
+@@ -38,6 +38,7 @@ from vllm.transformers_utils.config import (
+     get_sentence_transformer_tokenizer_config,
+     is_encoder_decoder,
+     is_rope_parameters_nested,
++    num_mrope_axes,
+     try_get_dense_modules,
+     try_get_generation_config,
+     try_get_tokenizer_config,
+@@ -1839,6 +1840,11 @@ class ModelConfig:
+     def uses_mrope(self) -> bool:
+         return uses_mrope(self.hf_config)
+ 
++    @property
++    def num_mrope_axes(self) -> int:
++        """Number of multimodal RoPE position axes (``len(mrope_section)``)."""
++        return num_mrope_axes(self.hf_config)
++
+     @property
+     def uses_xdrope_dim(self) -> int:
+         return uses_xdrope_dim(self.hf_config)
+diff --git a/vllm/model_executor/models/transformers/base.py b/vllm/model_executor/models/transformers/base.py
+index 1d8fa5b5d7..75d81e448f 100644
+--- a/vllm/model_executor/models/transformers/base.py
++++ b/vllm/model_executor/models/transformers/base.py
+@@ -537,12 +537,16 @@ class Base(
+             }
+             if attn_cls is MLAAttention:
+                 text_config._attn_implementation = "vllm_mla"
+-            else:
++            elif mla_fusers:
+                 # MLA model not using MLAAttention: recompute head_size for full attn
+                 qk_nope_head_dim = getattr(text_config, "qk_nope_head_dim", 0)
+                 qk_rope_head_dim = getattr(text_config, "qk_rope_head_dim", 0)
+                 if qk_head_dim := qk_nope_head_dim + qk_rope_head_dim:
+                     self.model_config.model_arch_config.head_size = qk_head_dim
++            # A kv_lora_rank without any MLA attention modules means the
++            # config carries vestigial MLA fields its implementation ignores
++            # (e.g. HunYuanVL's deepseek-lineage text config is plain GQA
++            # over `head_dim`); keep the arch-derived head size there.
+ 
+         logits_soft_cap = getattr(text_config, "attn_logit_softcapping", None)
+ 
+diff --git a/vllm/model_executor/models/transformers/multimodal.py b/vllm/model_executor/models/transformers/multimodal.py
+index f4206a3e14..1a8babf3f4 100644
+--- a/vllm/model_executor/models/transformers/multimodal.py
++++ b/vllm/model_executor/models/transformers/multimodal.py
+@@ -1254,10 +1254,16 @@ class MultiModalMixin(SupportsMultiModal, SupportsMRoPE):
+                 mm_token_type_ids[offset : offset + length] = mm_token_type_id
+             kwargs["mm_token_type_ids"] = mm_token_type_ids.unsqueeze(0)
+ 
++        # Grid kwargs for absent modalities must not be passed as explicit
++        # None: not every HF `get_rope_index` accepts them (e.g. HunYuanVL
++        # has no `video_grid_thw` parameter).
++        if image_grid_thw is not None:
++            kwargs["image_grid_thw"] = image_grid_thw
++        if video_grid_thw is not None:
++            kwargs["video_grid_thw"] = video_grid_thw
++
+         mrope_positions, mrope_position_delta = self.model.get_rope_index(
+             input_ids=torch.tensor(input_tokens).unsqueeze(0),
+-            image_grid_thw=image_grid_thw,
+-            video_grid_thw=video_grid_thw,
+             **kwargs,
+         )
+ 
+diff --git a/vllm/transformers_utils/config.py b/vllm/transformers_utils/config.py
+index 0ed71feb22..74be6efe94 100644
+--- a/vllm/transformers_utils/config.py
++++ b/vllm/transformers_utils/config.py
+@@ -578,6 +578,51 @@ def thinker_uses_mrope(config: PretrainedConfig) -> bool:
+     return uses_mrope(thinker_text_config)
+ 
+ 
++def _get_mrope_section(config: PretrainedConfig) -> list[int] | None:
++    rope_parameters = getattr(config, "rope_parameters", None)
++    if rope_parameters is None:
++        return None
++
++    section = rope_parameters.get("mrope_section")
++    if isinstance(section, list) and section:
++        return section
++
++    return None
++
++
++def num_mrope_axes(config: PretrainedConfig) -> int:
++    """Number of multimodal RoPE position axes, i.e. ``len(mrope_section)``.
++
++    Per the transformers modeling rule, ``mrope_section`` controls both the
++    number and order of multimodal RoPE axes, so position buffers must be
++    sized from it instead of being hardcoded to 3 axes. This matters because
++    transformers normalizes legacy XD-RoPE checkpoints (e.g. HunYuanVL's
++    ``rope_scaling.type="xdrope"`` with a 4-entry ``xdrope_section``) into a
++    4-section ``mrope_section``.
++    """
++    for section in (
++        _get_mrope_section(config),
++        _get_mrope_section(config.get_text_config()),
++    ):
++        if section is not None:
++            return len(section)
++
++    thinker_config = getattr(config, "thinker_config", None)
++    thinker_text_config = (
++        getattr(thinker_config, "text_config", None)
++        if thinker_config is not None
++        else None
++    )
++    if thinker_text_config is not None:
++        section = _get_mrope_section(thinker_text_config)
++        if section is not None:
++            return len(section)
++
++    # uses_mrope() implies a mrope_section was found; keep the historical
++    # 3-axis default as a safe fallback anyway.
++    return 3
++
++
+ def uses_xdrope_dim(config: PretrainedConfig) -> int:
+     """Detect if the model with this config uses XD-ROPE."""
+     xdrope_section = getattr(config, "xdrope_section", None)
+diff --git a/vllm/v1/worker/gpu/mm/rope.py b/vllm/v1/worker/gpu/mm/rope.py
+index e5de282234..8435b84d17 100644
+--- a/vllm/v1/worker/gpu/mm/rope.py
++++ b/vllm/v1/worker/gpu/mm/rope.py
+@@ -143,7 +143,12 @@ def get_rope_state(
+     if model_config.uses_mrope:
+         assert isinstance(model, SupportsMRoPE)
+         return RopeState(
+-            num_dims=3,
++            # The HF rule is that the number of position axes equals
++            # len(mrope_section); transformers normalizes 4-axis XD-RoPE
++            # models (e.g. HunYuanVL) into a 4-section mrope_section, so the
++            # buffer must be sized from the config or the extra channels are
++            # silently dropped.
++            num_dims=model_config.num_mrope_axes,
+             has_delta=True,
+             max_num_reqs=max_num_reqs,
+             max_num_tokens=max_num_tokens,
+diff --git a/vllm/v1/worker/gpu_model_runner.py b/vllm/v1/worker/gpu_model_runner.py
+index e6e63e1e98..ae9552733c 100644
+--- a/vllm/v1/worker/gpu_model_runner.py
++++ b/vllm/v1/worker/gpu_model_runner.py
+@@ -870,13 +870,17 @@ class GPUModelRunner(
+             # with torch compile.
+             # See detailed explanation in https://github.com/vllm-project/vllm/pull/12128#discussion_r1926431923
+ 
+-            # NOTE: When M-RoPE is enabled, position ids are 3D regardless of
+-            # the modality of inputs. For text-only inputs, each dimension has
+-            # identical position IDs, making M-RoPE functionally equivalent to
+-            # 1D-RoPE.
++            # NOTE: When M-RoPE is enabled, position ids are one per
++            # mrope_section entry regardless of the modality of inputs.
++            # For text-only inputs, each dimension has identical position IDs,
++            # making M-RoPE functionally equivalent to 1D-RoPE.
+             # See page 5 of https://arxiv.org/abs/2409.12191
++            # The axis count follows len(mrope_section): transformers
++            # normalizes 4-axis XD-RoPE models (e.g. HunYuanVL) into a
++            # 4-section mrope_section.
+             self.mrope_positions = self._make_buffer(
+-                (3, self.max_num_tokens + 1), dtype=torch.int64
++                (self.model_config.num_mrope_axes, self.max_num_tokens + 1),
++                dtype=torch.int64,
+             )
+ 
+         # Only relevant for models using XD-RoPE (e.g, HunYuan-VL)

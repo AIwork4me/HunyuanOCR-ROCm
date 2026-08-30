@@ -1,0 +1,167 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/vllm-mainline-probe
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 1 item
+
+tests/kernels/core/test_mrope.py F                                       [100%]
+
+=================================== FAILURES ===================================
+_ test_mrope_torch_compile_tracing[8192-dtype0-2-model_info4-Qwen/Qwen3-VL-4B-Instruct] _
+
+model = 'Qwen/Qwen3-VL-4B-Instruct', trust_remote_code = False, revision = None
+code_revision = None, config_format = 'auto', hf_overrides_kw = None
+hf_overrides_fn = None, kwargs = {}
+
+    def get_config(
+        model: str | Path,
+        trust_remote_code: bool,
+        revision: str | None = None,
+        code_revision: str | None = None,
+        config_format: str | ConfigFormat = "auto",
+        hf_overrides_kw: dict[str, Any] | None = None,
+        hf_overrides_fn: Callable[[PretrainedConfig], PretrainedConfig] | None = None,
+        **kwargs,
+    ) -> PretrainedConfig:
+        if config_format == "auto":
+            try:
+                # First check for Mistral to avoid defaulting to
+                # Transformers implementation.
+                if is_mistral_model_repo(
+                    model_name_or_path=str(model), revision=revision
+                ) and file_or_path_exists(
+                    model=model, config_name=MISTRAL_CONFIG_NAME, revision=revision
+                ):
+                    config_format = "mistral"
+                elif file_or_path_exists(model, HF_CONFIG_NAME, revision=revision):
+                    config_format = "hf"
+                else:
+>                   raise ValueError(
+                        "Could not detect config format for no config file found. "
+                        "With config_format 'auto', ensure your model has either "
+                        "config.json (HF format) or params.json (Mistral format). "
+                        "Otherwise please specify your_custom_config_format "
+                        "in engine args for customized config parser."
+                    )
+E                   ValueError: Could not detect config format for no config file found. With config_format 'auto', ensure your model has either config.json (HF format) or params.json (Mistral format). Otherwise please specify your_custom_config_format in engine args for customized config parser.
+
+vllm/transformers_utils/config.py:711: ValueError
+
+The above exception was the direct cause of the following exception:
+
+default_vllm_config = VllmConfig(model_config=None, cache_config=CacheConfig(block_size=16, user_specified_block_size=False, user_specified_...mization_level=<OptimizationLevel.O2: 2>, performance_mode='balanced', weight_transfer_config=None, shutdown_timeout=0)
+model_name = 'Qwen/Qwen3-VL-4B-Instruct'
+model_info = MRoPETestInfo(model_name='Qwen/Qwen3-VL-4B-Instruct', is_neox_style=True, atol=0.01, rtol=0.016, marks=[])
+tp_size = 2, dtype = torch.bfloat16, num_tokens = 8192
+
+    @pytest.mark.skipif(
+        not current_platform.is_cuda_alike(), reason="Skipping CUDA/ROCm only tests."
+    )
+    @pytest.mark.parametrize(
+        "model_info, model_name",
+        [
+            pytest.param(test_config, test_config.model_name, marks=test_config.marks)
+            for test_config in MODELS_TO_TEST
+        ],
+    )
+    @pytest.mark.parametrize("tp_size", [1, 2])
+    @pytest.mark.parametrize("dtype", [torch.bfloat16])
+    @pytest.mark.parametrize("num_tokens", num_tokens_list)
+    def test_mrope_torch_compile_tracing(
+        default_vllm_config,
+        model_name: str,
+        model_info: MRoPETestInfo,
+        tp_size: int,
+        dtype: torch.dtype,
+        num_tokens: int,
+    ):
+        atol = model_info.atol
+        rtol = model_info.rtol
+    
+>       config = get_config(model_name, False).get_text_config()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/kernels/core/test_mrope.py:202: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+model = 'Qwen/Qwen3-VL-4B-Instruct', trust_remote_code = False, revision = None
+code_revision = None, config_format = 'auto', hf_overrides_kw = None
+hf_overrides_fn = None, kwargs = {}
+
+    def get_config(
+        model: str | Path,
+        trust_remote_code: bool,
+        revision: str | None = None,
+        code_revision: str | None = None,
+        config_format: str | ConfigFormat = "auto",
+        hf_overrides_kw: dict[str, Any] | None = None,
+        hf_overrides_fn: Callable[[PretrainedConfig], PretrainedConfig] | None = None,
+        **kwargs,
+    ) -> PretrainedConfig:
+        if config_format == "auto":
+            try:
+                # First check for Mistral to avoid defaulting to
+                # Transformers implementation.
+                if is_mistral_model_repo(
+                    model_name_or_path=str(model), revision=revision
+                ) and file_or_path_exists(
+                    model=model, config_name=MISTRAL_CONFIG_NAME, revision=revision
+                ):
+                    config_format = "mistral"
+                elif file_or_path_exists(model, HF_CONFIG_NAME, revision=revision):
+                    config_format = "hf"
+                else:
+                    raise ValueError(
+                        "Could not detect config format for no config file found. "
+                        "With config_format 'auto', ensure your model has either "
+                        "config.json (HF format) or params.json (Mistral format). "
+                        "Otherwise please specify your_custom_config_format "
+                        "in engine args for customized config parser."
+                    )
+    
+            except Exception as e:
+                error_message = (
+                    "Invalid repository ID or local directory specified:"
+                    " '{model}'.\nPlease verify the following requirements:\n"
+                    "1. Provide a valid Hugging Face repository ID.\n"
+                    "2. Specify a local directory that contains a recognized "
+                    "configuration file.\n"
+                    "   - For Hugging Face models: ensure the presence of a "
+                    "'config.json'.\n"
+                    "   - For Mistral models: ensure the presence of a "
+                    "'params.json'.\n"
+                ).format(model=model)
+    
+>               raise ValueError(error_message) from e
+E               ValueError: Invalid repository ID or local directory specified: 'Qwen/Qwen3-VL-4B-Instruct'.
+E               Please verify the following requirements:
+E               1. Provide a valid Hugging Face repository ID.
+E               2. Specify a local directory that contains a recognized configuration file.
+E                  - For Hugging Face models: ensure the presence of a 'config.json'.
+E                  - For Mistral models: ensure the presence of a 'params.json'.
+
+vllm/transformers_utils/config.py:732: ValueError
+---------------------------- Captured stdout setup -----------------------------
+INFO 08-30 04:01:08 [scheduler.py:242] Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO 08-30 04:01:08 [kernel.py:369] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+------------------------------ Captured log setup ------------------------------
+INFO     vllm.config.scheduler:scheduler.py:242 Chunked prefill is enabled with max_num_batched_tokens=2048.
+INFO     vllm.config.kernel:kernel.py:369 Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+../venv-mainline-probe/lib/python3.12/site-packages/torch/jit/_script.py:365: 14 warnings
+  /workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/kernels/core/test_mrope.py::test_mrope_torch_compile_tracing[8192-dtype0-2-model_info4-Qwen/Qwen3-VL-4B-Instruct]
+======================== 1 failed, 16 warnings in 0.60s ========================
+sys:1: DeprecationWarning: builtin type swigvarlink has no __module__ attribute

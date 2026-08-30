@@ -1,0 +1,31 @@
+{
+  "mode": "default",
+  "tests": {
+    "1_simple": {
+      "expect_in": "W7900",
+      "ok": true,
+      "text": "W7900-OK",
+      "sha": "379b06d5b4cc4dca"
+    },
+    "2_document": {
+      "ok": true,
+      "text": "# Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\n\nCost of Goods Sold: 4,210,000 USD\n\nGross Profit: 8,270,000 USD",
+      "sha": "6cd5fba4cdb2f135"
+    },
+    "3_repeatability_x3": {
+      "deterministic": true,
+      "shas": [
+        "6cd5fba4cdb2f135",
+        "6cd5fba4cdb2f135",
+        "6cd5fba4cdb2f135"
+      ],
+      "texts_equal": true
+    },
+    "4_portrait": {
+      "ok": true,
+      "text": "# Maintenance Log\n\nPump A: pressure nominal\nValve B: replaced 2026-08-01\nMotor C: vibration high",
+      "sha": "eee9091f4a671a11"
+    }
+  },
+  "all_ok": true
+}

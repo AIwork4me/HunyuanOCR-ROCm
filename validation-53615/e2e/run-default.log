@@ -1,0 +1,183 @@
+INFO 08-30 03:56:31 [arg_utils.py:824] HF_HUB_OFFLINE is True, replace model_id [tencent/HunyuanOCR] to model_path [/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205]
+INFO 08-30 03:56:31 [api_utils.py:286] non-default args: {'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'gpu_memory_utilization': 0.9, 'disable_log_stats': True, 'limit_mm_per_prompt': {'image': 1}, 'model': '/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205'}
+WARNING 08-30 03:56:31 [arg_utils.py:1749] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+INFO 08-30 03:56:32 [model.py:685] Resolved architecture: HunYuanVLForConditionalGeneration
+INFO 08-30 03:56:32 [model.py:2027] Using max model len 8192
+WARNING 08-30 03:56:32 [model.py:982] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+INFO 08-30 03:56:35 [scheduler.py:242] Chunked prefill is enabled with max_num_batched_tokens=8192.
+INFO 08-30 03:56:35 [kernel.py:369] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+INFO 08-30 03:56:37 [core.py:123] Initializing a V1 LLM engine (v0.28.1rc1.dev49+gd1922cb5a) with config: model='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', speculative_config=None, tokenizer='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=True, quantization=None, quantization_config=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['+sparse_attn_indexer', 'none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::qwen_gdn_attention_core', 'vllm::qwen_gdn_attention_core_fused_norm_packed', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::hpc_rope_norm_forward', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_AND_PIECEWISE: (2, 1)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, enable_jit_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+INFO 08-30 03:56:38 [parallel_state.py:1638] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_fc5502a2958e4b01b81bb5cc159d2d72 backend=nccl
+INFO 08-30 03:56:38 [parallel_state.py:1982] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+INFO 08-30 03:56:38 [gpu_worker.py:428] Using V2 Model Runner
+INFO 08-30 03:56:38 [model_runner.py:377] Loading model from scratch...
+INFO 08-30 03:56:38 [base.py:109] Using Transformers modeling backend.
+INFO 08-30 03:56:39 [base.py:509] Fused: q_proj + k_proj + v_proj (self_attn: HunYuanVLDenseV1Attention) -> qkv_proj (QKVParallelLinear)
+INFO 08-30 03:56:39 [base.py:509] Fused: query_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [base.py:509] Fused: key_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [base.py:509] Fused: gate_proj + up_proj (mlp: HunYuanVLMLP) -> gate_up_proj (MergedColumnParallelLinear)
+INFO 08-30 03:56:39 [base.py:509] Fused: input_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [base.py:509] Fused: post_attention_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [base.py:509] Fused: norm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [base.py:509] Fused: before_rms (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [base.py:509] Fused: after_rms (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:56:39 [rocm.py:703] Found incompatible backend(s) [TURBOQUANT] with AttentionType.DECODER. Overriding with ROCM_ATTN out of potential backends: ['ROCM_ATTN', 'TRITON_ATTN'].
+WARNING 08-30 03:56:39 [compilation.py:1352] Op 'sparse_attn_indexer' doesn't exist (or wasn't imported/registered), enabling with '+sparse_attn_indexer' has no effect
+WARNING 08-30 03:56:39 [vllm.py:2951] `torch.compile` is turned on, but the model /root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205 does not support it. Please open an issue on GitHub if you want it to be supported.
+INFO 08-30 03:56:39 [weight_utils.py:858] Filesystem type for checkpoints: EXT4. Checkpoint size: 2.09 GiB. Available RAM: 21.45 GiB.
+INFO 08-30 03:56:39 [weight_utils.py:881] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.92s/it]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.92s/it]
+
+INFO 08-30 03:56:41 [default_loader.py:430] Loading weights took 2.06 seconds
+INFO 08-30 03:56:42 [model_runner.py:399] Model loading took 1.88 GiB memory and 3.628576 seconds
+INFO 08-30 03:56:42 [utils.py:306] Using LHBNC KV cache layout.
+INFO 08-30 03:56:44 [encoder_runner.py:131] Encoder cache will be initialized with a budget of 16514 tokens, and profiled with 1 image items of the maximum feature size.
+WARNING 08-30 03:57:12 [multimodal.py:1070] Encoder returned a different number of tokens than expected; padding or truncating to fit. The embeddings are not trustworthy outside of memory profiling.
+Capturing CUDA graphs (PIECEWISE):   0%|          | 0/51 [00:00<?, ?it/s]WARNING 08-30 03:57:19 [chunked_prefill_paged_decode.py:433] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+Capturing CUDA graphs (PIECEWISE):   2%|▏         | 1/51 [00:03<03:08,  3.78s/it]Capturing CUDA graphs (PIECEWISE):   4%|▍         | 2/51 [00:03<01:20,  1.64s/it]Capturing CUDA graphs (PIECEWISE):   6%|▌         | 3/51 [00:04<00:45,  1.05it/s]Capturing CUDA graphs (PIECEWISE):   8%|▊         | 4/51 [00:04<00:29,  1.59it/s]Capturing CUDA graphs (PIECEWISE):  10%|▉         | 5/51 [00:04<00:20,  2.24it/s]Capturing CUDA graphs (PIECEWISE):  12%|█▏        | 6/51 [00:04<00:15,  2.99it/s]Capturing CUDA graphs (PIECEWISE):  14%|█▎        | 7/51 [00:04<00:11,  3.82it/s]Capturing CUDA graphs (PIECEWISE):  16%|█▌        | 8/51 [00:04<00:09,  4.73it/s]Capturing CUDA graphs (PIECEWISE):  18%|█▊        | 9/51 [00:04<00:07,  5.64it/s]Capturing CUDA graphs (PIECEWISE):  22%|██▏       | 11/51 [00:04<00:05,  7.29it/s]Capturing CUDA graphs (PIECEWISE):  25%|██▌       | 13/51 [00:05<00:04,  8.81it/s]Capturing CUDA graphs (PIECEWISE):  29%|██▉       | 15/51 [00:05<00:03, 10.42it/s]Capturing CUDA graphs (PIECEWISE):  33%|███▎      | 17/51 [00:05<00:02, 12.01it/s]Capturing CUDA graphs (PIECEWISE):  37%|███▋      | 19/51 [00:05<00:02, 13.50it/s]Capturing CUDA graphs (PIECEWISE):  41%|████      | 21/51 [00:05<00:02, 14.66it/s]Capturing CUDA graphs (PIECEWISE):  45%|████▌     | 23/51 [00:05<00:01, 15.58it/s]Capturing CUDA graphs (PIECEWISE):  49%|████▉     | 25/51 [00:05<00:01, 16.25it/s]Capturing CUDA graphs (PIECEWISE):  53%|█████▎    | 27/51 [00:05<00:01, 16.77it/s]Capturing CUDA graphs (PIECEWISE):  57%|█████▋    | 29/51 [00:06<00:01, 17.17it/s]Capturing CUDA graphs (PIECEWISE):  61%|██████    | 31/51 [00:06<00:01, 17.39it/s]Capturing CUDA graphs (PIECEWISE):  65%|██████▍   | 33/51 [00:06<00:01, 17.61it/s]Capturing CUDA graphs (PIECEWISE):  69%|██████▊   | 35/51 [00:06<00:00, 17.79it/s]Capturing CUDA graphs (PIECEWISE):  73%|███████▎  | 37/51 [00:06<00:00, 17.92it/s]Capturing CUDA graphs (PIECEWISE):  76%|███████▋  | 39/51 [00:06<00:00, 17.90it/s]Capturing CUDA graphs (PIECEWISE):  80%|████████  | 41/51 [00:06<00:00, 17.85it/s]Capturing CUDA graphs (PIECEWISE):  84%|████████▍ | 43/51 [00:06<00:00, 17.79it/s]Capturing CUDA graphs (PIECEWISE):  88%|████████▊ | 45/51 [00:06<00:00, 17.75it/s]Capturing CUDA graphs (PIECEWISE):  92%|█████████▏| 47/51 [00:07<00:00, 17.78it/s]Capturing CUDA graphs (PIECEWISE):  96%|█████████▌| 49/51 [00:07<00:00, 16.34it/s]Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:07<00:00,  7.31it/s]Capturing CUDA graphs (PIECEWISE): 100%|██████████| 51/51 [00:07<00:00,  6.56it/s]
+Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]Capturing CUDA graphs (FULL):   0%|          | 0/2 [00:00<?, ?it/s]
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/cudagraph_utils.py", line 389, in capture
+[rank0]:     forward_fn(CUDAGraphMode.NONE)
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/cudagraph_utils.py", line 581, in forward_fn
+[rank0]:     model_output = model(**model_inputs)
+[rank0]:                    ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/model_executor/models/transformers/multimodal.py", line 1006, in forward
+[rank0]:     model_output = super().forward(
+[rank0]:                    ^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/model_executor/models/transformers/base.py", line 708, in forward
+[rank0]:     outputs = self.model(
+[rank0]:               ^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/generic.py", line 939, in wrapper
+[rank0]:     output = func(self, *args, **kwargs)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/models/hunyuan_vl/modeling_hunyuan_vl.py", line 1107, in forward
+[rank0]:     outputs: BaseModelOutputWithPast = self.language_model(
+[rank0]:                                        ^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/compilation/decorators.py", line 509, in __call__
+[rank0]:     return self.forward(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/generic.py", line 1068, in wrapper
+[rank0]:     output = func(self, *args, **kwargs)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/output_capturing.py", line 262, in wrapper
+[rank0]:     outputs = func(self, *args, **kwargs)
+[rank0]:               ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/models/hunyuan_vl/modeling_hunyuan_vl.py", line 834, in forward
+[rank0]:     position_embeddings = self.rotary_emb(hidden_states, position_ids)
+[rank0]:                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+[rank0]:     return self._call_impl(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+[rank0]:     return forward_call(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/modeling_rope_utils.py", line 125, in wrapper
+[rank0]:     dynamic_frequency_update(self, position_ids, device=x.device, **kwargs)
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/transformers/modeling_rope_utils.py", line 100, in dynamic_frequency_update
+[rank0]:     if seq_len > max_seq_len_cached:  # growth
+[rank0]:        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]: torch.AcceleratorError: CUDA error: operation not permitted when stream is capturing
+[rank0]: Search for `hipErrorStreamCaptureUnsupported' in https://rocm.docs.amd.com/projects/HIP/en/latest/index.html for more information.
+[rank0]: CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+[rank0]: For debugging consider passing AMD_SERIALIZE_KERNEL=3
+[rank0]: Device-side assertion tracking was not enabled by user.
+
+[rank0]: During handling of the above exception, another exception occurred:
+
+[rank0]: Traceback (most recent call last):
+[rank0]:   File "/workspace/HunyuanOCR-ROCm/validation-53615/scripts/e2e_suite.py", line 122, in <module>
+[rank0]:     main()
+[rank0]:   File "/workspace/HunyuanOCR-ROCm/validation-53615/scripts/e2e_suite.py", line 76, in main
+[rank0]:     llm = LLM(**kwargs)
+[rank0]:           ^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/entrypoints/llm.py", line 343, in __init__
+[rank0]:     self.llm_engine = LLMEngine.from_engine_args(
+[rank0]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/engine/llm_engine.py", line 179, in from_engine_args
+[rank0]:     return cls(
+[rank0]:            ^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/engine/llm_engine.py", line 105, in __init__
+[rank0]:     self.engine_core = EngineCoreClient.make_client(
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/engine/core_client.py", line 112, in make_client
+[rank0]:     return InprocClient(vllm_config, executor_class, log_stats)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/engine/core_client.py", line 317, in __init__
+[rank0]:     self.engine_core = EngineCore(*args, **kwargs)
+[rank0]:                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/engine/core.py", line 145, in __init__
+[rank0]:     kv_cache_config = self._initialize_kv_caches(vllm_config)
+[rank0]:                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/tracing/otel.py", line 178, in sync_wrapper
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/engine/core.py", line 308, in _initialize_kv_caches
+[rank0]:     available_gpu_memory = self.model_executor.determine_available_memory()
+[rank0]:                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/executor/abstract.py", line 149, in determine_available_memory
+[rank0]:     return self.collective_rpc("determine_available_memory")
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/executor/uniproc_executor.py", line 103, in collective_rpc
+[rank0]:     result = run_method(self.driver_worker, method, args, kwargs)
+[rank0]:              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/serial_utils.py", line 510, in run_method
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu_worker.py", line 569, in determine_available_memory
+[rank0]:     cudagraph_memory_estimate = self.model_runner.profile_cudagraph_memory()
+[rank0]:                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/model_runner.py", line 887, in profile_cudagraph_memory
+[rank0]:     return _profile_cudagraph_memory(self)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/cudagraph_utils.py", line 792, in profile_cudagraph_memory
+[rank0]:     measured = int(runner.capture_model())
+[rank0]:                    ^^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/model_runner.py", line 920, in capture_model
+[rank0]:     self.cudagraph_manager.capture(
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/cudagraph_utils.py", line 617, in capture
+[rank0]:     super().capture(create_forward_fn, progress_bar_desc)
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+[rank0]:     return func(*args, **kwargs)
+[rank0]:            ^^^^^^^^^^^^^^^^^^^^^
+[rank0]:   File "/workspace/vllm-mainline-probe/vllm/v1/worker/gpu/cudagraph_utils.py", line 386, in capture
+[rank0]:     with torch.cuda.graph(
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/cuda/graphs.py", line 283, in __exit__
+[rank0]:     self.cuda_graph.capture_end()
+[rank0]:   File "/workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/cuda/graphs.py", line 126, in capture_end
+[rank0]:     super().capture_end()
+[rank0]: torch.AcceleratorError: CUDA error: operation failed due to a previous error during capture
+[rank0]: Search for `hipErrorStreamCaptureInvalidated' in https://rocm.docs.amd.com/projects/HIP/en/latest/index.html for more information.
+[rank0]: CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+[rank0]: For debugging consider passing AMD_SERIALIZE_KERNEL=3
+[rank0]: Device-side assertion tracking was not enabled by user.
+[rank0]:[W830 03:57:24.893808286 ProcessGroupNCCL.cpp:1647] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

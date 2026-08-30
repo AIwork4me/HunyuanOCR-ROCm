@@ -1,0 +1,87 @@
+INFO 08-30 03:54:53 [arg_utils.py:824] HF_HUB_OFFLINE is True, replace model_id [tencent/HunyuanOCR] to model_path [/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205]
+INFO 08-30 03:54:53 [api_utils.py:286] non-default args: {'trust_remote_code': True, 'dtype': 'bfloat16', 'max_model_len': 8192, 'gpu_memory_utilization': 0.9, 'disable_log_stats': True, 'enforce_eager': True, 'limit_mm_per_prompt': {'image': 1}, 'model': '/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205'}
+WARNING 08-30 03:54:53 [arg_utils.py:1749] The global random seed is set to 0. Since VLLM_ENABLE_V1_MULTIPROCESSING is set to False, this may affect the random state of the Python process that launched vLLM.
+INFO 08-30 03:54:53 [model.py:685] Resolved architecture: HunYuanVLForConditionalGeneration
+INFO 08-30 03:54:53 [model.py:2027] Using max model len 8192
+WARNING 08-30 03:54:53 [model.py:982] Model does not support mm_device_do_normalize, forcing mm_device_do_normalize = False.
+INFO 08-30 03:54:56 [scheduler.py:242] Chunked prefill is enabled with max_num_batched_tokens=8192.
+WARNING 08-30 03:54:56 [vllm.py:1369] Enforce eager set, disabling torch.compile and CUDAGraphs. This is equivalent to setting -cc.mode=none -cc.cudagraph_mode=none
+WARNING 08-30 03:54:56 [vllm.py:1404] Inductor compilation was disabled by user settings, optimizations settings that are only active during inductor compilation will be ignored.
+INFO 08-30 03:54:56 [kernel.py:369] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native'])
+INFO 08-30 03:54:56 [vllm.py:1583] Cudagraph is disabled under eager mode
+INFO 08-30 03:54:56 [compilation.py:329] Enabled custom fusions: norm_quant, act_quant
+INFO 08-30 03:54:58 [core.py:123] Initializing a V1 LLM engine (v0.28.1rc1.dev49+gd1922cb5a) with config: model='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', speculative_config=None, tokenizer='/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=True, dtype=torch.bfloat16, max_seq_len=8192, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=True, quantization=None, quantization_config=None, enforce_eager=True, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, per_request_spec_decode_metrics='none', kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_mode='warn', jit_monitor_verbose=False), seed=0, served_model_name=/root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.NONE: 0>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['+sparse_attn_indexer', 'all'], 'ir_enable_torch_wrap': False, 'splitting_ops': [], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [8192], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.NONE: 0>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': [], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': True, 'fuse_act_quant': True, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'enable_qk_norm_rope_fusion': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False, 'fuse_qk_norm_rope_kvcache': False}, 'max_cudagraph_capture_size': 0, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['vllm_c', 'native'], fused_add_rms_norm=['vllm_c', 'native']), enable_flashinfer_autotune=True, enable_cutedsl_warmup=True, enable_jit_warmup=True, enable_bf16x3_router_gemm=False, moe_backend='auto', linear_backend='auto')
+INFO 08-30 03:54:59 [parallel_state.py:1638] world_size=1 rank=0 local_rank=0 distributed_init_method=file:///tmp/vllm_dist_ba113416f5a2493d9f5b4b18af4cbe23 backend=nccl
+INFO 08-30 03:54:59 [parallel_state.py:1982] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank 0, EPLB rank N/A
+INFO 08-30 03:54:59 [gpu_model_runner.py:5372] Starting to load model /root/.cache/huggingface/hub/models--tencent--HunyuanOCR/snapshots/de8f10ad2f00a0cefd790b526de8a65dcfdb3205...
+INFO 08-30 03:55:00 [base.py:109] Using Transformers modeling backend.
+INFO 08-30 03:55:00 [base.py:509] Fused: q_proj + k_proj + v_proj (self_attn: HunYuanVLDenseV1Attention) -> qkv_proj (QKVParallelLinear)
+INFO 08-30 03:55:00 [base.py:509] Fused: query_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [base.py:509] Fused: key_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [base.py:509] Fused: gate_proj + up_proj (mlp: HunYuanVLMLP) -> gate_up_proj (MergedColumnParallelLinear)
+INFO 08-30 03:55:00 [base.py:509] Fused: input_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [base.py:509] Fused: post_attention_layernorm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [base.py:509] Fused: norm (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [base.py:509] Fused: before_rms (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [base.py:509] Fused: after_rms (HunYuanVLRMSNorm) -> RMSNorm (CustomOp)
+INFO 08-30 03:55:00 [rocm.py:703] Found incompatible backend(s) [TURBOQUANT] with AttentionType.DECODER. Overriding with ROCM_ATTN out of potential backends: ['ROCM_ATTN', 'TRITON_ATTN'].
+WARNING 08-30 03:55:00 [compilation.py:1352] Op 'sparse_attn_indexer' not present in model, enabling with '+sparse_attn_indexer' has no effect
+INFO 08-30 03:55:00 [weight_utils.py:858] Filesystem type for checkpoints: EXT4. Checkpoint size: 2.09 GiB. Available RAM: 21.47 GiB.
+INFO 08-30 03:55:00 [weight_utils.py:881] Auto-prefetch is disabled because the filesystem (EXT4) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.95s/it]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.95s/it]
+
+INFO 08-30 03:55:02 [default_loader.py:430] Loading weights took 2.09 seconds
+INFO 08-30 03:55:03 [gpu_model_runner.py:5464] Model loading took 1.88 GiB memory and 2.832361 seconds
+INFO 08-30 03:55:03 [utils.py:306] Using LHBNC KV cache layout.
+INFO 08-30 03:55:03 [gpu_model_runner.py:6539] Encoder cache will be initialized with a budget of 16514 tokens, and profiled with 1 image items of the maximum feature size.
+WARNING 08-30 03:55:34 [multimodal.py:1070] Encoder returned a different number of tokens than expected; padding or truncating to fit. The embeddings are not trustworthy outside of memory profiling.
+INFO 08-30 03:55:35 [gpu_worker.py:624] Available KV cache memory: 38.91 GiB
+INFO 08-30 03:55:35 [kv_cache_utils.py:1983] GPU KV cache size: 424,976 tokens, Maximum concurrency for 8,192 tokens per request: 51.88x
+INFO 08-30 03:55:36 [kernel_warmup.py:124] JIT kernel warmup starting.
+JIT kernel warmup (1 compile keys):   0%|          | 0/1 [00:00<?, ?kernel/s]JIT kernel warmup (1 compile keys): 100%|██████████| 1/1 [00:00<00:00,  8.13kernel/s, ComputeSlotMappingKernel (1 keys)]JIT kernel warmup (1 compile keys): 100%|██████████| 1/1 [00:00<00:00,  8.12kernel/s, ComputeSlotMappingKernel (1 keys)]
+INFO 08-30 03:55:36 [kernel_warmup.py:134] JIT kernel warmup finished in 0.12s.
+INFO 08-30 03:55:36 [ll_bf16.py:30] cuteDSL (CUTLASS Python) not available, ll_bf16_gemm disabled
+INFO 08-30 03:55:36 [gpu_worker.py:859] Free memory on device (47.87/47.98 GiB) on startup. Desired GPU memory utilization is (0.9, 43.19 GiB). Actual usage is 2.73 GiB for consumed memory (weights + non-torch), 1.54 GiB for peak activation, and 0.0 GiB for CUDAGraph memory. Replace gpu_memory_utilization config with `--kv-cache-memory=41620627559` (38.76 GiB) to fit into requested memory, or `--kv-cache-memory=46653372928` (43.45 GiB) to fully utilize gpu memory. Current kv cache memory in use is 38.91 GiB.
+INFO 08-30 03:55:36 [jit_monitor.py:85] Kernel JIT monitor activated; monitored JIT compilations during inference will use mode=warn.
+INFO 08-30 03:55:36 [torch_utils.py:277] Reducing Torch threads from 64 to 1 for serving. Set OMP_NUM_THREADS in the external environment to override.
+INFO 08-30 03:55:36 [core.py:368] init engine (profile, create kv cache, warmup model) took 32.85 s
+INFO 08-30 03:55:36 [hf.py:547] Detected the chat template content format to be 'openai'. You can set `--chat-template-content-format` to override this.
+INFO 08-30 03:55:38 [base.py:235] Multi-modal warmup completed in 2.036s
+INFO 08-30 03:55:41 [base.py:235] Readonly multi-modal warmup completed in 1.982s
+WARNING 08-30 03:55:41 [jit_monitor.py:141] Triton kernel JIT compilation during inference: _fwd_kernel. This causes a latency spike; consider extending warmup to cover this shape/config.
+WARNING 08-30 03:55:41 [chunked_prefill_paged_decode.py:433] Cannot use ROCm custom paged attention kernel, falling back to Triton implementation.
+WARNING 08-30 03:55:41 [jit_monitor.py:141] Triton kernel JIT compilation during inference: kernel_paged_attention_2d. This causes a latency spike; consider extending warmup to cover this shape/config.
+{
+  "mode": "eager",
+  "tests": {
+    "1_simple": {
+      "expect_in": "W7900",
+      "ok": true,
+      "text": "W7900-OK",
+      "sha": "379b06d5b4cc4dca"
+    },
+    "2_document": {
+      "ok": true,
+      "text": "# Quarterly Financial Summary\n\nRevenue: 12,480,000 USD\n\nCost of Goods Sold: 4,210,000 USD\n\nGross Profit: 8,270,000 USD",
+      "sha": "6cd5fba4cdb2f135"
+    },
+    "3_repeatability_x3": {
+      "deterministic": true,
+      "shas": [
+        "6cd5fba4cdb2f135",
+        "6cd5fba4cdb2f135",
+        "6cd5fba4cdb2f135"
+      ],
+      "texts_equal": true
+    },
+    "4_portrait": {
+      "ok": true,
+      "text": "# Maintenance Log\n\nPump A: pressure nominal\nValve B: replaced 2026-08-01\nMotor C: vibration high",
+      "sha": "eee9091f4a671a11"
+    }
+  },
+  "all_ok": true
+}
+[rank0]:[W830 03:55:44.050125486 ProcessGroupNCCL.cpp:1647] Warning: WARNING: destroy_process_group() was not called before program exit, which can leak resources. For more info, please see https://pytorch.org/docs/stable/distributed.html#shutdown (function operator())

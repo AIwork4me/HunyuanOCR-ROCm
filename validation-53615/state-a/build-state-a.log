@@ -1,0 +1,49 @@
++ VREPO=/workspace/vllm-mainline-probe
++ WT=/workspace/vllm-53615-statea
++ VENV=/workspace/venv-53615-statea
++ cd /workspace/vllm-mainline-probe
++ git worktree remove /workspace/vllm-53615-statea --force
++ true
++ git worktree add /workspace/vllm-53615-statea 27ec8ac626
+Preparing worktree (detached HEAD 27ec8ac626)
+HEAD is now at 27ec8ac626 [Bugfix] Fix MTP draft model using local cache path instead of S3 URL with runai_streamer (#42079)
++ rm -rf /workspace/venv-53615-statea
++ cp -al /workspace/venv-vllm50603 /workspace/venv-53615-statea
++ cd /workspace/vllm-53615-statea
++ echo '=== transformers pin at state-a ==='
+=== transformers pin at state-a ===
++ grep -i transformers requirements/common.txt
++ head -2
+transformers >= 5.5.3
++ /workspace/venv-53615-statea/bin/python -c 'import transformers, torch; print('\''venv transformers'\'', transformers.__version__, '\''torch'\'', torch.__version__)'
+venv transformers 5.10.2 torch 2.12.0+rocm7.14.0
++ ROCM_PATH=/opt/rocm
++ HIP_PATH=/opt/rocm
++ CMAKE_PREFIX_PATH=/opt/rocm
++ PYTORCH_ROCM_ARCH=gfx1100
++ VLLM_TARGET_DEVICE=rocm
++ MAX_JOBS=96
++ /workspace/venv-53615-statea/bin/pip install -e . --no-build-isolation --no-deps
+Obtaining file:///workspace/vllm-53615-statea
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Building wheels for collected packages: vllm
+  Building editable for vllm (pyproject.toml): started
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): still running...
+  Building editable for vllm (pyproject.toml): finished with status 'done'
+  Created wheel for vllm: filename=vllm-0.26.1rc1.dev1070+g27ec8ac62.rocm721-0.editable-cp312-cp312-linux_x86_64.whl size=12186 sha256=3a437b298633e61315521193e4649ee07009da3bbb0717bb25852daf06160e31
+  Stored in directory: /tmp/pip-ephem-wheel-cache-l82s8g8r/wheels/7f/f0/3f/62a4a8f732a1e1928db499ebb2c6d633cafe32f6008d04e06d
+Successfully built vllm
+Installing collected packages: vllm
+  Attempting uninstall: vllm
+    Found existing installation: vllm 0.25.2.dev2+g01a3fe7d2.rocm721
+    Uninstalling vllm-0.25.2.dev2+g01a3fe7d2.rocm721:
+      Successfully uninstalled vllm-0.25.2.dev2+g01a3fe7d2.rocm721
+Successfully installed vllm-0.26.1rc1.dev1070+g27ec8ac62.rocm721
++ /workspace/venv-53615-statea/bin/python -c 'import vllm; print('\''state-a built:'\'', vllm.__version__, vllm.__file__)'
+state-a built: 0.26.1rc1.dev1070+g27ec8ac62 /workspace/vllm-53615-statea/vllm/__init__.py

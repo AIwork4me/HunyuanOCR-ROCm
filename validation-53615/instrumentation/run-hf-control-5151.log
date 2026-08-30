@@ -1,0 +1,14 @@
+[transformers] `torch_dtype` is deprecated! Use `dtype` instead!
+Loading weights:   0%|          | 0/714 [00:00<?, ?it/s]Loading weights:   0%|          | 1/714 [00:00<01:48,  6.56it/s]Loading weights:   0%|          | 2/714 [00:00<01:33,  7.63it/s]Loading weights:   3%|▎         | 24/714 [00:00<00:07, 89.71it/s]Loading weights:   7%|▋         | 48/714 [00:00<00:04, 139.37it/s]Loading weights:  10%|▉         | 70/714 [00:00<00:04, 157.65it/s]Loading weights:  13%|█▎        | 92/714 [00:00<00:03, 174.93it/s]Loading weights:  16%|█▌        | 112/714 [00:00<00:03, 181.91it/s]Loading weights:  19%|█▉        | 136/714 [00:00<00:02, 197.78it/s]Loading weights:  22%|██▏       | 157/714 [00:01<00:02, 198.59it/s]Loading weights:  25%|██▍       | 178/714 [00:01<00:02, 197.76it/s]Loading weights:  28%|██▊       | 198/714 [00:01<00:02, 192.78it/s]Loading weights:  31%|███       | 219/714 [00:01<00:02, 197.20it/s]Loading weights:  34%|███▍      | 241/714 [00:01<00:02, 197.31it/s]Loading weights:  38%|███▊      | 269/714 [00:01<00:02, 218.73it/s]Loading weights:  42%|████▏     | 300/714 [00:01<00:01, 245.07it/s]Loading weights:  47%|████▋     | 333/714 [00:01<00:01, 269.60it/s]Loading weights:  52%|█████▏    | 370/714 [00:01<00:01, 291.38it/s]Loading weights:  56%|█████▋    | 402/714 [00:01<00:01, 298.42it/s]Loading weights:  61%|██████    | 436/714 [00:02<00:00, 306.95it/s]Loading weights:  66%|██████▋   | 474/714 [00:02<00:00, 320.93it/s]Loading weights:  71%|███████   | 508/714 [00:02<00:00, 325.51it/s]Loading weights:  76%|███████▌  | 542/714 [00:02<00:00, 329.59it/s]Loading weights:  82%|████████▏ | 582/714 [00:02<00:00, 350.30it/s]Loading weights:  87%|████████▋ | 618/714 [00:02<00:00, 351.21it/s]Loading weights:  92%|█████████▏| 654/714 [00:02<00:00, 347.64it/s]Loading weights:  97%|█████████▋| 696/714 [00:02<00:00, 361.47it/s]Loading weights: 100%|██████████| 714/714 [00:02<00:00, 252.63it/s]
+[transformers] Ignoring clean_up_tokenization_spaces=True for BPE tokenizer TokenizersBackend. The clean_up_tokenization post-processing step is designed for WordPiece tokenizers and is destructive for BPE (it strips spaces before punctuation). Set clean_up_tokenization_spaces=False to suppress this warning, or set clean_up_tokenization_spaces_for_bpe_even_though_it_will_corrupt_output=True to force cleanup anyway.
+input_ids: (1, 1038) grid: [[1, 60, 64]]
+=== OUTPUT ===
+# Quarterly Financial Summary
+
+Revenue: 12,480,000 USD
+
+Cost of Goods Sold: 4,210,000 USD
+
+Gross Profit: 8,270,000 USD
+=== TOKEN IDS ===
+[2, 65383, 23695, 28801, 286, 85433, 25, 206, 814, 11, 16077, 11, 1545, 37274, 286, 21028, 279, 66817, 48131, 25, 206, 19, 11, 10990, 11, 1545, 37274, 286, 106624, 55514, 25, 206, 23, 11, 14787, 11, 1545, 37274, 120007]

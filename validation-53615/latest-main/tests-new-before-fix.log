@@ -1,0 +1,143 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /workspace/venv-mainline-probe/bin/python
+cachedir: .pytest_cache
+rootdir: /workspace/vllm-mainline-probe
+configfile: pyproject.toml
+plugins: anyio-4.14.2, asyncio-1.4.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 4 items
+
+tests/models/transformers/test_create_attention_instances.py::test_vestigial_kv_lora_rank_keeps_gqa_head_size FAILED [ 25%]
+tests/models/transformers/test_create_attention_instances.py::test_matched_mla_modules_still_override_head_size PASSED [ 50%]
+tests/models/transformers/test_get_rope_index_kwargs.py::test_hunyuan_style_get_rope_index_gets_no_absent_grid_kwargs FAILED [ 75%]
+tests/models/transformers/test_get_rope_index_kwargs.py::test_qwen_style_model_receives_present_grids_only FAILED [100%]
+
+=================================== FAILURES ===================================
+_______________ test_vestigial_kv_lora_rank_keeps_gqa_head_size ________________
+
+    def test_vestigial_kv_lora_rank_keeps_gqa_head_size():
+        backend = _FakeBackend(_hunyuan_like_text_config(), fusers={})
+    
+        Base.create_attention_instances(backend)
+    
+>       assert backend.model_config.model_arch_config.head_size == GQA_HEAD_DIM
+E       assert 192 == 128
+E        +  where 192 = <tests.models.transformers.test_create_attention_instances._ArchConfig object at 0x7a0018ee2e70>.head_size
+E        +    where <tests.models.transformers.test_create_attention_instances._ArchConfig object at 0x7a0018ee2e70> = <tests.models.transformers.test_create_attention_instances._ModelConfigStub object at 0x7a0018ee2f00>.model_arch_config
+E        +      where <tests.models.transformers.test_create_attention_instances._ModelConfigStub object at 0x7a0018ee2f00> = <tests.models.transformers.test_create_attention_instances._FakeBackend object at 0x7a0018fe2660>.model_config
+
+tests/models/transformers/test_create_attention_instances.py:104: AssertionError
+_________ test_hunyuan_style_get_rope_index_gets_no_absent_grid_kwargs _________
+
+    def test_hunyuan_style_get_rope_index_gets_no_absent_grid_kwargs():
+        model = _HunYuanStyleModel()
+        feature = _image_feature(offset=2, length=4, image_grid_thw=torch.tensor([[1, 4, 4]]))
+    
+>       positions, delta = MultiModalMixin.get_mrope_input_positions(
+            SimpleNamespace(model=model), [1] * 10, [feature]
+        )
+
+tests/models/transformers/test_get_rope_index_kwargs.py:93: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+self = namespace(model=<tests.models.transformers.test_get_rope_index_kwargs._HunYuanStyleModel object at 0x7a001992f230>, _get_rope_index_accepts_mm_token_type_ids=True)
+input_tokens = [1, 1, 1, 1, 1, 1, ...]
+mm_features = [MultiModalFeatureSpec(data=<tests.models.transformers.test_get_rope_index_kwargs._FakeKwargsItem object at 0x7a001992...modality='image', identifier='image-0', mm_position=PlaceholderRange(offset=2, length=4, is_embed=None), mm_hash=None)]
+
+    def get_mrope_input_positions(
+        self,
+        input_tokens: list[int],
+        mm_features: list[MultiModalFeatureSpec],
+    ) -> tuple[torch.Tensor, int]:
+        kwargs = MultiModalFeatureSpec.gather_kwargs(
+            mm_features,
+            {
+                "image_grid_thw",
+                "video_grid_thw",
+                "second_per_grid_ts",
+                "audio_feature_lengths",
+                "use_audio_in_video",
+            },
+        )
+        if any(v for k, v in kwargs.items() if k not in {"image_grid_thw"}):
+            raise NotImplementedError(
+                "Transformers modeling backend only supports images."
+            )
+    
+        image_grid_thw = kwargs.get("image_grid_thw", [])
+        video_grid_thw = kwargs.get("video_grid_thw", [])
+    
+        image_grid_thw = torch.stack(image_grid_thw) if image_grid_thw else None
+        video_grid_thw = torch.stack(video_grid_thw) if video_grid_thw else None
+    
+        # `get_rope_index` doesn't always accept arbitrary `kwargs`
+        kwargs = {}
+        if not hasattr(self, "_get_rope_index_accepts_mm_token_type_ids"):
+            import inspect
+    
+            sig = inspect.signature(self.model.get_rope_index)
+            params = sig.parameters
+            self._get_rope_index_accepts_mm_token_type_ids = (
+                "mm_token_type_ids" in params
+                or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in params.values())
+            )
+        if self._get_rope_index_accepts_mm_token_type_ids:
+            mm_token_type_ids = torch.zeros(len(input_tokens), dtype=torch.int)
+            for feature in mm_features:
+                position = feature.mm_position
+                offset, length = position.offset, position.length
+                mm_token_type_id = _MODALITY_TO_TOKEN_TYPE_ID[feature.modality]
+                mm_token_type_ids[offset : offset + length] = mm_token_type_id
+            kwargs["mm_token_type_ids"] = mm_token_type_ids.unsqueeze(0)
+    
+>       mrope_positions, mrope_position_delta = self.model.get_rope_index(
+            input_ids=torch.tensor(input_tokens).unsqueeze(0),
+            image_grid_thw=image_grid_thw,
+            video_grid_thw=video_grid_thw,
+            **kwargs,
+        )
+E       TypeError: _HunYuanStyleModel.get_rope_index() got an unexpected keyword argument 'video_grid_thw'
+
+vllm/model_executor/models/transformers/multimodal.py:1257: TypeError
+______________ test_qwen_style_model_receives_present_grids_only _______________
+
+    def test_qwen_style_model_receives_present_grids_only():
+        model = _QwenStyleModel()
+        feature = _image_feature(offset=2, length=4, image_grid_thw=torch.tensor([[1, 2, 2]]))
+    
+        positions, _ = MultiModalMixin.get_mrope_input_positions(
+            SimpleNamespace(model=model), [1] * 8, [feature]
+        )
+    
+        (call,) = model.calls
+>       assert call["image_grid_thw"].shape == (1, 3)
+E       AssertionError: assert torch.Size([1, 1, 3]) == (1, 3)
+E         
+E         At index 1 diff: 1 != 3
+E         Left contains one more item: 3
+E         
+E         Full diff:
+E         + torch.Size([1, 1, 3])
+E         - (...
+E         
+E         ...Full output truncated (3 lines hidden), use '-vv' to show
+
+tests/models/transformers/test_get_rope_index_kwargs.py:116: AssertionError
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+../venv-mainline-probe/lib/python3.12/site-packages/torch/jit/_script.py:365: 14 warnings
+  /workspace/venv-mainline-probe/lib/python3.12/site-packages/torch/jit/_script.py:365: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/models/transformers/test_create_attention_instances.py::test_vestigial_kv_lora_rank_keeps_gqa_head_size
+FAILED tests/models/transformers/test_get_rope_index_kwargs.py::test_hunyuan_style_get_rope_index_gets_no_absent_grid_kwargs
+FAILED tests/models/transformers/test_get_rope_index_kwargs.py::test_qwen_style_model_receives_present_grids_only
+=================== 3 failed, 1 passed, 16 warnings in 1.53s ===================
+sys:1: DeprecationWarning: builtin type swigvarlink has no __module__ attribute

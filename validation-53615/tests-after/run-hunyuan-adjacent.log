@@ -1,0 +1,82 @@
+
+==================================== ERRORS ====================================
+______ ERROR collecting tests/reasoning/test_hunyuan_reasoning_parser.py _______
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/hub.py:438: in cached_files
+    hf_hub_download(
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:88: in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/file_download.py:1027: in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/file_download.py:1174: in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/file_download.py:1904: in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+E   huggingface_hub.errors.LocalEntryNotFoundError: Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable hf.co look-ups and downloads online, set 'local_files_only' to False.
+
+The above exception was the direct cause of the following exception:
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/models/auto/tokenization_auto.py:768: in from_pretrained
+    config = AutoConfig.from_pretrained(
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/models/auto/configuration_auto.py:388: in from_pretrained
+    config_dict, unused_kwargs = PreTrainedConfig.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/configuration_utils.py:745: in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/configuration_utils.py:800: in _get_config_dict
+    resolved_config_file = cached_file(
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/hub.py:294: in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/hub.py:521: in cached_files
+    raise OSError(
+E   OSError: We couldn't connect to 'https://hf-mirror.com' to load the files, and couldn't find them in the cached files.
+E   Check your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
+
+During handling of the above exception, another exception occurred:
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/hub.py:438: in cached_files
+    hf_hub_download(
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:88: in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/file_download.py:1027: in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/file_download.py:1174: in _hf_hub_download_to_cache_dir
+    _raise_on_head_call_error(head_call_error, force_download, local_files_only)
+../venv-mainline-probe/lib/python3.12/site-packages/huggingface_hub/file_download.py:1904: in _raise_on_head_call_error
+    raise LocalEntryNotFoundError(
+E   huggingface_hub.errors.LocalEntryNotFoundError: Cannot find the requested files in the disk cache and outgoing traffic has been disabled. To enable hf.co look-ups and downloads online, set 'local_files_only' to False.
+
+The above exception was the direct cause of the following exception:
+tests/reasoning/test_hunyuan_reasoning_parser.py:144: in <module>
+    tokenizer = AutoTokenizer.from_pretrained(
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/models/auto/tokenization_auto.py:772: in from_pretrained
+    config = PreTrainedConfig.from_pretrained(pretrained_model_name_or_path, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/configuration_utils.py:704: in from_pretrained
+    config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/configuration_utils.py:745: in get_config_dict
+    config_dict, kwargs = cls._get_config_dict(pretrained_model_name_or_path, **kwargs)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/configuration_utils.py:800: in _get_config_dict
+    resolved_config_file = cached_file(
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/hub.py:294: in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../venv-mainline-probe/lib/python3.12/site-packages/transformers/utils/hub.py:521: in cached_files
+    raise OSError(
+E   OSError: We couldn't connect to 'https://hf-mirror.com' to load the files, and couldn't find them in the cached files.
+E   Check your internet connection or see how to run the library in offline mode at 'https://huggingface.co/docs/transformers/installation#offline-mode'.
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR tests/reasoning/test_hunyuan_reasoning_parser.py - OSError: We couldn't...
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+2 warnings, 1 error in 0.58s
