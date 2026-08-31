@@ -23,7 +23,7 @@ At the first generated-token position `D` where two runs differ, both runs have 
 
 ## First divergence
 
-28 divergent pairs (8 runs ⇒ all pairs diverge); first-divergence steps 5–24. Full evidence: `results/first-divergence-forensics.json`; per-step metadata `results/probe{1,2}-steps.jsonl`; lossless bf16 snapshots at divergence and aligned positions `logit-snapshots/` (+ `INDEX.json`).
+28 divergent pairs (8 runs ⇒ all pairs diverge); first-divergence steps 5–24. Full evidence: `results/first-divergence-forensics.json`; per-step metadata `results/probe{1,2}-steps.jsonl`; lossless bf16 snapshots at divergence and aligned positions — release assets [forensics-50603-snapshots](https://github.com/AIwork4me/HunyuanOCR-ROCm/releases/tag/forensics-50603-snapshots) (+ INDEX.json there; uploaded as release assets because the 42 MB pack exceeds this network's git transfer limit).
 
 Example — pair run0 vs run1, D=11, identical histories through step 10:
 
