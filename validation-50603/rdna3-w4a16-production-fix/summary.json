@@ -1,0 +1,32 @@
+{
+  "finding": "Production-shaped deterministic RDNA3 W4A16 fix: FP32 split partials + fixed-order reduction on both scalar and WMMA paths, deterministic by default, validated E2E and on current main",
+  "design": {
+    "M<65_anyN": "scalar deterministic (scratch Z*64*N*4, tile 64)",
+    "M>=65_N>=64": "WMMA deterministic (scratch k_split*512*N*4 <= ~144MiB, tile 512)",
+    "M>=65_N<64": "routes to scalar deterministic",
+    "threshold_basis": "measured scalar-vs-WMMA crossover K=6656/N=4096 between M=64 (scalar 276us < wmma-nosplit 355us) and M=128 (wmma-det 172us < scalar 479us)",
+    "default": "deterministic; VLLM_RDNA3_W4A16_LEGACY_ATOMIC=1 is a benchmarking opt-out only",
+    "graph_capture": "thread-local scratch cache bypassed while cudaStreamIsCapturing (a capture-time fault in the cached design was caught and fixed)"
+  },
+  "wmma_audit": {"K_SPLIT1_control": "1/100 both procs", "K_SPLIT4": "M=16: 100/100, M=32: 2-3/100, M=64: 100/100, M=128: 2/100, M=512: 1/100 (coincidence, treated non-guaranteed)"},
+  "rejected_designs": {"single_writer_z1": "13.1x at M=1 (567.6us)", "reduced_z": "not guaranteed deterministic; Z>=4 raced", "wmma_forced_ksplit1": "+187% M=16, +56% M=128", "tree_reduce": "unnecessary: sequential fixed-order reduce is single-pass over Z*N floats"},
+  "determinism": {"before": "up to 100/100 distinct per 100 calls (M=1..64)", "after": "1/100 at every measured M in {1,2,3,4,5,7,8,9,15,16,32,64,128,512}"},
+  "performance_real_qproj": {
+    "M1_us": {"legacy": 43.1, "det": 46.4, "delta": "+7.8%"},
+    "M8": "+5.4%", "M16": "+1.9%", "M64": "+2.3%", "M128": "-1.2%", "M512": "+1.1%",
+    "e2e_engine_wall_s": {"legacy": 115.4, "det": 132.5, "rootcause_proto": 171.5, "triton_fallback": 188.3}
+  },
+  "accuracy_vs_fp32_dequant": {"det_max_err": {"M1": 0.0061, "M512": 0.0173}, "legacy_max_err": {"M1": 0.028, "M512": 0.038}, "cosine": "det 0.9999976-0.9999986 vs legacy 0.9999788-0.9999942"},
+  "e2e": {
+    "muse_det_eager_3eng": "1/8 at ctx 512 AND 8192, all engines",
+    "muse_det_graphs_1eng": "1/8 both depths",
+    "gemma_det_1eng": "1/8 both depths",
+    "legacy_control_1eng": "8/8 @512, 3/8 @8192 (reproduces in same build)",
+    "routing": "Using RDNA3W4A16LinearKernel in all det+legacy logs"
+  },
+  "tests": "4 gfx1100-gated bit-repeatability tests via public op; 4/4 FAIL on pristine 0.25.1; 4/4 PASS on production build; 4/4 PASS on patched main",
+  "current_main": {"sha": "dafbef15a1c879c64ebb99427917e4ca8d5bca1e", "patch": "applies cleanly (touched files byte-identical to 0.25.1)", "build": "0.28.1rc1.dev159+gdafbef15a on torch 2.12.0+rocm7.14.0", "validated": "tests 4/4, Muse E2E 1/8 both depths, M=1/M=512 benched"},
+  "tp2": "not executable: single GPU installed; epilogue is per-rank local",
+  "patch": "patches/upstream-production-fix.patch (2 kernel files + tests, 808 lines, no forensic code, LEGACY_ATOMIC opt-out only)",
+  "timestamps_utc": {"start": "2026-08-31T14:54:00+00:00", "end": "2026-08-31T16:40:00+00:00"}
+}

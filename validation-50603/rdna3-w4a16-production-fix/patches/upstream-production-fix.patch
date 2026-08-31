@@ -1,0 +1,808 @@
+diff --git a/csrc/rocm/q_gemm_rdna3.cu b/csrc/rocm/q_gemm_rdna3.cu
+index fb178f6d3b..adcf8f88de 100644
+--- a/csrc/rocm/q_gemm_rdna3.cu
++++ b/csrc/rocm/q_gemm_rdna3.cu
+@@ -32,11 +32,13 @@
+ //      scalar (the bit-trick dequant beats WMMA below M=64).
+ 
+ #include <cstdint>
++#include <cstdlib>
+ #include <cstdio>
+ 
+ #include <torch/all.h>
+ #include <c10/cuda/CUDAGuard.h>
+ #include <ATen/cuda/CUDAContext.h>
++#include <c10/cuda/CUDAStream.h>
+ 
+ #include <hip/hip_runtime.h>
+ #include <hip/hip_bf16.h>
+@@ -257,7 +259,12 @@ __global__ void gemm_q4_kernel_rdna3(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q_weight,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Deterministic split-K: when non-null, each split block stores its FP32
++    // partial to partials[(z*size_m + m)*size_n + n] instead of the CAS-atomic
++    // low-precision accumulation. See the epilogue note below for why the
++    // atomic path is order-dependent.
++    float* __restrict__ partials) {
+   const int t = threadIdx.x;
+   const int offset_n = blockIdx.x * BLOCK_KN_SIZE * 4;
+   const int offset_m = blockIdx.y * M_COUNT;
+@@ -599,6 +606,15 @@ __global__ void gemm_q4_kernel_rdna3(
+   #pragma unroll
+   for (int m = 0; m < M_COUNT; ++m) {
+     if (offset_m + m >= size_m) continue;  // skip padding rows past size_m
++    if (partials != nullptr) {
++      float* p = partials +
++                 ((long)blockIdx.z * size_m + (offset_m + m)) * size_n + n;
++      p[0] = block_c[m][0];
++      p[1] = block_c[m][1];
++      p[2] = block_c[m][2];
++      p[3] = block_c[m][3];
++      continue;
++    }
+     T* out = c + (offset_m + m) * size_n + n;
+     if constexpr (std::is_same<T, half>::value) {
+       half2 r01 = __halves2half2(__float2half_rn(block_c[m][0]),
+@@ -628,6 +644,7 @@ __global__ void gemm_q4_kernel_rdna3(const T*, const uint32_t*, const uint32_t*,
+ 
+ #endif  // __HIP__RDNA3__ || !__HIP_DEVICE_COMPILE__
+ 
++
+ // ---------------------------------------------------------------------------
+ // Launcher.
+ // ---------------------------------------------------------------------------
+@@ -637,7 +654,8 @@ void launch_gemm_q4_for_mcount(const T* a, const uint32_t* b_q_weight,
+                                const uint32_t* b_qzeros, const T* b_scales,
+                                const int* b_q_perm, T* c, int size_m,
+                                int size_n, int size_k, int groups,
+-                               int zero_offset, cudaStream_t stream) {
++                               int zero_offset, float* partials,
++                               cudaStream_t stream) {
+   dim3 block(THREADS_X);
+   dim3 grid((size_n + BLOCK_KN_SIZE * 4 - 1) / (BLOCK_KN_SIZE * 4),
+             (size_m + M_COUNT - 1) / M_COUNT,
+@@ -645,7 +663,7 @@ void launch_gemm_q4_for_mcount(const T* a, const uint32_t* b_q_weight,
+ 
+   gemm_q4_kernel_rdna3<T, M_COUNT><<<grid, block, 0, stream>>>(
+       a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-      zero_offset, b_q_perm);
++      zero_offset, b_q_perm, partials);
+ }
+ 
+ // Dispatch to the largest M_COUNT template that doesn't waste more than
+@@ -664,28 +682,100 @@ void launch_gemm_q4(const T* a, const uint32_t* b_q_weight,
+                     const uint32_t* b_qzeros, const T* b_scales,
+                     const int* b_q_perm, T* c, int size_m, int size_n,
+                     int size_k, int groups, bool use_v2_format,
+-                    cudaStream_t stream) {
++                    float* partials, cudaStream_t stream) {
+   const int zero_offset = use_v2_format ? 0 : 1;
+ 
+   if (size_m == 1) {
+     launch_gemm_q4_for_mcount<T, 1>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else if (size_m <= 3) {
+     launch_gemm_q4_for_mcount<T, 2>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else if (size_m <= 7) {
+     launch_gemm_q4_for_mcount<T, 4>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else {
+-    // M_COUNT=8 covers M up to 15 here; M >= 16 should ideally take the
+-    // WMMA path, but if it falls through we still produce correct output —
+-    // just leaving 3-5× of throughput on the table for prefill workloads.
+     launch_gemm_q4_for_mcount<T, 8>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
++  }
++}
++
++// Deterministic split-K epilogue: one thread per output element sums the
++// grid.z FP32 partial slices in fixed ascending-z order and rounds to the
++// output dtype exactly once. Order is a pure function of the launch shape,
++// so the result is bit-reproducible for identical inputs.
++template <typename T>
++__global__ void reduce_partials_rdna3(const float* __restrict__ partials,
++                                      T* __restrict__ c, const int z_count,
++                                      const int size_m, const int size_n) {
++  const long idx = (long)blockIdx.x * blockDim.x + threadIdx.x;
++  if (idx >= (long)size_m * size_n) return;
++  const int m = (int)(idx / size_n);
++  const int n = (int)(idx % size_n);
++  float acc = 0.0f;
++  for (int z = 0; z < z_count; ++z)
++    acc += partials[((long)z * size_m + m) * size_n + n];
++  if constexpr (std::is_same<T, half>::value) {
++    c[idx] = __float2half_rn(acc);
++  } else {
++    c[idx] = __float2bfloat16(acc);
++  }
++}
++
++// Deterministic scalar GEMM: split-K blocks write FP32 partials (no atomics,
++// no intermediate low-precision rounding); a second pass reduces in fixed
++// order and casts once. Row-tiled (TILE_M) so scratch stays bounded:
++//   scratch_bytes = grid.z * TILE_M * size_n * 4
++// independently of the caller's M.
++template <typename T>
++void launch_gemm_q4_deterministic(const T* a, const uint32_t* b_q_weight,
++                                  const uint32_t* b_qzeros, const T* b_scales,
++                                  const int* b_q_perm, T* c, int size_m,
++                                  int size_n, int size_k, int groups,
++                                  bool use_v2_format, cudaStream_t stream) {
++  constexpr int TILE_M = 64;  // scalar path serves M < 65: single pass
++  const int z_count = (size_k + BLOCK_KN_SIZE - 1) / BLOCK_KN_SIZE;
++  // Scratch is reused across calls on the same thread (vLLM issues GEMMs
++  // sequentially per worker thread/stream), trading a bounded retained
++  // buffer for per-call allocator traffic. Resized when a larger layer
++  // appears; contents are fully overwritten before every read.
++  // Under CUDA graph capture the cache must NOT be used or updated: a
++  // captured kernel keeps the baked-in pointer, and a later resize would
++  // free it. While capturing, allocate per call from the capture pool.
++  thread_local at::Tensor partials;
++  cudaStreamCaptureStatus cap_status;
++  C10_CUDA_CHECK(cudaStreamIsCapturing(stream, &cap_status));
++  const bool capturing = cap_status != cudaStreamCaptureStatusNone;
++  for (int row0 = 0; row0 < size_m; row0 += TILE_M) {
++    const int rows = std::min(TILE_M, size_m - row0);
++    at::Tensor scratch;
++    if (capturing) {
++      scratch = at::empty({z_count, rows, size_n},
++                          at::TensorOptions().dtype(at::kFloat).device(
++                              at::Device(at::kCUDA, c10::cuda::current_device())));
++    } else {
++      if (!partials.defined() || partials.size(0) < z_count ||
++          partials.size(1) < rows || partials.size(2) < size_n) {
++        partials = at::empty({z_count, rows, size_n},
++                             at::TensorOptions().dtype(at::kFloat).device(
++                                 at::Device(at::kCUDA, c10::cuda::current_device())));
++      }
++      scratch = partials;
++    }
++    launch_gemm_q4<T>(a + (long)row0 * size_k, b_q_weight, b_qzeros, b_scales,
++                      b_q_perm, c + (long)row0 * size_n, rows, size_n, size_k,
++                      groups, use_v2_format,
++                      scratch.data_ptr<float>(), stream);
++    const long total = (long)rows * size_n;
++    const int threads = 256;
++    const int blocks = (int)((total + threads - 1) / threads);
++    reduce_partials_rdna3<T><<<blocks, threads, 0, stream>>>(
++        scratch.data_ptr<float>(), c + (long)row0 * size_n, z_count, rows,
++        size_n);
+   }
+ }
+ 
+@@ -715,10 +805,14 @@ torch::Tensor gptq_gemm_rdna3_wmma(torch::Tensor a, torch::Tensor b_q_weight,
+ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+                               torch::Tensor b_qzeros, torch::Tensor b_scales,
+                               torch::Tensor b_g_idx, bool use_v2_format) {
++  // Route large shapes to the WMMA path. Threshold is M >= 65 (with N >= 64,
++  // the WMMA tile width): below that the scalar deterministic path measures
++  // faster on gfx1100 (K=6656/N=4096: M=64 scalar ~268us vs WMMA-no-split
++  // ~355us; the crossover sits between M=64 and M=96), and the scalar path
++  // is deterministic for all M.
+   if (a.dim() == 2 && b_q_weight.dim() == 2 && a.size(1) % 16 == 0 &&
+-      b_q_weight.size(1) % 16 == 0 &&
+-      ((a.scalar_type() == torch::kBFloat16 && a.size(0) >= 16) ||
+-       (a.scalar_type() == torch::kHalf && a.size(0) >= 64))) {
++      b_q_weight.size(1) % 16 == 0 && a.size(0) >= 65 &&
++      b_q_weight.size(1) >= 64) {
+     return gptq_gemm_rdna3_wmma(a, b_q_weight, b_qzeros, b_scales, b_g_idx,
+                                 use_v2_format);
+   }
+@@ -751,7 +845,12 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+   TORCH_CHECK(size_n % 8 == 0, "N must be a multiple of 8 (64-bit atomic CAS)");
+ 
+   auto opts = torch::TensorOptions().dtype(a.dtype()).device(a.device());
+-  at::Tensor c = torch::zeros({size_m, size_n}, opts);
++  static const bool legacy_atomic =
++      std::getenv("VLLM_RDNA3_W4A16_LEGACY_ATOMIC") != nullptr;
++  // The deterministic epilogue's reduce pass writes every output element,
++  // so c needs no zero-init; the atomic path accumulates into c and does.
++  at::Tensor c = legacy_atomic ? torch::zeros({size_m, size_n}, opts)
++                               : torch::empty({size_m, size_n}, opts);
+ 
+   const int* g_idx_ptr = nullptr;
+   if (!b_g_idx.device().is_meta() && b_g_idx.numel() > 0) {
+@@ -760,12 +859,34 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+     g_idx_ptr = (const int*)b_g_idx.data_ptr();
+   }
+ 
++  // Deterministic by default: FP32 split partials + fixed-order reduction.
++  // The legacy CAS-atomic low-precision accumulation is order-dependent and
++  // kept only behind this opt-out for performance comparisons.
++  if (!legacy_atomic) {
++    if (a.scalar_type() == torch::kHalf) {
++      vllm::gptq_rdna3::launch_gemm_q4_deterministic<half>(
++          (const half*)a.data_ptr(), (const uint32_t*)b_q_weight.data_ptr(),
++          (const uint32_t*)b_qzeros.data_ptr(),
++          (const half*)b_scales.data_ptr(), g_idx_ptr, (half*)c.data_ptr(),
++          size_m, size_n, size_k, groups, use_v2_format, stream);
++    } else {
++      vllm::gptq_rdna3::launch_gemm_q4_deterministic<
++          vllm::gptq_rdna3::bf16_t>(
++          (const vllm::gptq_rdna3::bf16_t*)a.data_ptr(),
++          (const uint32_t*)b_q_weight.data_ptr(),
++          (const uint32_t*)b_qzeros.data_ptr(),
++          (const vllm::gptq_rdna3::bf16_t*)b_scales.data_ptr(), g_idx_ptr,
++          (vllm::gptq_rdna3::bf16_t*)c.data_ptr(), size_m, size_n, size_k,
++          groups, use_v2_format, stream);
++    }
++    return c;
++  }
+   if (a.scalar_type() == torch::kHalf) {
+     vllm::gptq_rdna3::launch_gemm_q4<half>(
+         (const half*)a.data_ptr(), (const uint32_t*)b_q_weight.data_ptr(),
+         (const uint32_t*)b_qzeros.data_ptr(), (const half*)b_scales.data_ptr(),
+         g_idx_ptr, (half*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        use_v2_format, stream);
++        use_v2_format, /*partials=*/nullptr, stream);
+   } else {
+     vllm::gptq_rdna3::launch_gemm_q4<vllm::gptq_rdna3::bf16_t>(
+         (const vllm::gptq_rdna3::bf16_t*)a.data_ptr(),
+@@ -773,7 +894,7 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+         (const uint32_t*)b_qzeros.data_ptr(),
+         (const vllm::gptq_rdna3::bf16_t*)b_scales.data_ptr(), g_idx_ptr,
+         (vllm::gptq_rdna3::bf16_t*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        use_v2_format, stream);
++        use_v2_format, /*partials=*/nullptr, stream);
+   }
+ 
+   return c;
+diff --git a/csrc/rocm/q_gemm_rdna3_wmma.cu b/csrc/rocm/q_gemm_rdna3_wmma.cu
+index 966d5df403..9b0b8e0630 100644
+--- a/csrc/rocm/q_gemm_rdna3_wmma.cu
++++ b/csrc/rocm/q_gemm_rdna3_wmma.cu
+@@ -33,10 +33,12 @@
+ //     each block owning its 16M × 16N output tile.
+ 
+ #include <cstdint>
++#include <cstdlib>
+ 
+ #include <torch/all.h>
+ #include <c10/cuda/CUDAGuard.h>
+ #include <ATen/cuda/CUDAContext.h>
++#include <c10/cuda/CUDAStream.h>
+ 
+ #include <hip/hip_runtime.h>
+ #include <hip/hip_bf16.h>
+@@ -1158,7 +1160,11 @@ __global__ void gemm_q4_wmma_kernel_64x32_4w(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Deterministic split-K: non-null => store this block's FP32 partial to
++    // partials[(z*size_m + m)*size_n + n]; a separate pass reduces the
++    // z-slices in fixed order with a single low-precision rounding.
++    float* __restrict__ partials) {
+   using E = typename WmmaNative<T>::elem;
+   using V16 = typename WmmaNative<T>::v16;
+ 
+@@ -1302,6 +1308,22 @@ __global__ void gemm_q4_wmma_kernel_64x32_4w(
+   // Helper: store one v8fp32 accumulator's 8 outputs (covers 16 N-cols at
+   // n_base via lane_lo + interleaved M rows m_tile_wave + 2i + lane_hi).
+   auto store_acc = [&](const v8fp32& acc, int n_base) {
++    if (partials != nullptr) {
++      // Deterministic split-K: plain FP32 store per (z, m, n). Each element
++      // has one writer per z-slice and the reduce pass fixes the
++      // accumulation order, so the result is bit-reproducible.
++      const int out_n = n_base + lane_lo;
++      if (out_n >= size_n) return;
++#pragma unroll
++      for (int i = 0; i < 8; i++) {
++        const int out_m = m_tile_wave + 2 * i + lane_hi;
++        if (out_m < size_m) {
++          partials[((long)blockIdx.z * size_m + out_m) * size_n + out_n] =
++              acc[i];
++        }
++      }
++      return;
++    }
+     if (gridDim.z > 1) {
+       const bool is_even_lane = (lane_lo & 1) == 0;
+       const int out_n_pair = n_base + lane_lo;
+@@ -1352,7 +1374,7 @@ template <typename T>
+ __global__ void gemm_q4_wmma_kernel_64x32_4w(const T*, const uint32_t*,
+                                              const uint32_t*, const T*, T*,
+                                              const int, const int, const int,
+-                                             const int, const int, const int*) {
++                                             const int, const int, const int*, float*) {
+ }
+ #endif
+ 
+@@ -1378,7 +1400,7 @@ void launch_gemm_q4_wmma_64x32_4w(const T* a, const uint32_t* b_q_weight,
+   dim3 grid((size_n + 31) / 32, (size_m + 63) / 64, k_split);
+   gemm_q4_wmma_kernel_64x32_4w<T><<<grid, block, 0, stream>>>(
+       a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-      zero_offset, b_q_perm);
++      zero_offset, b_q_perm, /*partials=*/nullptr);
+ }
+ 
+ #if defined(__HIP__RDNA3__) || !defined(__HIP_DEVICE_COMPILE__)
+@@ -1412,7 +1434,11 @@ __global__ void gemm_q4_wmma_kernel_64x64_4w(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Deterministic split-K: non-null => store this block's FP32 partial to
++    // partials[(z*size_m + m)*size_n + n]; a separate pass reduces the
++    // z-slices in fixed order with a single low-precision rounding.
++    float* __restrict__ partials) {
+   using E = typename WmmaNative<T>::elem;
+   using V16 = typename WmmaNative<T>::v16;
+ 
+@@ -1547,6 +1573,22 @@ __global__ void gemm_q4_wmma_kernel_64x64_4w(
+   // ---- Store C ---- Each wave owns 16M × 64N. Helper writes one acc slice.
+   const int m_tile_wave = m_tile + wave_id * 16;
+   auto store_acc = [&](const v8fp32& acc, int n_base) {
++    if (partials != nullptr) {
++      // Deterministic split-K: plain FP32 store per (z, m, n). Each element
++      // has one writer per z-slice and the reduce pass fixes the
++      // accumulation order, so the result is bit-reproducible.
++      const int out_n = n_base + lane_lo;
++      if (out_n >= size_n) return;
++#pragma unroll
++      for (int i = 0; i < 8; i++) {
++        const int out_m = m_tile_wave + 2 * i + lane_hi;
++        if (out_m < size_m) {
++          partials[((long)blockIdx.z * size_m + out_m) * size_n + out_n] =
++              acc[i];
++        }
++      }
++      return;
++    }
+     if (gridDim.z > 1) {
+       const bool is_even_lane = (lane_lo & 1) == 0;
+       const int out_n_pair = n_base + lane_lo;
+@@ -1611,7 +1653,11 @@ __global__ void gemm_q4_wmma_kernel_128x64_k16(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Deterministic split-K: non-null => store this block's FP32 partial to
++    // partials[(z*size_m + m)*size_n + n]; a separate pass reduces the
++    // z-slices in fixed order with a single low-precision rounding.
++    float* __restrict__ partials) {
+   using E = typename WmmaNative<T>::elem;
+   using V16 = typename WmmaNative<T>::v16;
+ 
+@@ -1741,6 +1787,22 @@ __global__ void gemm_q4_wmma_kernel_128x64_k16(
+   // ---- Store C ---- Each wave owns 16M × 64N.
+   const int m_tile_wave = m_tile + wave_id * 16;
+   auto store_acc = [&](const v8fp32& acc, int n_base) {
++    if (partials != nullptr) {
++      // Deterministic split-K: plain FP32 store per (z, m, n). Each element
++      // has one writer per z-slice and the reduce pass fixes the
++      // accumulation order, so the result is bit-reproducible.
++      const int out_n = n_base + lane_lo;
++      if (out_n >= size_n) return;
++#pragma unroll
++      for (int i = 0; i < 8; i++) {
++        const int out_m = m_tile_wave + 2 * i + lane_hi;
++        if (out_m < size_m) {
++          partials[((long)blockIdx.z * size_m + out_m) * size_n + out_n] =
++              acc[i];
++        }
++      }
++      return;
++    }
+     if (gridDim.z > 1) {
+       const bool is_even_lane = (lane_lo & 1) == 0;
+       const int out_n_pair = n_base + lane_lo;
+@@ -1810,7 +1872,11 @@ __global__ void gemm_q4_wmma_kernel_128x64_k32(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Deterministic split-K: non-null => store this block's FP32 partial to
++    // partials[(z*size_m + m)*size_n + n]; a separate pass reduces the
++    // z-slices in fixed order with a single low-precision rounding.
++    float* __restrict__ partials) {
+   using E = typename WmmaNative<T>::elem;
+   using V16 = typename WmmaNative<T>::v16;
+ 
+@@ -1953,6 +2019,22 @@ __global__ void gemm_q4_wmma_kernel_128x64_k32(
+   // ---- Store C ---- Same as V7.
+   const int m_tile_wave = m_tile + wave_id * 16;
+   auto store_acc = [&](const v8fp32& acc, int n_base) {
++    if (partials != nullptr) {
++      // Deterministic split-K: plain FP32 store per (z, m, n). Each element
++      // has one writer per z-slice and the reduce pass fixes the
++      // accumulation order, so the result is bit-reproducible.
++      const int out_n = n_base + lane_lo;
++      if (out_n >= size_n) return;
++#pragma unroll
++      for (int i = 0; i < 8; i++) {
++        const int out_m = m_tile_wave + 2 * i + lane_hi;
++        if (out_m < size_m) {
++          partials[((long)blockIdx.z * size_m + out_m) * size_n + out_n] =
++              acc[i];
++        }
++      }
++      return;
++    }
+     if (gridDim.z > 1) {
+       const bool is_even_lane = (lane_lo & 1) == 0;
+       const int out_n_pair = n_base + lane_lo;
+@@ -2006,29 +2088,53 @@ template <typename T>
+ __global__ void gemm_q4_wmma_kernel_64x64_4w(const T*, const uint32_t*,
+                                              const uint32_t*, const T*, T*,
+                                              const int, const int, const int,
+-                                             const int, const int, const int*) {
++                                             const int, const int, const int*, float*) {
+ }
+ template <typename T>
+ __global__ void gemm_q4_wmma_kernel_128x64_k16(const T*, const uint32_t*,
+                                                const uint32_t*, const T*, T*,
+                                                const int, const int, const int,
+                                                const int, const int,
+-                                               const int*) {}
++                                               const int*, float*) {}
+ template <typename T>
+ __global__ void gemm_q4_wmma_kernel_128x64_k32(const T*, const uint32_t*,
+                                                const uint32_t*, const T*, T*,
+                                                const int, const int, const int,
+                                                const int, const int,
+-                                               const int*) {}
++                                               const int*, float*) {}
+ #endif
+ 
++// Deterministic split-K epilogue for the WMMA path (mirrors the scalar
++// reduce kernel in q_gemm_rdna3.cu; duplicated here because HIP kernel
++// templates cannot be shared across translation units cheaply).
++template <typename T>
++__global__ void reduce_partials_wmma(const float* __restrict__ partials,
++                                     T* __restrict__ c, const int z_count,
++                                     const int size_m, const int size_n) {
++  const long idx = (long)blockIdx.x * blockDim.x + threadIdx.x;
++  if (idx >= (long)size_m * size_n) return;
++  const int m = (int)(idx / size_n);
++  const int n = (int)(idx % size_n);
++  float acc = 0.0f;
++  for (int z = 0; z < z_count; ++z)
++    acc += partials[((long)z * size_m + m) * size_n + n];
++  if constexpr (std::is_same<T, half>::value) {
++    c[idx] = __float2half_rn(acc);
++  } else {
++    c[idx] = __float2bfloat16(acc);
++  }
++}
++
+ template <typename T>
+ void launch_gemm_q4_wmma_64x64_4w(const T* a, const uint32_t* b_q_weight,
+                                   const uint32_t* b_qzeros, const T* b_scales,
+                                   const int* b_q_perm, T* c, int size_m,
+                                   int size_n, int size_k, int groups,
+-                                  int zero_offset, cudaStream_t stream) {
++                                  int zero_offset, bool deterministic,
++                                  cudaStream_t stream) {
+   // Fall back to v4 when N < 64 (would waste 1+ waves on out-of-range cols).
++  // Deterministic callers never reach this with size_m < 65 / size_n < 64
++  // (the public entry routes such shapes to the scalar deterministic path).
+   if (size_m < 64 || size_n < 64) {
+     launch_gemm_q4_wmma_64x32_4w<T>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+@@ -2036,34 +2142,95 @@ void launch_gemm_q4_wmma_64x64_4w(const T* a, const uint32_t* b_q_weight,
+     return;
+   }
+ 
+-  // V8 (128M × 64N, K=32/iter, 8-wave dequant) when K%32==0 and gs≥32.
+-  // Falls back to V7 otherwise. V7/V8 read A sequentially, so act-order
+-  // (b_q_perm != null) must skip them and use v5, which honors the perm.
++  // Deterministic split-K: row-tiled FP32 partials + fixed-order reduce.
++  // scratch_bytes = k_split * TILE_M * size_n * 4, bounded independently of
++  // the caller's M (k_split <= 4 by the heuristic).
++  if (deterministic) {
++    constexpr int TILE_M = 512;  // bounds scratch: k_split*512*N*4 <= ~144MB
++    const int m_tile = (size_m >= 128 && b_q_perm == nullptr) ? 128 : 64;
++    const int k_split =
++        compute_wmma_k_split_mn(size_m, size_n, size_k, m_tile, 64);
++    // See the scalar path: thread-local scratch reuse, resized on demand;
++    // never use or update the cache while a CUDA graph is capturing (the
++    // captured kernel keeps the baked-in pointer; a later resize would
++    // free it). While capturing, allocate per call from the capture pool.
++    thread_local at::Tensor partials;
++    cudaStreamCaptureStatus cap_status;
++    C10_CUDA_CHECK(cudaStreamIsCapturing(stream, &cap_status));
++    const bool capturing = cap_status != cudaStreamCaptureStatusNone;
++    for (int row0 = 0; row0 < size_m; row0 += TILE_M) {
++      const int rows = std::min(TILE_M, size_m - row0);
++      at::Tensor scratch;
++      if (capturing) {
++        scratch = at::empty(
++            {k_split, rows, size_n},
++            at::TensorOptions().dtype(at::kFloat).device(
++                at::Device(at::kCUDA, c10::cuda::current_device())));
++      } else {
++        if (!partials.defined() || partials.size(0) < k_split ||
++            partials.size(1) < rows || partials.size(2) < size_n) {
++          partials = at::empty(
++              {k_split, rows, size_n},
++              at::TensorOptions().dtype(at::kFloat).device(
++                  at::Device(at::kCUDA, c10::cuda::current_device())));
++        }
++        scratch = partials;
++      }
++      const T* a_t = a + (long)row0 * size_k;
++      T* c_t = c + (long)row0 * size_n;
++      dim3 block(m_tile == 128 ? 256 : 128);
++      dim3 grid((size_n + 63) / 64, (rows + m_tile - 1) / m_tile, k_split);
++      if (m_tile == 128 && size_k % 32 == 0 && (size_k / groups) >= 32 &&
++          (size_k / k_split) % 32 == 0) {
++        gemm_q4_wmma_kernel_128x64_k32<T><<<grid, block, 0, stream>>>(
++            a_t, b_q_weight, b_qzeros, b_scales, c_t, rows, size_n, size_k,
++            groups, zero_offset, b_q_perm, scratch.data_ptr<float>());
++      } else if (m_tile == 128) {
++        gemm_q4_wmma_kernel_128x64_k16<T><<<grid, block, 0, stream>>>(
++            a_t, b_q_weight, b_qzeros, b_scales, c_t, rows, size_n, size_k,
++            groups, zero_offset, b_q_perm, scratch.data_ptr<float>());
++      } else {
++        gemm_q4_wmma_kernel_64x64_4w<T><<<grid, block, 0, stream>>>(
++            a_t, b_q_weight, b_qzeros, b_scales, c_t, rows, size_n, size_k,
++            groups, zero_offset, b_q_perm, scratch.data_ptr<float>());
++      }
++      const long total = (long)rows * size_n;
++      const int threads = 256;
++      const int blocks = (int)((total + threads - 1) / threads);
++      reduce_partials_wmma<T><<<blocks, threads, 0, stream>>>(
++          scratch.data_ptr<float>(), c_t, k_split, rows, size_n);
++    }
++    return;
++  }
++
++  // Legacy path: split blocks CAS-accumulate low-precision partials directly
++  // into the output (order-dependent; nondeterministic when k_split > 1).
++  // V8 (128M x 64N, K=32/iter, 8-wave dequant) when K%32==0 and gs>=32.
+   if (size_m >= 128 && b_q_perm == nullptr) {
+     const int k_split =
+         compute_wmma_k_split_mn(size_m, size_n, size_k, 128, 64);
+-    const int groupsize = size_k / groups;
+     dim3 block(256);
+     dim3 grid((size_n + 63) / 64, (size_m + 127) / 128, k_split);
+-    if (size_k % 32 == 0 && groupsize >= 32 && (size_k / k_split) % 32 == 0) {
++    if (size_k % 32 == 0 && (size_k / groups) >= 32 &&
++        (size_k / k_split) % 32 == 0) {
+       gemm_q4_wmma_kernel_128x64_k32<T><<<grid, block, 0, stream>>>(
+           a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-          zero_offset, b_q_perm);
++          zero_offset, b_q_perm, /*partials=*/nullptr);
+     } else {
+       gemm_q4_wmma_kernel_128x64_k16<T><<<grid, block, 0, stream>>>(
+           a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-          zero_offset, b_q_perm);
++          zero_offset, b_q_perm, /*partials=*/nullptr);
+     }
+     return;
+   }
+ 
+-  // 4 waves per block (128 threads), 64M × 64N tile per block.
++  // 4 waves per block (128 threads), 64M x 64N tile per block.
+   const int k_split = compute_wmma_k_split_mn(size_m, size_n, size_k, 64, 64);
+   dim3 block(128);
+   dim3 grid((size_n + 63) / 64, (size_m + 63) / 64, k_split);
+   gemm_q4_wmma_kernel_64x64_4w<T><<<grid, block, 0, stream>>>(
+       a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-      zero_offset, b_q_perm);
++      zero_offset, b_q_perm, /*partials=*/nullptr);
+ }
+ 
+ }  // namespace gptq_rdna3_wmma
+@@ -2089,10 +2256,29 @@ void launch_gemm_q4_wmma_64x64_4w(const T* a, const uint32_t* b_q_weight,
+ //   * size_n % 16 == 0 (WMMA tile size)
+ //   * size_k % 16 == 0 (WMMA tile size)
+ 
++// Scalar-path entry (defined in q_gemm_rdna3.cu); used to route shapes the
++// deterministic WMMA path does not cover back to the scalar deterministic
++// implementation.
++torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
++                              torch::Tensor b_qzeros, torch::Tensor b_scales,
++                              torch::Tensor b_g_idx, bool use_v2_format);
++
+ torch::Tensor gptq_gemm_rdna3_wmma(torch::Tensor a, torch::Tensor b_q_weight,
+                                    torch::Tensor b_qzeros,
+                                    torch::Tensor b_scales,
+                                    torch::Tensor b_g_idx, bool use_v2_format) {
++  // Deterministic by default (see the epilogue comments in the kernels).
++  // Shapes the deterministic WMMA path does not cover (M < 65 or N < 64)
++  // are handled entirely by the scalar deterministic path in
++  // gptq_gemm_rdna3, which routes back here only when both thresholds are
++  // met — no recursion. The legacy low-precision atomic epilogue remains
++  // available behind VLLM_RDNA3_W4A16_LEGACY_ATOMIC for benchmarking.
++  static const bool legacy_atomic =
++      std::getenv("VLLM_RDNA3_W4A16_LEGACY_ATOMIC") != nullptr;
++  if (!legacy_atomic && (a.size(0) < 65 || b_q_weight.size(1) < 64)) {
++    return gptq_gemm_rdna3(a, b_q_weight, b_qzeros, b_scales, b_g_idx,
++                           use_v2_format);
++  }
+   TORCH_CHECK(a.is_cuda(), "a must be a CUDA/HIP tensor");
+   TORCH_CHECK(b_q_weight.is_cuda(), "b_q_weight must be a CUDA/HIP tensor");
+   TORCH_CHECK(b_qzeros.is_cuda(), "b_qzeros must be a CUDA/HIP tensor");
+@@ -2149,7 +2335,7 @@ torch::Tensor gptq_gemm_rdna3_wmma(torch::Tensor a, torch::Tensor b_q_weight,
+         (const half*)a.data_ptr(), (const uint32_t*)b_q_weight.data_ptr(),
+         (const uint32_t*)b_qzeros.data_ptr(), (const half*)b_scales.data_ptr(),
+         g_idx_ptr, (half*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        zero_offset, stream);
++        zero_offset, !legacy_atomic, stream);
+   } else {
+     vllm::gptq_rdna3_wmma::launch_gemm_q4_wmma_64x64_4w<
+         vllm::gptq_rdna3_wmma::bf16_t>(
+@@ -2158,7 +2344,7 @@ torch::Tensor gptq_gemm_rdna3_wmma(torch::Tensor a, torch::Tensor b_q_weight,
+         (const uint32_t*)b_qzeros.data_ptr(),
+         (const vllm::gptq_rdna3_wmma::bf16_t*)b_scales.data_ptr(), g_idx_ptr,
+         (vllm::gptq_rdna3_wmma::bf16_t*)c.data_ptr(), size_m, size_n, size_k,
+-        groups, zero_offset, stream);
++        groups, zero_offset, !legacy_atomic, stream);
+   }
+ 
+   return c;
+diff --git a/tests/kernels/quantization/test_rdna3_w4a16_determinism.py b/tests/kernels/quantization/test_rdna3_w4a16_determinism.py
+new file mode 100644
+index 0000000000..c018a2e5ef
+--- /dev/null
++++ b/tests/kernels/quantization/test_rdna3_w4a16_determinism.py
+@@ -0,0 +1,151 @@
++#!/usr/bin/env python3
++# SPDX-LicenseFileCopyrightText: Copyright contributors to the vLLM project
++"""Bit-repeatability regression tests for the RDNA3 W4A16 GEMM.
++
++The split-K epilogues of ``gptq_gemm_rdna3`` (scalar path) and the WMMA
++path historically accumulated per-split low-precision partials directly
++into the output via CAS atomics. With multiple writers per output element
++the accumulation order — and therefore the rounded result — varied per
++call: repeated fixed-input calls produced a different output almost every
++time on gfx1100 (empirical onset between Z=2 and Z=4 concurrent writers;
++Z = K/256 for the scalar path).
++
++Both paths now reduce FP32 split partials in a fixed order with a single
++final low-precision rounding, which is deterministic by construction.
++These tests assert exact repeatability through the public op so they fail
++on the legacy atomic epilogue and pass on the deterministic one.
++"""
++
++import pytest
++import torch
++
++from vllm.platforms import current_platform
++
++if not current_platform.is_rocm():
++    pytest.skip("RDNA3 W4A16 kernel is ROCm-only", allow_module_level=True)
++
++from vllm.model_executor.kernels.linear.mixed_precision.MPLinearKernel import (  # noqa: E402
++    MPLinearLayerConfig,
++)
++from vllm.model_executor.kernels.linear.mixed_precision.rdna3_w4a16 import (  # noqa: E402
++    RDNA3W4A16LinearKernel,
++)
++from vllm.model_executor.layers.quantization.utils.quant_utils import (  # noqa: E402
++    pack_quantized_values_into_int32,
++)
++from vllm.model_executor.parameter import (  # noqa: E402
++    GroupQuantScaleParameter,
++    PackedvLLMParameter,
++)
++from vllm.platforms.rocm import on_gfx1100  # noqa: E402
++from vllm.scalar_type import scalar_types  # noqa: E402
++
++device = "cuda"
++WEIGHT_TYPE = scalar_types.uint4b8
++
++gfx1100_only = pytest.mark.skipif(
++    not (
++        on_gfx1100()
++        and hasattr(torch.ops, "_rocm_C")
++        and hasattr(torch.ops._rocm_C, "gptq_gemm_rdna3")
++    ),
++    reason="requires gfx1100 with the _rocm_C.gptq_gemm_rdna3 op built in",
++)
++
++REPEATS = 20
++GROUP = 128
++
++
++def _build(K, N, seed):
++    torch.manual_seed(seed)
++    q_int4_kn = torch.randint(0, 16, (K, N), dtype=torch.int32)
++    scales_gn = (torch.randn(K // GROUP, N) * 0.01 + 0.02).to(torch.bfloat16)
++    qweight = pack_quantized_values_into_int32(q_int4_kn, WEIGHT_TYPE, packed_dim=0)
++    no_loader = lambda *a, **k: None  # noqa: E731
++
++    class DummyLayer(torch.nn.Module):
++        pass
++
++    layer = DummyLayer()
++    layer.register_parameter(
++        "qweight",
++        PackedvLLMParameter(data=qweight, weight_loader=no_loader, input_dim=0,
++                            output_dim=1, packed_dim=0, packed_factor=8))
++    layer.register_parameter(
++        "scales",
++        GroupQuantScaleParameter(data=scales_gn, weight_loader=no_loader,
++                                 input_dim=0, output_dim=1))
++    return layer.to(device)
++
++
++def _run(M, K, N, seed):
++    from vllm.config import VllmConfig, set_current_vllm_config
++    _cm = set_current_vllm_config(VllmConfig())
++    _cm.__enter__()
++    import os
++    os.environ.setdefault("MASTER_ADDR", "127.0.0.1")
++    os.environ.setdefault("MASTER_PORT", "29741")
++    from vllm.distributed import (init_distributed_environment,
++                                  initialize_model_parallel)
++    if not torch.distributed.is_initialized():
++        init_distributed_environment(backend="cpu:gloo,cuda:hccl", world_size=1,
++                                     rank=0, local_rank=0,
++                                     distributed_init_method="env://")
++        initialize_model_parallel(tensor_model_parallel_size=1)
++    layer = _build(K, N, seed)
++    cfg = MPLinearLayerConfig(
++        full_weight_shape=(K, N), partition_weight_shape=(K, N),
++        weight_type=WEIGHT_TYPE, act_type=torch.bfloat16,
++        group_size=GROUP, zero_points=False, has_g_idx=False)
++    kernel = RDNA3W4A16LinearKernel(cfg, w_q_param_name="qweight",
++                                    w_s_param_name="scales",
++                                    w_zp_param_name=None, w_gidx_param_name=None)
++    kernel.process_weights_after_loading(layer)
++    w_q, w_s, w_zp, w_g_idx = kernel._get_weight_params(layer)
++    torch.manual_seed(seed + 1)
++    x = torch.randn(M, K, device=device, dtype=torch.bfloat16)
++    outs = [
++        torch.ops._rocm_C.gptq_gemm_rdna3(x, w_q, w_zp, w_s, w_g_idx, False)
++        for _ in range(REPEATS)
++    ]
++    return outs
++
++
++@gfx1100_only
++def test_scalar_splitk_bit_repeatable():
++    """Scalar path, split-K active (Z = 1024/256 = 4 concurrent writers)."""
++    outs = _run(M=1, K=1024, N=4096, seed=1234)
++    for o in outs[1:]:
++        assert torch.equal(o, outs[0]), (
++            "RDNA3 W4A16 scalar split-K produced differing outputs for "
++            "identical inputs")
++
++
++@gfx1100_only
++def test_scalar_small_m_bit_repeatable():
++    """Scalar M>1 tiles share the same deterministic epilogue."""
++    outs = _run(M=8, K=1024, N=4096, seed=1235)
++    for o in outs[1:]:
++        assert torch.equal(o, outs[0])
++
++
++@gfx1100_only
++def test_wmma_splitk_bit_repeatable():
++    """WMMA path (M >= 16 bf16), K where the legacy heuristic splits K.
++
++    K=6656 gives K_SPLIT=4 in the legacy heuristic; the deterministic path
++    must be bit-repeatable regardless of the split count.
++    """
++    outs = _run(M=16, K=6656, N=4096, seed=1236)
++    for o in outs[1:]:
++        assert torch.equal(o, outs[0]), (
++            "RDNA3 W4A16 WMMA split-K produced differing outputs for "
++            "identical inputs")
++
++
++@gfx1100_only
++def test_wmma_large_m_bit_repeatable():
++    """Large-M WMMA tiles (128x64 kernels) with the deterministic epilogue."""
++    outs = _run(M=128, K=6656, N=4096, seed=1237)
++    for o in outs[1:]:
++        assert torch.equal(o, outs[0])

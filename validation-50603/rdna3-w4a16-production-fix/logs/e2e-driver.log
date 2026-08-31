@@ -1,0 +1,20 @@
+--- det-eager eng1 eager=1 leg=0 2026-08-31T15:40:21+00:00 ---
+  [within] muse tp=1 eager=1 eng=1 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=1 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- det-eager eng2 eager=1 leg=0 2026-08-31T15:42:32+00:00 ---
+  [within] muse tp=1 eager=1 eng=2 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=2 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- det-eager eng3 eager=1 leg=0 2026-08-31T15:44:46+00:00 ---
+  [within] muse tp=1 eager=1 eng=3 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=3 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- det-graphs eng1 eager=0 leg=0 2026-08-31T15:46:58+00:00 ---
+--- gemma eng1 eager=1 leg=0 2026-08-31T15:48:51+00:00 ---
+  [within] gemma3 tp=1 eager=1 eng=1 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] gemma3 tp=1 eager=1 eng=1 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- legacy-control eng1 eager=1 leg=1 2026-08-31T15:52:20+00:00 ---
+  [within] muse tp=1 eager=1 eng=1 ctx=   512 -> 8 distinct of 8  first_div=[5, 5, 7, 9, 5, 5, 5]
+  [within] muse tp=1 eager=1 eng=1 ctx=  8192 -> 3 distinct of 8  first_div=[None, 5, 1, None, None, 1, 1]
+=== routing ===
+(EngineCore pid=520553) INFO 08-31 15:40:49 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=524220) INFO 08-31 15:52:46 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+=== E2E DONE 2026-08-31T15:54:24+00:00 ===

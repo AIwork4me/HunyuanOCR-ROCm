@@ -1,0 +1,13 @@
+=== Phase 0 — 2026-08-31T14:54:50+00:00 ===
+validated baseline: vLLM 0.25.1 @ 752a3a504485790a2e8491cacbb35c137339ad34
+current upstream main: dafbef15a1c879c64ebb99427917e4ca8d5bca1e (2026-08-31 14:26 +0000, #49445)
+
+blob identity main vs v0.25.1 (defect unchanged on main):
+  csrc/rocm/q_gemm_rdna3.cu IDENTICAL
+  csrc/rocm/q_gemm_rdna3_wmma.cu IDENTICAL
+  csrc/rocm/qdq_4_rdna3.cuh IDENTICAL
+  vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py IDENTICAL
+  tests/kernels/quantization/test_rdna3_w4a16.py IDENTICAL
+
+decision: develop on 0.25.1-era validated tree (known-good build stack),
+port to current main in Phase 17 — identical file bases make the port clean.
