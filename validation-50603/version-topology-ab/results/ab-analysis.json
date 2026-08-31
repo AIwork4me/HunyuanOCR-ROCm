@@ -1,0 +1,1190 @@
+[
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/gemma3-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/gemma3-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/gemma3-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/gemma3-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   null,
+   4,
+   4,
+   null,
+   31,
+   4,
+   null
+  ],
+  "groups": "[0,1,4,7]+[2,3,6]+[5]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/gemma3-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   4,
+   null,
+   null,
+   null,
+   4,
+   37,
+   null
+  ],
+  "groups": "[0,2,3,4,7]+[1,5]+[6]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/gemma3-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   4,
+   4
+  ],
+  "groups": "[0,1,2,3,4,5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/gemma3-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "gemma3",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 2,
+  "ngen": 8,
+  "first_div": [
+   4,
+   null,
+   null,
+   null,
+   4,
+   null,
+   null
+  ],
+  "groups": "[0,2,3,4,6,7]+[1,5]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/gemma3-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   14,
+   14,
+   14,
+   7,
+   14,
+   14,
+   14
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 2,
+  "ctx": 512,
+  "unique": 7,
+  "ngen": 8,
+  "first_div": [
+   28,
+   7,
+   9,
+   28,
+   7,
+   7,
+   23
+  ],
+  "groups": "[0]+[1]+[2,5]+[3]+[4]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e0-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 3,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   9,
+   7,
+   7,
+   9,
+   44,
+   7,
+   9
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e0-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   6,
+   5,
+   21,
+   33,
+   5,
+   5,
+   19
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 2,
+  "ctx": 512,
+  "unique": 7,
+  "ngen": 8,
+  "first_div": [
+   15,
+   5,
+   5,
+   5,
+   7,
+   15,
+   5
+  ],
+  "groups": "[0]+[1,6]+[2]+[3]+[4]+[5]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e1-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 3,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   5,
+   5,
+   25,
+   5,
+   5,
+   18,
+   18
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e1-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   6,
+   5,
+   6,
+   6,
+   16,
+   6,
+   6
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 2,
+  "ctx": 512,
+  "unique": 6,
+  "ngen": 8,
+  "first_div": [
+   8,
+   1,
+   1,
+   1,
+   1,
+   13,
+   1
+  ],
+  "groups": "[0]+[1]+[2,4,7]+[3]+[5]+[6]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e0-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 3,
+  "ctx": 512,
+  "unique": 7,
+  "ngen": 8,
+  "first_div": [
+   35,
+   24,
+   27,
+   40,
+   null,
+   26,
+   1
+  ],
+  "groups": "[0,5]+[1]+[2]+[3]+[4]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e0-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 7,
+  "ngen": 8,
+  "first_div": [
+   5,
+   7,
+   7,
+   36,
+   5,
+   5,
+   5
+  ],
+  "groups": "[0]+[1]+[2,3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 2,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   5,
+   5,
+   6,
+   5,
+   19,
+   5,
+   5
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e1-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 3,
+  "ctx": 512,
+  "unique": 8,
+  "ngen": 8,
+  "first_div": [
+   17,
+   6,
+   5,
+   5,
+   6,
+   17,
+   6
+  ],
+  "groups": "[0]+[1]+[2]+[3]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e1-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 7,
+  "ngen": 8,
+  "first_div": [
+   7,
+   7,
+   7,
+   18,
+   18,
+   7,
+   18
+  ],
+  "groups": "[0]+[1]+[2]+[3,6]+[4]+[5]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 2,
+  "ctx": 512,
+  "unique": 5,
+  "ngen": 8,
+  "first_div": [
+   7,
+   7,
+   null,
+   null,
+   null,
+   18,
+   9
+  ],
+  "groups": "[0,3,4,5]+[1]+[2]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e0-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 3,
+  "ctx": 512,
+  "unique": 7,
+  "ngen": 8,
+  "first_div": [
+   5,
+   18,
+   7,
+   27,
+   7,
+   7,
+   7
+  ],
+  "groups": "[0]+[1]+[2]+[3,6]+[4]+[5]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e0-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 512,
+  "unique": 6,
+  "ngen": 8,
+  "first_div": [
+   7,
+   null,
+   null,
+   15,
+   13,
+   5,
+   5
+  ],
+  "groups": "[0,2,3]+[1]+[4]+[5]+[6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 2,
+  "ctx": 512,
+  "unique": 6,
+  "ngen": 8,
+  "first_div": [
+   23,
+   9,
+   5,
+   5,
+   7,
+   23,
+   23
+  ],
+  "groups": "[0]+[1,6,7]+[2]+[3]+[4]+[5]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e1-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 3,
+  "ctx": 512,
+  "unique": 5,
+  "ngen": 8,
+  "first_div": [
+   6,
+   5,
+   5,
+   5,
+   5,
+   5,
+   5
+  ],
+  "groups": "[0]+[1]+[2,4,6,7]+[3]+[5]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e1-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 2,
+  "ngen": 8,
+  "first_div": [
+   2,
+   2,
+   2,
+   2,
+   null,
+   2,
+   2
+  ],
+  "groups": "[0,5]+[1,2,3,4,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 2,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   null,
+   5,
+   5,
+   null,
+   null,
+   5,
+   2
+  ],
+  "groups": "[0,1,4,5]+[2,3,6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e0-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 3,
+  "ctx": 8192,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e0-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 2,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   1,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,7]+[6]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 2,
+  "ctx": 8192,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e1-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.23.1.dev1",
+  "vllm": "0.23.1.dev1+g9ddef7117",
+  "git": "9ddef7117",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 3,
+  "ctx": 8192,
+  "unique": 2,
+  "ngen": 8,
+  "first_div": [
+   1,
+   1,
+   1,
+   null,
+   1,
+   1,
+   1
+  ],
+  "groups": "[0,4]+[1,2,3,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.23.1.dev1/muse-e1-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 2,
+  "ctx": 8192,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e0-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 3,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   5,
+   2,
+   null
+  ],
+  "groups": "[0,1,2,3,4,7]+[5]+[6]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e0-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   null,
+   1,
+   1,
+   1,
+   1,
+   1,
+   5
+  ],
+  "groups": "[0,1]+[2,3,4,5,6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 2,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   1,
+   1,
+   null,
+   null,
+   null,
+   1,
+   5
+  ],
+  "groups": "[0,3,4,5]+[1,2,6]+[7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e1-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 3,
+  "ctx": 8192,
+  "unique": 2,
+  "ngen": 8,
+  "first_div": [
+   null,
+   1,
+   1,
+   null,
+   null,
+   null,
+   1
+  ],
+  "groups": "[0,1,4,5,6]+[2,3,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1/muse-e1-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   null
+  ],
+  "groups": "[0,7]+[1,2,4,5,6]+[3]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e0-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 2,
+  "ctx": 8192,
+  "unique": 1,
+  "ngen": 8,
+  "first_div": [
+   null,
+   null,
+   null,
+   null,
+   null,
+   null,
+   null
+  ],
+  "groups": "[0,1,2,3,4,5,6,7]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e0-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": false,
+  "engine": 3,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "groups": "[0]+[1,3,4,5,6,7]+[2]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e0-eng3.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 1,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   1,
+   null,
+   1,
+   1,
+   1,
+   1,
+   null
+  ],
+  "groups": "[0,2,7]+[1]+[3,4,5,6]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e1-eng1.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 2,
+  "ctx": 8192,
+  "unique": 3,
+  "ngen": 8,
+  "first_div": [
+   1,
+   null,
+   1,
+   1,
+   1,
+   5,
+   null
+  ],
+  "groups": "[0,2,7]+[1,3,4,5]+[6]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e1-eng2.json"
+ },
+ {
+  "version_tag": "vllm-0.25.1-defaultmm",
+  "vllm": "0.25.1",
+  "git": "752a3a504",
+  "torch": "2.12.0+rocm7.14.0",
+  "model": "muse",
+  "tp": 1,
+  "eager": true,
+  "engine": 3,
+  "ctx": 8192,
+  "unique": 2,
+  "ngen": 8,
+  "first_div": [
+   null,
+   1,
+   null,
+   null,
+   1,
+   null,
+   null
+  ],
+  "groups": "[0,1,3,4,6,7]+[2,5]",
+  "seq_lens": [
+   64
+  ],
+  "path": "vllm-0.25.1-defaultmm/muse-e1-eng3.json"
+ }
+]

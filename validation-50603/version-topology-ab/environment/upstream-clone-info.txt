@@ -1,0 +1,12 @@
+=== git remote -v ===
+origin	https://github.com/cadamcat/dual-radeon-vllm (fetch)
+origin	https://github.com/cadamcat/dual-radeon-vllm (push)
+=== git rev-parse HEAD ===
+782c7d431ab8e821242f2a717bf5d03b0be3301d
+=== git status --short ===
+=== git log -3 ===
+782c7d4 the front page's two captions were walls, so they were rebuilt as something readable
+0f18fa9 --enforce-eager does not remove the non-determinism, and 51 links had gone 404
+5a76945 one model, five machines: the chart the ladder earned, and the tables it fills
+=== clone UTC ===
+2026-08-30T22:53:59+00:00
