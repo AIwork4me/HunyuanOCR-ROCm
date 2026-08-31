@@ -1,0 +1,109 @@
+{
+ "engine": 2,
+ "run_unique": 8,
+ "call_counting": {
+  "total_lmhead_calls": 522,
+  "profile_calls_batch128": 2,
+  "decode_shaped_calls": 520,
+  "warmup": 8,
+  "measured": 512,
+  "note": "520 = 8 warmup + 8x64 measured with ZERO extra prefill calls => every measured generation hit the shared prompt prefix cache => identical inputs at every aligned step"
+ },
+ "alignment_check": "bf16 roundtrip of saved fp32 rows matches lmhead logits_sha256 (8/8 spot checks)",
+ "per_step_distinct_hashes": [
+  {
+   "step": 0,
+   "token_sets": 1,
+   "distinct_hidden_sha": 8,
+   "distinct_logits_sha": 8
+  },
+  {
+   "step": 1,
+   "token_sets": 1,
+   "distinct_hidden_sha": 8,
+   "distinct_logits_sha": 8
+  },
+  {
+   "step": 2,
+   "token_sets": 1,
+   "distinct_hidden_sha": 8,
+   "distinct_logits_sha": 8
+  },
+  {
+   "step": 3,
+   "token_sets": 1,
+   "distinct_hidden_sha": 8,
+   "distinct_logits_sha": 8
+  },
+  {
+   "step": 4,
+   "token_sets": 1,
+   "distinct_hidden_sha": 8,
+   "distinct_logits_sha": 8
+  },
+  {
+   "step": 5,
+   "token_sets": 2,
+   "distinct_hidden_sha": 8,
+   "distinct_logits_sha": 8
+  }
+ ],
+ "pairs_vs_run0": [
+  {
+   "gen": 1,
+   "D": 5,
+   "tok0": 112740,
+   "tokg": 200007,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  },
+  {
+   "gen": 2,
+   "D": 43,
+   "tok0": 21261,
+   "tokg": 112740,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  },
+  {
+   "gen": 3,
+   "D": 18,
+   "tok0": 170660,
+   "tokg": 200007,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  },
+  {
+   "gen": 4,
+   "D": 25,
+   "tok0": 30499,
+   "tokg": 26,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  },
+  {
+   "gen": 5,
+   "D": 7,
+   "tok0": 6772,
+   "tokg": 44071,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  },
+  {
+   "gen": 6,
+   "D": 50,
+   "tok0": 154210,
+   "tokg": 112740,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  },
+  {
+   "gen": 7,
+   "D": 5,
+   "tok0": 112740,
+   "tokg": 200007,
+   "hidden_equal_at_D": false,
+   "logits_equal_at_D": false
+  }
+ ]
+}

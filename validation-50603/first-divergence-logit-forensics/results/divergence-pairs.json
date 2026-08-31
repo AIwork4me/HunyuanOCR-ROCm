@@ -1,0 +1,32 @@
+{
+ "eng1": {
+  "unique_512": 8,
+  "earliest_pair": {
+   "run_A": 0,
+   "run_B": 1,
+   "D": 5,
+   "tok_A": 112740,
+   "tok_B": 200007
+  }
+ },
+ "eng2": {
+  "unique_512": 8,
+  "earliest_pair": {
+   "run_A": 0,
+   "run_B": 1,
+   "D": 5,
+   "tok_A": 200007,
+   "tok_B": 112740
+  }
+ },
+ "eng3": {
+  "unique_512": 8,
+  "earliest_pair": {
+   "run_A": 0,
+   "run_B": 2,
+   "D": 5,
+   "tok_A": 200007,
+   "tok_B": 112740
+  }
+ }
+}

@@ -1,0 +1,13 @@
+--- baseline eng1 2026-08-31T02:10:26+00:00 ---
+  [within] muse tp=1 eager=1 eng=1 ctx=   512 -> 8 distinct of 8  first_div=[5, 25, 5, 5, 5, 5, 50]
+  [within] muse tp=1 eager=1 eng=1 ctx=  8192 -> 2 distinct of 8  first_div=[1, None, 1, 1, 1, 1, 1]
+  === NONDET DONE ===
+--- baseline eng2 2026-08-31T02:13:29+00:00 ---
+  [within] muse tp=1 eager=1 eng=2 ctx=   512 -> 8 distinct of 8  first_div=[5, 5, 5, 5, 5, 17, 6]
+  [within] muse tp=1 eager=1 eng=2 ctx=  8192 -> 2 distinct of 8  first_div=[1, None, None, None, None, None, None]
+  === NONDET DONE ===
+--- baseline eng3 2026-08-31T02:15:25+00:00 ---
+  [within] muse tp=1 eager=1 eng=3 ctx=   512 -> 8 distinct of 8  first_div=[6, 5, 30, 30, 5, 34, 5]
+  [within] muse tp=1 eager=1 eng=3 ctx=  8192 -> 2 distinct of 8  first_div=[1, None, None, None, 1, None, 1]
+  === NONDET DONE ===
+=== BASELINE DONE 2026-08-31T02:17:20+00:00 ===
