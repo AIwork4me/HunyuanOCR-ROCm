@@ -1,0 +1,17 @@
+--- prototype eng1 2026-08-31T04:16:54+00:00 ---
+  [within] muse tp=1 eager=1 eng=1 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=1 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- prototype eng2 2026-08-31T04:19:44+00:00 ---
+  [within] muse tp=1 eager=1 eng=2 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=2 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- prototype eng3 2026-08-31T04:22:36+00:00 ---
+  [within] muse tp=1 eager=1 eng=3 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=3 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+=== routing evidence ===
+(EngineCore pid=476257) INFO 08-31 04:17:21 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=476257) INFO 08-31 04:17:36 [logging.py:355] RDNA3W4A16LinearKernel deterministic split-K reduction (VLLM_RDNA3_W4A16_DETERMINISTIC=1)
+(EngineCore pid=476899) INFO 08-31 04:20:11 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=476899) INFO 08-31 04:20:28 [logging.py:355] RDNA3W4A16LinearKernel deterministic split-K reduction (VLLM_RDNA3_W4A16_DETERMINISTIC=1)
+(EngineCore pid=477546) INFO 08-31 04:23:02 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=477546) INFO 08-31 04:23:19 [logging.py:355] RDNA3W4A16LinearKernel deterministic split-K reduction (VLLM_RDNA3_W4A16_DETERMINISTIC=1)
+=== PHASE8C DONE 2026-08-31T04:25:27+00:00 ===

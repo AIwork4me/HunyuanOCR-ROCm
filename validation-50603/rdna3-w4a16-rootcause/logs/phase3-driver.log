@@ -1,0 +1,18 @@
+--- OFF eng1 2026-08-31T03:23:20+00:00 ---
+  [within] muse tp=1 eager=1 eng=1 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=1 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- OFF eng2 2026-08-31T03:26:35+00:00 ---
+  [within] muse tp=1 eager=1 eng=2 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=2 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+--- OFF eng3 2026-08-31T03:29:43+00:00 ---
+  [within] muse tp=1 eager=1 eng=3 ctx=   512 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+  [within] muse tp=1 eager=1 eng=3 ctx=  8192 -> 1 distinct of 8  first_div=[None, None, None, None, None, None, None]
+=== routing (off) ===
+(EngineCore pid=438204) INFO 08-31 03:23:49 [compressed_tensors_wNa16.py:137] Using TritonW4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=439985) INFO 08-31 03:27:01 [compressed_tensors_wNa16.py:137] Using TritonW4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=440716) INFO 08-31 03:30:10 [compressed_tensors_wNa16.py:137] Using TritonW4A16LinearKernel for CompressedTensorsWNA16
+=== routing (on, from phase2 logs) ===
+(EngineCore pid=435232) INFO 08-31 03:16:39 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=435915) INFO 08-31 03:18:34 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+(EngineCore pid=436576) INFO 08-31 03:20:29 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+=== PHASE3 DONE 2026-08-31T03:32:51+00:00 ===

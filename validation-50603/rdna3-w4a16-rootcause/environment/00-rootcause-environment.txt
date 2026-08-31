@@ -1,0 +1,40 @@
+=== date -Is ===
+2026-08-31T03:13:52+00:00
+=== uname ===
+Linux u-18147-942e8579 6.8.0-79-generic #79-Ubuntu SMP PREEMPT_DYNAMIC Tue Aug 12 14:42:46 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux
+=== os ===
+PRETTY_NAME="Ubuntu 24.04.4 LTS"
+NAME="Ubuntu"
+=== rocm-smi ===
+==================================================================================================================
+0       2     0x744b,   6853   25.0°C  12.0W  N/A, N/A, 0         0Mhz  96Mhz  20.0%  auto  241.0W  0%     0%    
+==================================================================================================================
+============================================== End of ROCm SMI Log ===============================================
+=== gfx ===
+  Name:                    gfx1100                            
+  Uuid:                    GPU-9187179a3606ca10               
+  Marketing Name:          AMD Radeon Graphics                
+  Vendor Name:             AMD                                
+  Feature:                 KERNEL_DISPATCH                    
+  Profile:                 BASE_PROFILE                       
+  Float Round Mode:        NEAR                               
+  Max Queue Number:        128(0x80)                          
+  Queue Min Size:          64(0x40)                           
+=== python ===
+torch 2.12.0+rocm7.14.0
+vllm 0.25.1
+=== vllm worktree ===
+752a3a504485790a2e8491cacbb35c137339ad34
+0
+=== model rev ===
+/root/.cache/huggingface/hub/models--RedHatAI--Muse-Glimmer-30B-INT4/snapshots/f5b410ce4234fad70eef8be99b4680ee4e30b418
+=== kernel file sha ===
+840fc8e76da64a85e22e41b63fad6afd7cbfd47b9ee7264d5a3df9d418e2f654  /workspace/vllm-50603-version-ab/worktrees/v0.25.1/csrc/rocm/q_gemm_rdna3.cu
+=== hipcc ===
+HIP version: 7.2.53211-e1a6bc5663
+AMD clang version 22.0.0git (https://github.com/RadeonOpenCompute/llvm-project roc-7.2.1 26084 f58b06dce1f9c15707c5f808fd002e18c2accf7e)
+=== pip freeze (key) ===
+torch                                    2.12.0+rocm7.14.0
+transformers                             5.15.1
+triton                                   3.7.1+git0263a6a6.rocm7.14.0
+vllm                                     0.25.1+rocm721               /workspace/vllm-50603-version-ab/worktrees/v0.25.1

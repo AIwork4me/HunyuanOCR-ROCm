@@ -1,0 +1,273 @@
+diff --git a/csrc/rocm/ops.h b/csrc/rocm/ops.h
+index 549d50300d..7d6c2b4676 100644
+--- a/csrc/rocm/ops.h
++++ b/csrc/rocm/ops.h
+@@ -22,6 +22,12 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+                               torch::Tensor b_qzeros, torch::Tensor b_scales,
+                               torch::Tensor b_g_idx, bool use_v2_format);
+ 
++// Root-cause diagnostic: per-split-K FP32 partials [Z, M, N] (no atomics).
++torch::Tensor gptq_gemm_rdna3_partials(torch::Tensor a, torch::Tensor b_q_weight,
++                                       torch::Tensor b_qzeros,
++                                       torch::Tensor b_scales,
++                                       torch::Tensor b_g_idx,
++                                       bool use_v2_format);
+ torch::Tensor gptq_gemm_rdna3_wmma(torch::Tensor a, torch::Tensor b_q_weight,
+                                    torch::Tensor b_qzeros,
+                                    torch::Tensor b_scales,
+diff --git a/csrc/rocm/q_gemm_rdna3.cu b/csrc/rocm/q_gemm_rdna3.cu
+index fb178f6d3b..422d7e9fdf 100644
+--- a/csrc/rocm/q_gemm_rdna3.cu
++++ b/csrc/rocm/q_gemm_rdna3.cu
+@@ -257,7 +257,12 @@ __global__ void gemm_q4_kernel_rdna3(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q_weight,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Root-cause diagnostic/prototype hook: when non-null, each split-K block
++    // stores its FP32 partial to partials[(z*size_m + m)*size_n + n] instead of
++    // the CAS-atomic bf16 accumulation into c. Production callers pass nullptr
++    // and take the unchanged atomic path below.
++    float* __restrict__ partials) {
+   const int t = threadIdx.x;
+   const int offset_n = blockIdx.x * BLOCK_KN_SIZE * 4;
+   const int offset_m = blockIdx.y * M_COUNT;
+@@ -599,21 +604,30 @@ __global__ void gemm_q4_kernel_rdna3(
+   #pragma unroll
+   for (int m = 0; m < M_COUNT; ++m) {
+     if (offset_m + m >= size_m) continue;  // skip padding rows past size_m
+-    T* out = c + (offset_m + m) * size_n + n;
+-    if constexpr (std::is_same<T, half>::value) {
+-      half2 r01 = __halves2half2(__float2half_rn(block_c[m][0]),
+-                                 __float2half_rn(block_c[m][1]));
+-      half2 r23 = __halves2half2(__float2half_rn(block_c[m][2]),
+-                                 __float2half_rn(block_c[m][3]));
+-      atomic_add_pk4_f16(out, r01, r23);
++    if (partials != nullptr) {
++      float* p = partials +
++                 ((long)blockIdx.z * size_m + (offset_m + m)) * size_n + n;
++      p[0] = block_c[m][0];
++      p[1] = block_c[m][1];
++      p[2] = block_c[m][2];
++      p[3] = block_c[m][3];
+     } else {
+-      bf162_t r01;
+-      r01.x = __float2bfloat16(block_c[m][0]);
+-      r01.y = __float2bfloat16(block_c[m][1]);
+-      bf162_t r23;
+-      r23.x = __float2bfloat16(block_c[m][2]);
+-      r23.y = __float2bfloat16(block_c[m][3]);
+-      atomic_add_pk4_bf16(out, r01, r23);
++      T* out = c + (offset_m + m) * size_n + n;
++      if constexpr (std::is_same<T, half>::value) {
++        half2 r01 = __halves2half2(__float2half_rn(block_c[m][0]),
++                                   __float2half_rn(block_c[m][1]));
++        half2 r23 = __halves2half2(__float2half_rn(block_c[m][2]),
++                                   __float2half_rn(block_c[m][3]));
++        atomic_add_pk4_f16(out, r01, r23);
++      } else {
++        bf162_t r01;
++        r01.x = __float2bfloat16(block_c[m][0]);
++        r01.y = __float2bfloat16(block_c[m][1]);
++        bf162_t r23;
++        r23.x = __float2bfloat16(block_c[m][2]);
++        r23.y = __float2bfloat16(block_c[m][3]);
++        atomic_add_pk4_bf16(out, r01, r23);
++      }
+     }
+   }
+ }
+@@ -624,7 +638,10 @@ template <typename T, int M_COUNT>
+ __global__ void gemm_q4_kernel_rdna3(const T*, const uint32_t*, const uint32_t*,
+                                      const T*, T*, const int, const int,
+                                      const int, const int, const int,
+-                                     const int*) {}
++                                     const int*, float*) {}
++template <typename T>
++__global__ void reduce_partials_rdna3(const float*, T*, const int,
++                                      const long, const int) {}
+ 
+ #endif  // __HIP__RDNA3__ || !__HIP_DEVICE_COMPILE__
+ 
+@@ -637,7 +654,8 @@ void launch_gemm_q4_for_mcount(const T* a, const uint32_t* b_q_weight,
+                                const uint32_t* b_qzeros, const T* b_scales,
+                                const int* b_q_perm, T* c, int size_m,
+                                int size_n, int size_k, int groups,
+-                               int zero_offset, cudaStream_t stream) {
++                               int zero_offset, float* partials,
++                               cudaStream_t stream) {
+   dim3 block(THREADS_X);
+   dim3 grid((size_n + BLOCK_KN_SIZE * 4 - 1) / (BLOCK_KN_SIZE * 4),
+             (size_m + M_COUNT - 1) / M_COUNT,
+@@ -645,7 +663,7 @@ void launch_gemm_q4_for_mcount(const T* a, const uint32_t* b_q_weight,
+ 
+   gemm_q4_kernel_rdna3<T, M_COUNT><<<grid, block, 0, stream>>>(
+       a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-      zero_offset, b_q_perm);
++      zero_offset, b_q_perm, partials);
+ }
+ 
+ // Dispatch to the largest M_COUNT template that doesn't waste more than
+@@ -664,28 +682,28 @@ void launch_gemm_q4(const T* a, const uint32_t* b_q_weight,
+                     const uint32_t* b_qzeros, const T* b_scales,
+                     const int* b_q_perm, T* c, int size_m, int size_n,
+                     int size_k, int groups, bool use_v2_format,
+-                    cudaStream_t stream) {
++                    float* partials, cudaStream_t stream) {
+   const int zero_offset = use_v2_format ? 0 : 1;
+ 
+   if (size_m == 1) {
+     launch_gemm_q4_for_mcount<T, 1>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else if (size_m <= 3) {
+     launch_gemm_q4_for_mcount<T, 2>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else if (size_m <= 7) {
+     launch_gemm_q4_for_mcount<T, 4>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else {
+     // M_COUNT=8 covers M up to 15 here; M >= 16 should ideally take the
+     // WMMA path, but if it falls through we still produce correct output —
+     // just leaving 3-5× of throughput on the table for prefill workloads.
+     launch_gemm_q4_for_mcount<T, 8>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   }
+ }
+ 
+@@ -765,16 +783,84 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+         (const half*)a.data_ptr(), (const uint32_t*)b_q_weight.data_ptr(),
+         (const uint32_t*)b_qzeros.data_ptr(), (const half*)b_scales.data_ptr(),
+         g_idx_ptr, (half*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        use_v2_format, stream);
++        use_v2_format, /*partials=*/nullptr, stream);
+   } else {
+     vllm::gptq_rdna3::launch_gemm_q4<vllm::gptq_rdna3::bf16_t>(
+         (const vllm::gptq_rdna3::bf16_t*)a.data_ptr(),
+         (const uint32_t*)b_q_weight.data_ptr(),
+         (const uint32_t*)b_qzeros.data_ptr(),
+         (const vllm::gptq_rdna3::bf16_t*)b_scales.data_ptr(), g_idx_ptr,
+-        (vllm::gptq_rdna3::bf16_t*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        use_v2_format, stream);
++        (vllm::gptq_rdna3::bf16_t*)c.data_ptr(), size_m, size_n, size_k,
++        groups, use_v2_format, /*partials=*/nullptr, stream);
+   }
+ 
+   return c;
+ }
++
++
++// ---------------------------------------------------------------------------
++// Root-cause diagnostic + deterministic prototype entry points.
++// ---------------------------------------------------------------------------
++
++namespace vllm {
++namespace gptq_rdna3 {
++
++// Shared argument validation for the diagnostic/prototype ops below.
++// Mirrors gptq_gemm_rdna3 but intentionally never forwards to the WMMA
++// kernel: the diagnostic/prototype target the scalar split-K path.
++static std::tuple<int, int, int, int, const int*> validate_probe_args(
++    torch::Tensor& a, torch::Tensor& b_q_weight, torch::Tensor& b_qzeros,
++    torch::Tensor& b_scales, torch::Tensor& b_g_idx) {
++  TORCH_CHECK(a.is_cuda() && b_q_weight.is_cuda() && b_qzeros.is_cuda() &&
++                  b_scales.is_cuda(),
++              "all tensors must be CUDA/HIP");
++  TORCH_CHECK(a.dim() == 2, "a must be 2D [M, K]");
++  TORCH_CHECK(b_q_weight.dim() == 2, "b_q_weight must be 2D [K/8, N]");
++  TORCH_CHECK(a.scalar_type() == torch::kBFloat16 ||
++                  a.scalar_type() == torch::kHalf,
++              "a must be half or bfloat16");
++  TORCH_CHECK(a.scalar_type() == b_scales.scalar_type(),
++              "b_scales dtype must match a");
++  int size_m = (int)a.size(0);
++  int size_k = (int)a.size(1);
++  int size_n = (int)b_q_weight.size(1);
++  int groups = (int)b_qzeros.size(0);
++  TORCH_CHECK(b_q_weight.size(0) * 8 == size_k,
++              "b_q_weight first dim must be K/8");
++  TORCH_CHECK(b_scales.size(0) == groups && b_scales.size(1) == size_n,
++              "b_scales shape mismatch");
++  TORCH_CHECK(size_n % 8 == 0, "N must be a multiple of 8");
++  const int* g_idx_ptr = nullptr;
++  if (!b_g_idx.device().is_meta() && b_g_idx.numel() > 0) {
++    TORCH_CHECK(b_g_idx.scalar_type() == torch::kInt32,
++                "b_g_idx must be int32");
++    g_idx_ptr = (const int*)b_g_idx.data_ptr();
++  }
++  return {size_m, size_n, size_k, groups, g_idx_ptr};
++}
++
++template <typename T>
++at::Tensor gptq_gemm_rdna3_partials_impl(torch::Tensor a,
++                                         torch::Tensor b_q_weight,
++                                         torch::Tensor b_qzeros,
++                                         torch::Tensor b_scales,
++                                         torch::Tensor b_g_idx,
++                                         bool use_v2_format) {
++  const at::cuda::OptionalCUDAGuard device_guard(device_of(a));
++  auto stream = at::cuda::getCurrentCUDAStream();
++  auto [size_m, size_n, size_k, groups, g_idx_ptr] = validate_probe_args(
++      a, b_q_weight, b_qzeros, b_scales, b_g_idx);
++  const int z_count = (size_k + BLOCK_KN_SIZE - 1) / BLOCK_KN_SIZE;
++  at::Tensor partials =
++      torch::empty({z_count, size_m, size_n},
++                   torch::TensorOptions().dtype(torch::kFloat32).device(a.device()));
++  at::Tensor c = torch::empty({size_m, size_n},
++                              torch::TensorOptions().dtype(a.dtype()).device(a.device()));
++  launch_gemm_q4<T>((const T*)a.data_ptr(), (const uint32_t*)b_q_weight.data_ptr(),
++                    (const uint32_t*)b_qzeros.data_ptr(),
++                    (const T*)b_scales.data_ptr(), g_idx_ptr,
++                    (T*)c.data_ptr(), size_m, size_n, size_k, groups,
++                    use_v2_format, (float*)partials.data_ptr(), stream);
++  return partials;
++}
++
+diff --git a/csrc/rocm/torch_bindings.cpp b/csrc/rocm/torch_bindings.cpp
+index 03de6dcd15..06d433c49c 100644
+--- a/csrc/rocm/torch_bindings.cpp
++++ b/csrc/rocm/torch_bindings.cpp
+@@ -45,6 +45,11 @@ TORCH_LIBRARY_EXPAND(TORCH_EXTENSION_NAME, rocm_ops) {
+       "gptq_gemm_rdna3(Tensor a, Tensor b_q_weight, Tensor b_qzeros, "
+       "Tensor b_scales, Tensor b_g_idx, bool use_v2_format) -> Tensor");
+   rocm_ops.impl("gptq_gemm_rdna3", torch::kCUDA, &gptq_gemm_rdna3);
++  rocm_ops.def(
++      "gptq_gemm_rdna3_partials(Tensor a, Tensor b_q_weight, Tensor b_qzeros, "
++      "Tensor b_scales, Tensor b_g_idx, bool use_v2_format) -> Tensor");
++  rocm_ops.impl("gptq_gemm_rdna3_partials", torch::kCUDA,
++                &gptq_gemm_rdna3_partials);
+ 
+   rocm_ops.def(
+       "gptq_gemm_rdna3_wmma(Tensor a, Tensor b_q_weight, Tensor b_qzeros, "
+diff --git a/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py b/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py
+index 268728f4bf..b9cb949ed3 100644
+--- a/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py
++++ b/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py
+@@ -10,6 +10,8 @@ Registered ahead of TritonW4A16LinearKernel for the ROCm-RDNA3 path; falls
+ through to the Triton kernel on non-RDNA3 ROCm devices (e.g. CDNA/MI300).
+ """
+ 
++import os
++
+ import torch
+ 
+ from vllm import _custom_ops as ops
+@@ -186,6 +188,10 @@ class RDNA3W4A16LinearKernel(MPLinearKernel):
+         assert w_zp is not None, "Zero points are required by RDNA3 W4A16"
+         assert w_g_idx is not None, "g_idx tensor (possibly empty) required"
+ 
++        _mlog = os.environ.get("RDNA3_DEBUG_M_LOG")
++        if _mlog:
++            with open(_mlog, "a") as _f:
++                _f.write(f"{x_2d.size(0)}\n")
+         output = ops.gptq_gemm_rdna3(x_2d, w_q, w_zp, w_s, w_g_idx, False)
+ 
+         if bias is not None:

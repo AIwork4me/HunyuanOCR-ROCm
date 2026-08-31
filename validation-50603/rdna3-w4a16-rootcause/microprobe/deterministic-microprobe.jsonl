@@ -1,0 +1,6 @@
+{"tag": "detA", "op": "atomic", "M": 1, "repeats": 200, "distinct": 200, "max_abs_err_vs_first": 0.0390625, "sha_first": "35e43043b17ed718748c363f4bdda7f9fc7962a55008fd3eebdd66222557e955"}
+{"tag": "detA", "op": "deterministic", "M": 1, "repeats": 200, "distinct": 1, "max_abs_err_vs_first": 0.0, "sha_first": "c50b8a2be603be663c40626a8be46a86a29edc5e2d2d8172d0a956b2939d72cf"}
+{"tag": "detB", "op": "atomic", "M": 1, "repeats": 200, "distinct": 200, "max_abs_err_vs_first": 0.0625, "sha_first": "744563d295dd3626fc8871a731bb71ebf6072737cd87848e7715d0820514ae7d"}
+{"tag": "detB", "op": "deterministic", "M": 1, "repeats": 200, "distinct": 1, "max_abs_err_vs_first": 0.0, "sha_first": "c50b8a2be603be663c40626a8be46a86a29edc5e2d2d8172d0a956b2939d72cf"}
+{"tag": "detC", "op": "atomic", "M": 1, "repeats": 200, "distinct": 200, "max_abs_err_vs_first": 0.078125, "sha_first": "7ec5955543a58248eb53dca0bb5bb8354818ea7937fc8a39eb4e9862381ad3c3"}
+{"tag": "detC", "op": "deterministic", "M": 1, "repeats": 200, "distinct": 1, "max_abs_err_vs_first": 0.0, "sha_first": "c50b8a2be603be663c40626a8be46a86a29edc5e2d2d8172d0a956b2939d72cf"}

@@ -1,0 +1,48 @@
+{
+  "finding": "vllm#50603 gfx1100 greedy nondeterminism is caused by the CAS-atomic bf16 split-K epilogue of gptq_gemm_rdna3; FP32-scratch + fixed-order reduction removes it end to end",
+  "cell": {
+    "gpu": "AMD Radeon PRO W7900D (gfx1100, 47.98 GiB)",
+    "vllm": "0.25.1", "vllm_git": "752a3a504485790a2e8491cacbb35c137339ad34",
+    "torch": "2.12.0+rocm7.14.0", "transformers": "5.15.1", "python": "3.12.3",
+    "model": "RedHatAI/Muse-Glimmer-30B-INT4@f5b410ce4234fad70eef8be99b4680ee4e30b418",
+    "tp": 1, "eager": true, "protocol": "warmup x1 (max_tokens=8) + 8 greedy (max_tokens=64, temperature=0.0, ignore_eos), prompt [1000+(i%20000)], 3 engines/arm"
+  },
+  "kernel": {
+    "file": "csrc/rocm/q_gemm_rdna3.cu", "sha256": "840fc8e76da64a85e22e41b63fad6afd7cbfd47b9ee7264d5a3df9d418e2f654",
+    "BLOCK_KN_SIZE": 256, "split_K": "gridDim.z = K/256", "Z_primary": 26,
+    "epilogue": "fp32 partials -> bf16 cast -> atomic_add_pk4_bf16 (CAS loop, 4 lanes/64-bit word) into pre-zeroed bf16 output"
+  },
+  "e2e_unique_of_8": {
+    "on_atomic":        {"512": [6, 8, 8], "8192": [2, 3, 2]},
+    "off_triton":       {"512": [1, 1, 1], "8192": [1, 1, 1]},
+    "prototype_deterministic": {"512": [1, 1, 1], "8192": [1, 1, 1]}
+  },
+  "routing_verified_from_logs": {
+    "on": "Using RDNA3W4A16LinearKernel", "off": "Using TritonW4A16LinearKernel",
+    "prototype": "Using RDNA3W4A16LinearKernel + 'deterministic split-K reduction' line"
+  },
+  "microprobe_m1_real_qproj": {
+    "atomic": "200/200 distinct per process x3, first-call sha differs per process, max|Δ| vs first 0.039-0.078",
+    "deterministic": "1/200 distinct per process x3, identical sha c50b8a2b... across processes"
+  },
+  "split_partials": {
+    "partials_repeatable": "50 calls -> 1 distinct [Z,M,N] tensor",
+    "fixed_orders": "R1 ascending == R2 descending == R3 shuffled (single sha, recorded permutation seed 7)",
+    "atomic_vs_R1": "30 atomic calls -> 30 distinct; |atomic-R1| max 0.0352 median 0.0234; atomic-vs-atomic max 0.0313"
+  },
+  "z_sweep_unmodified_op": {"Z=1": "1/100", "Z=2": "1/100", "Z=4": "100/100", "Z=8": "100/100", "Z=26": "100/100"},
+  "correctness_vs_fp32_dequant_ref": {
+    "atomic": {"max_abs": [0.0261, 0.0248], "mean_abs": [0.00232, 0.00238], "cosine": [0.999981, 0.999980]},
+    "deterministic": {"max_abs": 0.0061, "mean_abs": 0.00059, "cosine": 0.999999}
+  },
+  "performance": {
+    "m1_median_us": {"atomic": 43.0, "deterministic": 45.9},
+    "m512_median_ms": {"atomic": 0.532, "deterministic": 2.107},
+    "e2e_engine_wall_s_both_depths": {"atomic": 115.4, "triton_fallback": 188.3, "deterministic": 171.5}
+  },
+  "regression_test": "tests/kernels/quantization/test_rdna3_w4a16_determinism.py: deterministic PASS, legacy atomic xfail (K=1024 Z=4)",
+  "patches": ["patches/diagnostic.patch", "patches/deterministic-prototype.patch", "patches/upstream-candidate.patch"],
+  "serving_path_discovery": "M-logger: generation runs re-execute prefill-tail forwards at M>8 (7x M=512 + M=16/128/8192 calls), so a decode-only deterministic route is insufficient; prototype routes all M with 64-row tiling (scratch <= ~118 MiB)",
+  "env_note": "dev venv = hardlink clone; two early builds via shebang-shared pip reinstalled the pristine venv's editable metadata; restored and re-verified (ON-arm 8/8, engine 9); all ON/OFF data predates the first modified build",
+  "timestamps_utc": {"start": "2026-08-31T03:10:00+00:00", "end": "2026-08-31T05:00:00+00:00"}
+}

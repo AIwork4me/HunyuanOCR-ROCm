@@ -1,0 +1,5 @@
+{"tag": "zsweepA", "K": 256, "Z": 1, "M": 1, "repeats": 100, "distinct": 1, "op": "gptq_gemm_rdna3(production)"}
+{"tag": "zsweepA", "K": 512, "Z": 2, "M": 1, "repeats": 100, "distinct": 1, "op": "gptq_gemm_rdna3(production)"}
+{"tag": "zsweepA", "K": 1024, "Z": 4, "M": 1, "repeats": 100, "distinct": 100, "op": "gptq_gemm_rdna3(production)"}
+{"tag": "zsweepA", "K": 2048, "Z": 8, "M": 1, "repeats": 100, "distinct": 100, "op": "gptq_gemm_rdna3(production)"}
+{"tag": "zsweepA", "K": 6656, "Z": 26, "M": 1, "repeats": 100, "distinct": 100, "op": "gptq_gemm_rdna3(production)"}

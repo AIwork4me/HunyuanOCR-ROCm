@@ -1,0 +1,473 @@
+diff --git a/csrc/rocm/ops.h b/csrc/rocm/ops.h
+index 549d50300d..75baad84df 100644
+--- a/csrc/rocm/ops.h
++++ b/csrc/rocm/ops.h
+@@ -22,6 +22,13 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+                               torch::Tensor b_qzeros, torch::Tensor b_scales,
+                               torch::Tensor b_g_idx, bool use_v2_format);
+ 
++// Deterministic split-K: FP32 scratch + fixed-order reduction.
++torch::Tensor gptq_gemm_rdna3_deterministic(torch::Tensor a,
++                                            torch::Tensor b_q_weight,
++                                            torch::Tensor b_qzeros,
++                                            torch::Tensor b_scales,
++                                            torch::Tensor b_g_idx,
++                                            bool use_v2_format);
+ torch::Tensor gptq_gemm_rdna3_wmma(torch::Tensor a, torch::Tensor b_q_weight,
+                                    torch::Tensor b_qzeros,
+                                    torch::Tensor b_scales,
+diff --git a/csrc/rocm/q_gemm_rdna3.cu b/csrc/rocm/q_gemm_rdna3.cu
+index fb178f6d3b..dc62722246 100644
+--- a/csrc/rocm/q_gemm_rdna3.cu
++++ b/csrc/rocm/q_gemm_rdna3.cu
+@@ -257,7 +257,12 @@ __global__ void gemm_q4_kernel_rdna3(
+     const T* __restrict__ a, const uint32_t* __restrict__ b_q_weight,
+     const uint32_t* __restrict__ b_qzeros, const T* __restrict__ b_scales,
+     T* __restrict__ c, const int size_m, const int size_n, const int size_k,
+-    const int groups, const int zero_offset, const int* __restrict__ b_q_perm) {
++    const int groups, const int zero_offset, const int* __restrict__ b_q_perm,
++    // Root-cause diagnostic/prototype hook: when non-null, each split-K block
++    // stores its FP32 partial to partials[(z*size_m + m)*size_n + n] instead of
++    // the CAS-atomic bf16 accumulation into c. Production callers pass nullptr
++    // and take the unchanged atomic path below.
++    float* __restrict__ partials) {
+   const int t = threadIdx.x;
+   const int offset_n = blockIdx.x * BLOCK_KN_SIZE * 4;
+   const int offset_m = blockIdx.y * M_COUNT;
+@@ -599,32 +604,65 @@ __global__ void gemm_q4_kernel_rdna3(
+   #pragma unroll
+   for (int m = 0; m < M_COUNT; ++m) {
+     if (offset_m + m >= size_m) continue;  // skip padding rows past size_m
+-    T* out = c + (offset_m + m) * size_n + n;
+-    if constexpr (std::is_same<T, half>::value) {
+-      half2 r01 = __halves2half2(__float2half_rn(block_c[m][0]),
+-                                 __float2half_rn(block_c[m][1]));
+-      half2 r23 = __halves2half2(__float2half_rn(block_c[m][2]),
+-                                 __float2half_rn(block_c[m][3]));
+-      atomic_add_pk4_f16(out, r01, r23);
++    if (partials != nullptr) {
++      float* p = partials +
++                 ((long)blockIdx.z * size_m + (offset_m + m)) * size_n + n;
++      p[0] = block_c[m][0];
++      p[1] = block_c[m][1];
++      p[2] = block_c[m][2];
++      p[3] = block_c[m][3];
+     } else {
+-      bf162_t r01;
+-      r01.x = __float2bfloat16(block_c[m][0]);
+-      r01.y = __float2bfloat16(block_c[m][1]);
+-      bf162_t r23;
+-      r23.x = __float2bfloat16(block_c[m][2]);
+-      r23.y = __float2bfloat16(block_c[m][3]);
+-      atomic_add_pk4_bf16(out, r01, r23);
++      T* out = c + (offset_m + m) * size_n + n;
++      if constexpr (std::is_same<T, half>::value) {
++        half2 r01 = __halves2half2(__float2half_rn(block_c[m][0]),
++                                   __float2half_rn(block_c[m][1]));
++        half2 r23 = __halves2half2(__float2half_rn(block_c[m][2]),
++                                   __float2half_rn(block_c[m][3]));
++        atomic_add_pk4_f16(out, r01, r23);
++      } else {
++        bf162_t r01;
++        r01.x = __float2bfloat16(block_c[m][0]);
++        r01.y = __float2bfloat16(block_c[m][1]);
++        bf162_t r23;
++        r23.x = __float2bfloat16(block_c[m][2]);
++        r23.y = __float2bfloat16(block_c[m][3]);
++        atomic_add_pk4_bf16(out, r01, r23);
++      }
+     }
+   }
+ }
+ 
++// Deterministic prototype epilogue kernel: one thread per output element
++// sums the Z split-K FP32 partials in fixed ascending z order and performs a
++// single T-typed rounding at the end. No atomics, no order ambiguity.
++template <typename T>
++__global__ void reduce_partials_rdna3(const float* __restrict__ partials,
++                                      T* __restrict__ c, const int z_count,
++                                      const int size_m, const int size_n) {
++  const long idx = (long)blockIdx.x * blockDim.x + threadIdx.x;
++  if (idx >= (long)size_m * size_n) return;
++  const int m = (int)(idx / size_n);
++  const int n = (int)(idx % size_n);
++  float acc = 0.0f;
++  for (int z = 0; z < z_count; ++z)
++    acc += partials[((long)z * size_m + m) * size_n + n];
++  if constexpr (std::is_same<T, half>::value) {
++    c[idx] = __float2half_rn(acc);
++  } else {
++    c[idx] = __float2bfloat16(acc);
++  }
++}
++
+ #else  // non-RDNA3 device pass: empty __global__ for symbol parity.
+ 
+ template <typename T, int M_COUNT>
+ __global__ void gemm_q4_kernel_rdna3(const T*, const uint32_t*, const uint32_t*,
+                                      const T*, T*, const int, const int,
+                                      const int, const int, const int,
+-                                     const int*) {}
++                                     const int*, float*) {}
++template <typename T>
++__global__ void reduce_partials_rdna3(const float*, T*, const int,
++                                      const long, const int) {}
+ 
+ #endif  // __HIP__RDNA3__ || !__HIP_DEVICE_COMPILE__
+ 
+@@ -637,7 +675,8 @@ void launch_gemm_q4_for_mcount(const T* a, const uint32_t* b_q_weight,
+                                const uint32_t* b_qzeros, const T* b_scales,
+                                const int* b_q_perm, T* c, int size_m,
+                                int size_n, int size_k, int groups,
+-                               int zero_offset, cudaStream_t stream) {
++                               int zero_offset, float* partials,
++                               cudaStream_t stream) {
+   dim3 block(THREADS_X);
+   dim3 grid((size_n + BLOCK_KN_SIZE * 4 - 1) / (BLOCK_KN_SIZE * 4),
+             (size_m + M_COUNT - 1) / M_COUNT,
+@@ -645,7 +684,7 @@ void launch_gemm_q4_for_mcount(const T* a, const uint32_t* b_q_weight,
+ 
+   gemm_q4_kernel_rdna3<T, M_COUNT><<<grid, block, 0, stream>>>(
+       a, b_q_weight, b_qzeros, b_scales, c, size_m, size_n, size_k, groups,
+-      zero_offset, b_q_perm);
++      zero_offset, b_q_perm, partials);
+ }
+ 
+ // Dispatch to the largest M_COUNT template that doesn't waste more than
+@@ -664,28 +703,28 @@ void launch_gemm_q4(const T* a, const uint32_t* b_q_weight,
+                     const uint32_t* b_qzeros, const T* b_scales,
+                     const int* b_q_perm, T* c, int size_m, int size_n,
+                     int size_k, int groups, bool use_v2_format,
+-                    cudaStream_t stream) {
++                    float* partials, cudaStream_t stream) {
+   const int zero_offset = use_v2_format ? 0 : 1;
+ 
+   if (size_m == 1) {
+     launch_gemm_q4_for_mcount<T, 1>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else if (size_m <= 3) {
+     launch_gemm_q4_for_mcount<T, 2>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else if (size_m <= 7) {
+     launch_gemm_q4_for_mcount<T, 4>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   } else {
+     // M_COUNT=8 covers M up to 15 here; M >= 16 should ideally take the
+     // WMMA path, but if it falls through we still produce correct output —
+     // just leaving 3-5× of throughput on the table for prefill workloads.
+     launch_gemm_q4_for_mcount<T, 8>(a, b_q_weight, b_qzeros, b_scales, b_q_perm,
+                                     c, size_m, size_n, size_k, groups,
+-                                    zero_offset, stream);
++                                    zero_offset, partials, stream);
+   }
+ }
+ 
+@@ -765,16 +804,115 @@ torch::Tensor gptq_gemm_rdna3(torch::Tensor a, torch::Tensor b_q_weight,
+         (const half*)a.data_ptr(), (const uint32_t*)b_q_weight.data_ptr(),
+         (const uint32_t*)b_qzeros.data_ptr(), (const half*)b_scales.data_ptr(),
+         g_idx_ptr, (half*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        use_v2_format, stream);
++        use_v2_format, /*partials=*/nullptr, stream);
+   } else {
+     vllm::gptq_rdna3::launch_gemm_q4<vllm::gptq_rdna3::bf16_t>(
+         (const vllm::gptq_rdna3::bf16_t*)a.data_ptr(),
+         (const uint32_t*)b_q_weight.data_ptr(),
+         (const uint32_t*)b_qzeros.data_ptr(),
+         (const vllm::gptq_rdna3::bf16_t*)b_scales.data_ptr(), g_idx_ptr,
+-        (vllm::gptq_rdna3::bf16_t*)c.data_ptr(), size_m, size_n, size_k, groups,
+-        use_v2_format, stream);
++        (vllm::gptq_rdna3::bf16_t*)c.data_ptr(), size_m, size_n, size_k,
++        groups, use_v2_format, /*partials=*/nullptr, stream);
+   }
+ 
+   return c;
+ }
++
++
++// ---------------------------------------------------------------------------
++// Root-cause diagnostic + deterministic prototype entry points.
++// ---------------------------------------------------------------------------
++
++namespace vllm {
++namespace gptq_rdna3 {
++
++// Shared argument validation for the diagnostic/prototype ops below.
++// Mirrors gptq_gemm_rdna3 but intentionally never forwards to the WMMA
++// kernel: the diagnostic/prototype target the scalar split-K path.
++static std::tuple<int, int, int, int, const int*> validate_probe_args(
++    torch::Tensor& a, torch::Tensor& b_q_weight, torch::Tensor& b_qzeros,
++    torch::Tensor& b_scales, torch::Tensor& b_g_idx) {
++  TORCH_CHECK(a.is_cuda() && b_q_weight.is_cuda() && b_qzeros.is_cuda() &&
++                  b_scales.is_cuda(),
++              "all tensors must be CUDA/HIP");
++  TORCH_CHECK(a.dim() == 2, "a must be 2D [M, K]");
++  TORCH_CHECK(b_q_weight.dim() == 2, "b_q_weight must be 2D [K/8, N]");
++  TORCH_CHECK(a.scalar_type() == torch::kBFloat16 ||
++                  a.scalar_type() == torch::kHalf,
++              "a must be half or bfloat16");
++  TORCH_CHECK(a.scalar_type() == b_scales.scalar_type(),
++              "b_scales dtype must match a");
++  int size_m = (int)a.size(0);
++  int size_k = (int)a.size(1);
++  int size_n = (int)b_q_weight.size(1);
++  int groups = (int)b_qzeros.size(0);
++  TORCH_CHECK(b_q_weight.size(0) * 8 == size_k,
++              "b_q_weight first dim must be K/8");
++  TORCH_CHECK(b_scales.size(0) == groups && b_scales.size(1) == size_n,
++              "b_scales shape mismatch");
++  TORCH_CHECK(size_n % 8 == 0, "N must be a multiple of 8");
++  const int* g_idx_ptr = nullptr;
++  if (!b_g_idx.device().is_meta() && b_g_idx.numel() > 0) {
++    TORCH_CHECK(b_g_idx.scalar_type() == torch::kInt32,
++                "b_g_idx must be int32");
++    g_idx_ptr = (const int*)b_g_idx.data_ptr();
++  }
++  return {size_m, size_n, size_k, groups, g_idx_ptr};
++}
++
++template <typename T>
++at::Tensor gptq_gemm_rdna3_deterministic_impl(
++    torch::Tensor a, torch::Tensor b_q_weight, torch::Tensor b_qzeros,
++    torch::Tensor b_scales, torch::Tensor b_g_idx, bool use_v2_format) {
++  const at::cuda::OptionalCUDAGuard device_guard(device_of(a));
++  auto stream = at::cuda::getCurrentCUDAStream();
++  auto [size_m, size_n, size_k, groups, g_idx_ptr] = validate_probe_args(
++      a, b_q_weight, b_qzeros, b_scales, b_g_idx);
++  const int z_count = (size_k + BLOCK_KN_SIZE - 1) / BLOCK_KN_SIZE;
++  at::Tensor c = torch::empty({size_m, size_n},
++                              torch::TensorOptions().dtype(a.dtype()).device(a.device()));
++  // Row-tiled so the FP32 split scratch stays bounded (tile <= 64 rows):
++  // scratch_bytes = Z * tile * N * 4 <= 26*64*17664*4 ~= 118 MiB worst layer.
++  // Tiling is sequential over row blocks; each tile's reduction is
++  // fixed-order, so the result is deterministic for any M.
++  constexpr int TILE_M = 64;
++  at::Tensor partials;
++  for (int row0 = 0; row0 < size_m; row0 += TILE_M) {
++    const int rows = std::min(TILE_M, size_m - row0);
++    if (!partials.defined() || partials.size(1) < rows) {
++      partials = torch::empty({z_count, rows, size_n},
++                              torch::TensorOptions().dtype(torch::kFloat32).device(a.device()));
++    }
++    const T* a_t = (const T*)a.data_ptr() + (long)row0 * size_k;
++    T* c_t = (T*)c.data_ptr() + (long)row0 * size_n;
++    launch_gemm_q4<T>(a_t, (const uint32_t*)b_q_weight.data_ptr(),
++                      (const uint32_t*)b_qzeros.data_ptr(),
++                      (const T*)b_scales.data_ptr(), g_idx_ptr, c_t, rows,
++                      size_n, size_k, groups, use_v2_format,
++                      (float*)partials.data_ptr(), stream);
++    const long total = (long)rows * size_n;
++    const int threads = 256;
++    const int blocks = (int)((total + threads - 1) / threads);
++    reduce_partials_rdna3<T><<<blocks, threads, 0, stream>>>(
++        (const float*)partials.data_ptr(), c_t, z_count, rows, size_n);
++  }
++  return c;
++}
++
++}  // namespace gptq_rdna3
++}  // namespace vllm
++
++torch::Tensor gptq_gemm_rdna3_deterministic(torch::Tensor a,
++                                            torch::Tensor b_q_weight,
++                                            torch::Tensor b_qzeros,
++                                            torch::Tensor b_scales,
++                                            torch::Tensor b_g_idx,
++                                            bool use_v2_format) {
++  if (a.scalar_type() == torch::kHalf) {
++    return vllm::gptq_rdna3::gptq_gemm_rdna3_deterministic_impl<half>(
++        a, b_q_weight, b_qzeros, b_scales, b_g_idx, use_v2_format);
++  }
++  return vllm::gptq_rdna3::gptq_gemm_rdna3_deterministic_impl<
++      vllm::gptq_rdna3::bf16_t>(a, b_q_weight, b_qzeros, b_scales, b_g_idx,
++                                use_v2_format);
++}
+diff --git a/csrc/rocm/torch_bindings.cpp b/csrc/rocm/torch_bindings.cpp
+index 03de6dcd15..6ce7d8dfff 100644
+--- a/csrc/rocm/torch_bindings.cpp
++++ b/csrc/rocm/torch_bindings.cpp
+@@ -45,6 +45,12 @@ TORCH_LIBRARY_EXPAND(TORCH_EXTENSION_NAME, rocm_ops) {
+       "gptq_gemm_rdna3(Tensor a, Tensor b_q_weight, Tensor b_qzeros, "
+       "Tensor b_scales, Tensor b_g_idx, bool use_v2_format) -> Tensor");
+   rocm_ops.impl("gptq_gemm_rdna3", torch::kCUDA, &gptq_gemm_rdna3);
++  rocm_ops.def(
++      "gptq_gemm_rdna3_deterministic(Tensor a, Tensor b_q_weight, Tensor "
++      "b_qzeros, Tensor b_scales, Tensor b_g_idx, bool use_v2_format) "
++      "-> Tensor");
++  rocm_ops.impl("gptq_gemm_rdna3_deterministic", torch::kCUDA,
++                &gptq_gemm_rdna3_deterministic);
+ 
+   rocm_ops.def(
+       "gptq_gemm_rdna3_wmma(Tensor a, Tensor b_q_weight, Tensor b_qzeros, "
+diff --git a/tests/kernels/quantization/test_rdna3_w4a16_determinism.py b/tests/kernels/quantization/test_rdna3_w4a16_determinism.py
+new file mode 100644
+index 0000000000..8fa5aaca74
+--- /dev/null
++++ b/tests/kernels/quantization/test_rdna3_w4a16_determinism.py
+@@ -0,0 +1,128 @@
++#!/usr/bin/env python3
++# SPDX-LicenseFileCopyrightText: Copyright contributors to the vLLM project
++"""Bit-repeatability regression test for the RDNA3 W4A16 split-K epilogue.
++
++Reproduces vllm#50603-class greedy nondeterminism at the kernel level:
++with split-K active (Z = K/BLOCK_KN_SIZE >= 4), the production
++``gptq_gemm_rdna3`` epilogue atomically accumulates per-split bf16 partials
++into the output via a CAS loop, so the bf16 reduction order is not fixed and
++repeated fixed-input calls differ (observed on gfx1100: Z=1..2 repeatable,
++Z>=4 gives a different output almost every call).
++
++The deterministic split-K path (FP32 partials + fixed-order reduction,
++``gptq_gemm_rdna3_deterministic``) must be bit-repeatable.
++
++Run: pytest tests/kernels/quantization/test_rdna3_w4a16_determinism.py
++"""
++
++import pytest
++import torch
++
++from vllm.platforms import current_platform
++
++if not current_platform.is_rocm():
++    pytest.skip("RDNA3 W4A16 kernel is ROCm-only", allow_module_level=True)
++
++from vllm.model_executor.kernels.linear.mixed_precision.MPLinearKernel import (  # noqa: E402
++    MPLinearLayerConfig,
++)
++from vllm.model_executor.kernels.linear.mixed_precision.rdna3_w4a16 import (  # noqa: E402
++    RDNA3W4A16LinearKernel,
++)
++from vllm.model_executor.layers.quantization.utils.quant_utils import (  # noqa: E402
++    pack_quantized_values_into_int32,
++)
++from vllm.model_executor.parameter import (  # noqa: E402
++    GroupQuantScaleParameter,
++    PackedvLLMParameter,
++)
++from vllm.platforms.rocm import on_gfx1100  # noqa: E402
++from vllm.scalar_type import scalar_types  # noqa: E402
++
++device = "cuda"
++WEIGHT_TYPE = scalar_types.uint4b8
++
++gfx1100_only = pytest.mark.skipif(
++    not (
++        on_gfx1100()
++        and hasattr(torch.ops, "_rocm_C")
++        and hasattr(torch.ops._rocm_C, "gptq_gemm_rdna3")
++    ),
++    reason="requires gfx1100 with the _rocm_C.gptq_gemm_rdna3 op built in",
++)
++
++# K chosen so split-K is active and the race is robust on gfx1100:
++# BLOCK_KN_SIZE=256 -> Z=4 for K=1024 (measured: Z<=2 repeatable, Z>=4 not).
++K, N, GROUP = 1024, 4096, 128
++REPEATS = 20
++
++
++def _build_layer():
++    torch.manual_seed(1234)
++    q_int4_kn = torch.randint(0, 16, (K, N), dtype=torch.int32)
++    scales_gn = (torch.randn(K // GROUP, N) * 0.01 + 0.02).to(torch.bfloat16)
++    qweight = pack_quantized_values_into_int32(q_int4_kn, WEIGHT_TYPE, packed_dim=0)
++    no_loader = lambda *a, **k: None  # noqa: E731
++
++    class DummyLayer(torch.nn.Module):
++        pass
++
++    layer = DummyLayer()
++    layer.register_parameter(
++        "qweight",
++        PackedvLLMParameter(data=qweight, weight_loader=no_loader, input_dim=0,
++                            output_dim=1, packed_dim=0, packed_factor=8))
++    layer.register_parameter(
++        "scales",
++        GroupQuantScaleParameter(data=scales_gn, weight_loader=no_loader,
++                                 input_dim=0, output_dim=1))
++    return layer.to(device)
++
++
++def _kernel_and_input():
++    layer = _build_layer()
++    cfg = MPLinearLayerConfig(
++        full_weight_shape=(K, N), partition_weight_shape=(K, N),
++        weight_type=WEIGHT_TYPE, act_type=torch.bfloat16,
++        group_size=GROUP, zero_points=False, has_g_idx=False)
++    kernel = RDNA3W4A16LinearKernel(cfg, w_q_param_name="qweight",
++                                    w_s_param_name="scales",
++                                    w_zp_param_name=None, w_gidx_param_name=None)
++    kernel.process_weights_after_loading(layer)
++    torch.manual_seed(4321)
++    x = torch.randn(1, K, device=device, dtype=torch.bfloat16)
++    return kernel, layer, x
++
++
++@gfx1100_only
++def test_rdna3_w4a16_deterministic_splitk_bit_repeatable(dist_init):
++    """The deterministic split-K path must be bit-repeatable on fixed inputs."""
++    kernel, layer, x = _kernel_and_input()
++    w_q, w_s, w_zp, w_g_idx = kernel._get_weight_params(layer)
++    outs = [
++        torch.ops._rocm_C.gptq_gemm_rdna3_deterministic(
++            x, w_q, w_zp, w_s, w_g_idx, False)
++        for _ in range(REPEATS)
++    ]
++    for o in outs[1:]:
++        assert torch.equal(o, outs[0]), (
++            "deterministic RDNA3 W4A16 split-K path produced differing "
++            "outputs for identical inputs")
++
++
++@gfx1100_only
++@pytest.mark.xfail(
++    reason="known: CAS-atomic bf16 split-K accumulation is order-dependent "
++    "(vllm#50603 root cause); tracked for the legacy epilogue",
++    strict=False,
++)
++def test_rdna3_w4a16_legacy_atomic_splitk_known_nondeterministic(dist_init):
++    """Documents the legacy epilogue's nondeterminism (xfail on gfx1100)."""
++    kernel, layer, x = _kernel_and_input()
++    w_q, w_s, w_zp, w_g_idx = kernel._get_weight_params(layer)
++    outs = [
++        torch.ops._rocm_C.gptq_gemm_rdna3(x, w_q, w_zp, w_s, w_g_idx, False)
++        for _ in range(REPEATS)
++    ]
++    for o in outs[1:]:
++        assert torch.equal(o, outs[0])
+diff --git a/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py b/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py
+index 268728f4bf..3e608409ac 100644
+--- a/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py
++++ b/vllm/model_executor/kernels/linear/mixed_precision/rdna3_w4a16.py
+@@ -10,6 +10,8 @@ Registered ahead of TritonW4A16LinearKernel for the ROCm-RDNA3 path; falls
+ through to the Triton kernel on non-RDNA3 ROCm devices (e.g. CDNA/MI300).
+ """
+ 
++import os
++
+ import torch
+ 
+ from vllm import _custom_ops as ops
+@@ -186,7 +188,18 @@ class RDNA3W4A16LinearKernel(MPLinearKernel):
+         assert w_zp is not None, "Zero points are required by RDNA3 W4A16"
+         assert w_g_idx is not None, "g_idx tensor (possibly empty) required"
+ 
+-        output = ops.gptq_gemm_rdna3(x_2d, w_q, w_zp, w_s, w_g_idx, False)
++        gemm_op = ops.gptq_gemm_rdna3
++        if os.environ.get("VLLM_RDNA3_W4A16_DETERMINISTIC") == "1":
++            # Deterministic split-K prototype: FP32 partials + fixed-order
++            # reduction (row-tiled, bounded scratch) instead of CAS-atomic
++            # bf16 accumulation. The serving path recomputes prefill-tail
++            # forwards during generation, so ALL M must be deterministic.
++            import logging
++            logging.getLogger(__name__).info_once(
++                "RDNA3W4A16LinearKernel deterministic split-K reduction "
++                "(VLLM_RDNA3_W4A16_DETERMINISTIC=1)")
++            gemm_op = torch.ops._rocm_C.gptq_gemm_rdna3_deterministic
++        output = gemm_op(x_2d, w_q, w_zp, w_s, w_g_idx, False)
+ 
+         if bias is not None:
+             output.add_(bias)

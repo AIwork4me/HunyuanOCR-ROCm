@@ -1,0 +1,18 @@
+=== A. microprobe 3 procs x200 ===
+{"tag": "baseA", "M": 1, "repeats": 200, "distinct": 200, "max_abs_err_vs_first": 0.046875, "sha_first": "638753bfff2868e4c382dfad7947fe70b481912b8ec9699574a5cf48d10fe99e", "shape": [1, 4096]}
+{"tag": "baseA", "M": 128, "repeats": 200, "distinct": 2, "max_abs_err_vs_first": 0.0078125, "sha_first": "b28d82b03bfd5162f4382f4ecd8d9cd70a9767ab33fee22eee7dd0694aa893da", "shape": [128, 4096]}
+{"tag": "baseB", "M": 1, "repeats": 200, "distinct": 200, "max_abs_err_vs_first": 0.046875, "sha_first": "bb9e1708adf19c714af632357f3cf9e64954936e64c0af3f890d4facf535ec22", "shape": [1, 4096]}
+{"tag": "baseB", "M": 128, "repeats": 200, "distinct": 2, "max_abs_err_vs_first": 0.0078125, "sha_first": "d6471fd9dd77fe0e93e149cfc913ef1e0fdd5def9da3fd8f2fb26012eb775e76", "shape": [128, 4096]}
+{"tag": "baseC", "M": 1, "repeats": 200, "distinct": 200, "max_abs_err_vs_first": 0.0625, "sha_first": "6ad236b093187c624db787d454f944c2ff8b2d5854539cb97e6f99a17ba18ef0", "shape": [1, 4096]}
+{"tag": "baseC", "M": 128, "repeats": 200, "distinct": 2, "max_abs_err_vs_first": 0.0078125, "sha_first": "6a4c1ce8a2b839a7d243f4aaccaf95fb48b3237de45f02879749c5fae0884393", "shape": [128, 4096]}
+=== B. Muse E2E 3 engines ===
+--- baseline eng1 2026-08-31T03:16:12+00:00 ---
+  [within] muse tp=1 eager=1 eng=1 ctx=   512 -> 6 distinct of 8  first_div=[7, 7, 7, 7, 7, 5, 7]
+  [within] muse tp=1 eager=1 eng=1 ctx=  8192 -> 2 distinct of 8  first_div=[None, None, None, 1, None, 1, None]
+--- baseline eng2 2026-08-31T03:18:07+00:00 ---
+  [within] muse tp=1 eager=1 eng=2 ctx=   512 -> 8 distinct of 8  first_div=[5, 5, 5, 5, 5, 5, 6]
+  [within] muse tp=1 eager=1 eng=2 ctx=  8192 -> 3 distinct of 8  first_div=[1, 1, 1, None, 1, None, None]
+--- baseline eng3 2026-08-31T03:20:03+00:00 ---
+  [within] muse tp=1 eager=1 eng=3 ctx=   512 -> 8 distinct of 8  first_div=[5, 5, 19, 17, 6, 5, 5]
+  [within] muse tp=1 eager=1 eng=3 ctx=  8192 -> 2 distinct of 8  first_div=[1, None, 1, 1, 1, 1, 1]
+=== PHASE2 DONE 2026-08-31T03:21:58+00:00 ===
