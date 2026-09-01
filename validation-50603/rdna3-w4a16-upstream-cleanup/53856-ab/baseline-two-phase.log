@@ -1,0 +1,11 @@
+=== baseline two-phase runs 1-3 (W4A16 only) ===
+512 1
+8192 2
+512 1
+8192 2
+512 1 first_div [None, None, None, None, None, None, None]
+8192 2 first_div [27, 27, 27, 27, 27, 27, 27]
+
+run1 512 1 / 8192 2 ; run2 512 1 / 8192 2 ; run3 (enhanced probe, shows first_div):
+512 1 first_div [None, None, None, None, None, None, None]
+8192 2 first_div [27, 27, 27, 27, 27, 27, 27]

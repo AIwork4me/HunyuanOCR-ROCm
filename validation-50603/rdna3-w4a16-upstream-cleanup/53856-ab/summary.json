@@ -1,0 +1,45 @@
+{
+  "question": "Does vLLM PR #53856 (Mask paged attention V cache padding) eliminate the residual Muse eager ctx8192 nondeterminism root-caused to stale V-cache slots after seq_len?",
+  "date": "2026-09-01",
+  "case": "A",
+  "case_meaning": "same root cause: residual is another manifestation of invalid final-block V-cache consumption already addressed by #53856",
+  "pr53856": {
+    "head_sha": "80e801cbfb7e6501f79c7ecd75aeb9b37ecf2561",
+    "base_sha": "796822d141382ab8ce82ef6101c6d802046f94e0",
+    "patch_sha256": "ba55bd3f9ded3d233cc06cc11be4a0da9ed65522ef8e0f8f01b73015177775c5",
+    "files": ["csrc/rocm/attention.cu", "tests/kernels/attention/test_attention.py"]
+  },
+  "ab_base": "07ea9350baf84e33fd696d36fec9b9f24735a733",
+  "ab_only_difference": "csrc/rocm/attention.cu (#53856) + its test; W4A16 files sha256-identical across trees",
+  "e2e_two_phase": {
+    "baseline_runs": [
+      {"ctx512": "1/8", "ctx8192": "2/8", "first_div": 27},
+      {"ctx512": "1/8", "ctx8192": "2/8"},
+      {"ctx512": "1/8", "ctx8192": "2/8", "first_div": 27}
+    ],
+    "candidate_runs": [
+      {"ctx512": "1/8", "ctx8192": "1/8", "first_div": null},
+      {"ctx512": "1/8", "ctx8192": "1/8", "first_div": null}
+    ],
+    "candidate_graphs": {"ctx512": "1/8", "ctx8192": "1/8"}
+  },
+  "stale_tail_causal_test": {
+    "method": "per NoPE decode call: fill V-cache slots [seq_len_block_offset:16] of the final referenced block with +1.0 (finite), rerun identical invocation, compare output bitwise; restore",
+    "baseline": {"tested": 780, "changed": 1, "max_abs_delta": 1.221e-04, "n_diff_elements": 1, "first_elem": [0, 3, 104], "s0_of_changed": 8199},
+    "candidate": {"tested": 780, "changed": 0, "max_abs_delta": 0.0}
+  },
+  "finite_stale_values": {
+    "nan_count": 0,
+    "inf_count": 0,
+    "observed_range": [-9.25, 8.5],
+    "note": "finite historical activation values, not NaN"
+  },
+  "routing": {
+    "custom_paged_attention_calls": {"baseline": 1612, "candidate": 1612},
+    "breakdown": "780 recorded NoPE-decode invocations + 780 mutation reruns + 52 prefill calls",
+    "cross_build_behavior_differs": true
+  },
+  "w4a16_regression_on_candidate": "8/8 PASS",
+  "interpretation": "The residual gfx1100 nondeterminism is another manifestation of the invalid final-block V-cache consumption already addressed by #53856; the same V-tail masking also removes the finite stale-value sensitivity.",
+  "recommended_upstream_action": "comment on #53856 with independent gfx1100 validation; no new attention issue; keep W4A16 PR separate; link both mechanisms in #50603 update"
+}

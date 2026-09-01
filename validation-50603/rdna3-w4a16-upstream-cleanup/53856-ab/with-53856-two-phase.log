@@ -1,0 +1,10 @@
+=== candidate (W4A16 + #53856) two-phase runs 1-2 ===
+512 1 first_div [None, None, None, None, None, None, None]
+8192 1 first_div [None, None, None, None, None, None, None]
+-- run2
+512 1 first_div [None, None, None, None, None, None, None]
+8192 1 first_div [None, None, None, None, None, None, None]
+
+=== candidate graphs-mode run (enforce_eager=False) ===
+512 1 first_div [None, None, None, None, None, None, None]
+8192 1 first_div [None, None, None, None, None, None, None]

@@ -22,6 +22,7 @@ Final upstream-cleanup validation for the gfx1100 (RDNA3) W4A16 split-K determin
 - `validation.md` — Phase 8 matrix results (scalar/WMMA/bf16/fp16/graphs/streams/E2E)
 - `self-review.md` — Phase 12 maintainer-style review (PASS/FAIL per item)
 - `muse-eager-8192-attention-rootcause.md` — full diagnostic chain for the one residual E2E cell (upstream attention defect, out of scope for this patch)
+- `53856-ab/` — follow-up A/B proving that PR #53856 ("Mask paged attention V cache padding") eliminates the residual: CASE A (same root cause), E2E 2/8 → 1/8 and stale-tail causal sensitivity 1/780 → 0/780
 - `patches/upstream-final.patch` — the patch (byte-identical to the one under test)
 - `upstream-pr-final.md` — Phase 15 PR draft
 - `github-comment-final.md` — Phase 14 issue comment draft (wording per task book)

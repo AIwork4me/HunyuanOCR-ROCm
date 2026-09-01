@@ -1,0 +1,13 @@
+# Routing evidence (Phase 5)
+
+Tree selection verified per run via 'import vllm; print(vllm.__file__)':
+/workspace/vllm-50603-53856-ab/logs-stale-baseline.log:IMPORT: /tmp/vllm-53856-ab/baseline/vllm/__init__.py
+/workspace/vllm-50603-53856-ab/logs-stale-candidate.log:IMPORT: /tmp/vllm-53856-ab/candidate/vllm/__init__.py
+
+Custom paged-attention kernel invocations counted by wrapping vllm._custom_ops.paged_attention_rocm (the ops.paged_attention entry used only by the custom path; the Triton fallback logs 'Cannot use ROCm custom paged attention kernel' and was never seen):
+/workspace/vllm-50603-53856-ab/logs-stale-baseline.log:CUSTOM_CALLS: 1612
+/workspace/vllm-50603-53856-ab/logs-stale-candidate.log:CUSTOM_CALLS: 1612
+
+Both builds: 1612 custom-path calls = 780 recorded NoPE-decode invocations + 780 mutation reruns + 52 prefill-pass calls. Identical count across A/B => same routing; only the attention.cu kernel code differs (via #53856). Muse NoPE/full-attention layers (13 of 52) are exactly the layers using the custom kernel (sliding layers pass sliding_window=2047 -> Triton decode).
+
+Note: the string "Cannot use ROCm custom paged attention kernel, falling back to Triton" appears exactly ONCE per process in BOTH baseline and candidate logs (engine-init warning_once during profiling warmup, before any decode step) — an init artifact identical across A/B, not a fallback of the measured decode path. The measured decode path is custom: 1612 counted custom-path calls, and the stale-tail mutation result differs between builds (1/780 vs 0/780) — only possible if the #53856-modified kernel code executed in the candidate.
