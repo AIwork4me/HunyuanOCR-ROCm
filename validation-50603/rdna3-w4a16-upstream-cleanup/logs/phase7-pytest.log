@@ -1,0 +1,3 @@
+$ cd /tmp/vllm-phase7 (fresh worktree @ 07ea9350 + patches/upstream-final.patch, rebuilt via env-clean)
+$ env-clean/bin/python -m pytest tests/kernels/quantization/test_rdna3_w4a16_determinism.py -q
+8 passed, 14 warnings in 4.68s

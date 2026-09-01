@@ -1,0 +1,56 @@
+{
+  "stage": "upstream-cleanup",
+  "date": "2026-09-01",
+  "hardware": "AMD W7900D (gfx1100, RDNA3), ROCm 7.14 wheel stack, torch 2.12.0+rocm7.14.0",
+  "base_commit": "07ea9350baf84e33fd696d36fec9b9f24735a733",
+  "patch": {
+    "files": 3,
+    "lines": 878,
+    "thread_local_refs": 0,
+    "legacy_atomic_refs": 0,
+    "zexp_refs": 0,
+    "force_ksplit_refs": 0
+  },
+  "micro_determinism": {
+    "shape": "real Muse q_proj K=6656 N=4096",
+    "bf16_M": [1, 8, 16, 64, 128, 512],
+    "distinct_per_100": 1,
+    "fp16": "scalar z4/z26 + WMMA M=64/128/512 all 1/100"
+  },
+  "regression_test": {
+    "file": "tests/kernels/quantization/test_rdna3_w4a16_determinism.py",
+    "after": "8/8 PASS (bf16+fp16)",
+    "before_unpatched_0_25_1": "4/4 FAIL"
+  },
+  "interception": {
+    "calls_per_gen": 16640,
+    "kernel_level_divergences": 0
+  },
+  "e2e": {
+    "muse_graphs_ctx512": "1/8",
+    "muse_graphs_ctx8192": "1/8",
+    "muse_eager_ctx512": "1/8",
+    "muse_eager_eng": "2 engines, both 2/8 @8192 with first_div=27 (stable)",
+    "gemma3_ctx512": "1/8",
+    "gemma3_ctx8192": "1/8",
+    "muse_eager_ctx8192": {
+      "result": "2/8",
+      "root_cause": "upstream ROCm custom paged attention (NoPE-layer decode) sensitive to KV last-block stale slots; NOT the W4A16 patch (0/16640 kernel-level divergences)",
+      "triton_attn_backend_same_build": "1/8 at both 512 and 8192",
+      "report": "muse-eager-8192-attention-rootcause.md"
+    }
+  },
+  "performance": {
+    "M1_vs_atomic_scalar_us": {"clean": 45.1, "base": 43.1, "delta_pct": 4.6},
+    "M8": {"clean": 73.3, "base": 70.0, "delta_pct": 4.7},
+    "M16_vs_atomic_wmma_us": {"clean": 81.0, "base": 97.8, "delta_pct": -17.2},
+    "M64_vs_atomic_wmma_us": {"clean": 172.4, "base": 183.0, "delta_pct": -5.8},
+    "M128": {"clean": 176.4, "base": 182.3, "delta_pct": -3.2},
+    "M512": {"clean": 554.8, "base": 535.0, "delta_pct": 3.7},
+    "note": "baselines are same-dispatch same-path atomic kernels measured on the same machine (see performance.md)"
+  },
+  "accuracy": {
+    "max_abs_err_vs_fp32_dequant": {"M1": 0.0061, "atomic_M1": 0.028},
+    "cosine_range": [0.9999976, 0.9999986]
+  }
+}
