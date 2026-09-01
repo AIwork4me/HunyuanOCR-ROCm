@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-01",
+  "submission_base_sha": "40b2f62061575905aaac8bc360eaea62a4baeb67",
+  "old_head": "bd5d05816bf0a2a93a7f491375812759f7efe1b0",
+  "old_base": "07ea9350baf84e33fd696d36fec9b9f24735a733",
+  "pr_head_sha": "dddf1647811a4663dc0de5511bad3fe348afb3b3",
+  "dco": "Signed-off-by: AIwork4me <AIwork4me@users.noreply.github.com>",
+  "changed_files": [
+    "csrc/rocm/q_gemm_rdna3.cu",
+    "csrc/rocm/q_gemm_rdna3_wmma.cu",
+    "tests/kernels/quantization/test_rdna3_w4a16_determinism.py"
+  ],
+  "pr": {
+    "number": 54706,
+    "url": "https://github.com/vllm-project/vllm/pull/54706",
+    "state": "OPEN",
+    "draft": false,
+    "base": "main",
+    "head": "AIwork4me:fix/rdna3-w4a16-determinism"
+  },
+  "issue_comment": "https://github.com/vllm-project/vllm/issues/50603#issuecomment-5489539359",
+  "validation": {
+    "pytest": "8/8 PASS",
+    "scalar_M1": {"distinct_per_100": 1, "all_finite": true, "sha": "6315ced8074f235f"},
+    "wmma_M128": {"distinct_per_100": 1, "all_finite": true, "sha": "cf22e7d8be5305a2"},
+    "muse_eager_ctx512": "1/8, first_div none",
+    "routing": "RDNA3W4A16LinearKernel confirmed in engine log"
+  },
+  "ci_at_submission": {
+    "check_format": "pass",
+    "pre_run_check": "fail (first-time-contributor label gate; AI instructed not to request labels)",
+    "note": "full matrix awaits maintainer 'verified'/'ready' label"
+  },
+  "push_method": "git force-with-lease rejected by transport quirk; branch updated via GitHub refs API after explicit lease check (remote confirmed still at bd5d05816b); pushed commit tree verified byte-identical to locally validated build",
+  "backup_branch_local": "backup/w4a16-pre-rebase-bd5d058"
+}

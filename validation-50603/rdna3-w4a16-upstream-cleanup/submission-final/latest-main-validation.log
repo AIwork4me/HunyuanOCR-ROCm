@@ -1,0 +1,9 @@
+8 passed, 14 warnings in 4.17s
+{"base": "model.language_model.layers.0.self_attn.q_proj", "K": 6656, "N": 4096, "M": 1, "distinct100": 1, "first_eq_rest": true, "all_finite": true, "out_sha_full": "6315ced8074f235f", "phase512": false, "h0": "6315ced8", "h1": "6315ced8", "h2": "6315ced8"}
+{"base": "model.language_model.layers.0.self_attn.q_proj", "K": 6656, "N": 4096, "M": 128, "distinct100": 1, "first_eq_rest": true, "all_finite": true, "out_sha_full": "cf22e7d8be5305a2", "phase512": false, "h0": "cf22e7d8", "h1": "cf22e7d8", "h2": "cf22e7d8"}
+import: /tmp/vllm-phase7/vllm/__init__.py
+CTX512: 1 unique / 8  first_div: [None, None, None, None, None, None, None]
+CTX512-PROBE DONE
+(EngineCore pid=694741) INFO 09-01 05:46:39 [compressed_tensors_wNa16.py:137] Using RDNA3W4A16LinearKernel for CompressedTensorsWNA16
+--- env: torch/hip/gpu
+torch 2.12.0+rocm7.14.0 hip 7.14.60850 AMD Radeon Pro W7900D
