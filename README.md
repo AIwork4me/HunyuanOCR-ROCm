@@ -11,6 +11,7 @@
 [![vLLM canary](https://img.shields.io/badge/vLLM%20canary%20148-94.81-green)](reports/canary-baseline.md)
 [![llama.cpp full](https://img.shields.io/badge/llama.cpp%20full%201651-92.09-yellow)](reports/project-stage-summary.md)
 [![status: evaluation-backed](https://img.shields.io/badge/status-evaluation--backed-blue)](docs/benchmark-methodology.md)
+[![vLLM upstream merged](https://img.shields.io/badge/vLLM%20%2354706-upstream%20merged-brightgreen)](https://github.com/vllm-project/vllm/pull/54706)
 [![license: mixed](https://img.shields.io/badge/license-mixed%20(see%20NOTICE)-blue)](NOTICE)
 
 ## At a glance
@@ -29,6 +30,36 @@
   [vLLM full-set validation](#vllm-full-set-validation-2026-07-25).
 - **Fastest path to one page.** [Quick start (llama.cpp)](#quick-start-llamacpp-recommended)
   — warm ~1.4 s/page on a single GPU.
+
+## Upstream contributions
+
+### ✅ vLLM #54706 — RDNA3 W4A16 accuracy & determinism fix — Merged
+
+The gfx1100 investigation in this project helped isolate a lower-level vLLM
+RDNA3 W4A16 kernel issue beyond the original HunyuanOCR symptom.
+
+The affected `RDNA3W4A16LinearKernel` / `gptq_gemm_rdna3` split-K path
+accumulated bf16/fp16 partials in an execution-order-dependent way. The
+upstream fix replaces the affected reduction path with deterministic FP32
+partial accumulation and fixed-order reduction, while also improving the fp16
+dequantization path and small-batch performance.
+
+- **Upstream PR:** [vLLM #54706](https://github.com/vllm-project/vllm/pull/54706)
+- **Status:** ✅ Merged into vLLM main
+- **Merged:** 2026-10-03
+- **Upstream merge commit:** [`4ac0d0e`](https://github.com/vllm-project/vllm/commit/4ac0d0eac25eecc98ff519887f2aa3d659dc75f3)
+- **Hardware scope:** RDNA3 / gfx11 W4A16
+- **Original model-level isolation:** Muse-Glimmer-30B-INT4
+- **Independent end-to-end validation:** Qwen3.8-27B W4A16 on gfx1100
+- **Investigation trail:** [vLLM #50603](https://github.com/vllm-project/vllm/issues/50603)
+  (in-repo three-state A/B validation of its attention-kernel leg: [validation-50603/SUMMARY.md](validation-50603/SUMMARY.md))
+
+> This upstream fix addresses the RDNA3 W4A16 quantized-GEMM accuracy and
+> determinism issue uncovered during the investigation. It should **not** be
+> interpreted as a fix for every HunyuanOCR long-context issue; the original
+> long-sequence behavior was investigated separately. HunyuanOCR-1.5 runs bf16
+> in this repo, so the W4A16 kernel path is not exercised by the published
+> benchmark numbers, which are unchanged.
 
 ## Results
 
@@ -340,8 +371,12 @@ LICENSES/  NOTICE  .github/workflows/   # mixed-license texts + CI
 | torch.compile for vLLM | ~28× decode speedup (2→150 tok/s) | `scripts/serve_vllm.sh` |
 | `-c 65536` for **llama-server** | large pages overflow 32768 ctx at full res | `scripts/reproduce_llamacpp_*.sh` (llama-server flags) |
 
-## Issues filed
+## Upstream issues & contributions
 
+Details of the merged #54706 fix: [Upstream contributions](#upstream-contributions).
+
+- ✅ **[vLLM #54706](https://github.com/vllm-project/vllm/pull/54706)** — RDNA3 W4A16 split-K accuracy and determinism fix. **Merged upstream.**
+- **[vLLM #50603](https://github.com/vllm-project/vllm/issues/50603)** — investigation trail that led to the RDNA3 W4A16 root-cause isolation.
 - **[ROCm/ROCm#6416](https://github.com/ROCm/ROCm/issues/6416)** — bf16 ViT forward non-determinism + NaN above ~14.3k tokens on gfx1100.
 - **[Tencent-Hunyuan/HunyuanOCR#114](https://github.com/Tencent-Hunyuan/HunyuanOCR/issues/114)** — recommended max resolution / vision-token budget; three-backend comparison data; formula CDM gap analysis.
 
