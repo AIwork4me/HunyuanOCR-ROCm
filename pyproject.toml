@@ -51,7 +51,7 @@ eval = ["pyyaml"]
 # OmniDocBench-ROCm platform integration (conformance, score, publish).
 platform = ["omnidocbench-rocm>=0.2.0"]
 # Development / CI tooling.
-dev = ["pytest>=8", "pytest-mock", "ruff>=0.16,<0.17", "build", "pytest-cov>=4"]
+dev = ["pytest>=8", "pytest-mock", "ruff>=0.16,<0.18", "build", "pytest-cov>=4"]
 
 [project.urls]
 Homepage = "https://github.com/AIwork4me/HunyuanOCR-ROCm"
